@@ -1,0 +1,70 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXGroup section */
+		F61A01FA2D9491E000DCF735 = {
+			isa = PBXGroup;
+			children = (
+			);
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXProject section */
+		F61A01FB2D9491E000DCF735 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1620;
+			};
+			buildConfigurationList = F61A01FE2D9491E100DCF735 /* Build configuration list for PBXProject "Fattecentralen Projekt ny" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = F61A01FA2D9491E000DCF735;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+			);
+		};
+/* End PBXProject section */
+
+/* Begin XCBuildConfiguration section */
+		F61A01FF2D9491E100DCF735 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		F61A02002D9491E100DCF735 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		F61A01FE2D9491E100DCF735 /* Build configuration list for PBXProject "Fattecentralen Projekt ny" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F61A01FF2D9491E100DCF735 /* Debug */,
+				F61A02002D9491E100DCF735 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = F61A01FB2D9491E000DCF735 /* Project object */;
+}
