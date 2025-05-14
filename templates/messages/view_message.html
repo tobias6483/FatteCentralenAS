@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% from "_macros.html" import user_avatar %}
+
+{% block title %}{{ title }} - Beskeder - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4 messages-container">
+    {# Breadcrumb uses the title (subject of the first message) #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('messages.inbox') }}">Indbakke</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ title | truncate(50) }}</li>
+        </ol>
+    </nav>
+
+    {# Main card for the conversation thread #}
+    <div class="card shadow-sm message-thread-card">
+        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+            <h1 class="h4 mb-0 page-title text-dark">{{ title }}</h1>
+            <div class="message-actions">
+                {# Reply button links to the reply route using the LAST message's ID #}
+                {% if conversation %}
+                <a href="{{ url_for('messages.compose_message', reply_to_message_id=conversation[-1].id) }}" class="btn btn-sm btn-outline-success" title="Svar på tråd">
+                    <i class="bi bi-reply-fill"></i> Svar
+                </a>
+                {% endif %}
+                {# Delete button still targets the initial message ID for now #}
+                <form action="{{ url_for('messages.delete_message', message_id=initial_message_id) }}" method="POST" class="d-inline needs-confirmation" data-confirm-message="Er du sikker på, du vil slette den oprindelige besked (ID: {{ initial_message_id }})? Dette sletter kun din visning.">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Slet oprindelig besked (din visning)">
+                        <i class="bi bi-trash"></i> Slet
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body message-thread-body">
+            {# Loop through each message in the conversation #}
+            {% if conversation %}
+                {% for msg in conversation %}
+                <div class="message-item mb-4 pb-3 {% if loop.last %}border-0{% else %}border-bottom{% endif %}">
+                    <div class="message-meta d-flex align-items-center mb-2">
+                        {{ user_avatar(user_data=msg.sender, size='sm', img_class='me-2 flex-shrink-0') }} {# Smaller avatar #}
+                        <div class="flex-grow-1">
+                            <h6 class="mb-0 small fw-bold">
+                                <a href="{{ url_for('main.profile', username=msg.sender.username) }}">{{ msg.sender.username | title }}</a>
+                                {% if msg.sender.is_online %}
+                                   <span class="online-indicator" title="Online" style="display: inline-block; width: 7px; height: 7px; background-color: #28a745; border-radius: 50%; margin-left: 4px; vertical-align: middle;"></span>
+                                {% endif %}
+                            </h6>
+                            {# Use local-datetime class and data attribute for JS conversion #}
+                            <p class="mb-0 text-muted" style="font-size: 0.8rem;">
+                                Sendt: <span class="local-datetime" data-utc-datetime="{{ msg.timestamp.isoformat() if msg.timestamp else '' }}" title="{{ msg.timestamp | dt if msg.timestamp else 'Ukendt' }}">{{ msg.timestamp | dt(relative=True) }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="message-body user-content-styles ps-4 ms-3 border-start"> {# Indent message body slightly #}
+                        {{ msg.body_html | safe if msg.body_html else msg.body | nl2br }}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+<script src="{{ url_for('static', filename='js/messages.js') }}" defer></script>
+                <p class="text-muted text-center">Samtalen kunne ikke indlæses.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts_extra %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const confirmationForms = document.querySelectorAll('form.needs-confirmation');
+    confirmationForms.forEach(form => {
+        form.addEventListener('submit', function (event) {
+            const message = this.dataset.confirmMessage || 'Er du sikker?';
+            if (!confirm(message)) {
+                event.preventDefault();
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

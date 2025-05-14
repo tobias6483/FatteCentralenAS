@@ -1,0 +1,54 @@
+{% extends "base.html" %} {# <<< TILFØJET: Arver fra base.html #}
+
+{# <<< TILFØJET: Definerer sidens titel #}
+{% block title %}Server Fejl - {{ super() }}{% endblock %}
+
+{# <<< TILFØJET: Placerer specifik CSS/stil i head_extra #}
+{% block head_extra %}
+    {{ super() }} {# Arv fra base #}
+    <style>
+        /* Specifik styling for 500 siden */
+        .error-container {
+            max-width: 600px;
+            padding: 2rem;
+            margin-top: 5vh; /* Lidt afstand fra toppen */
+            text-align: center;
+        }
+        .error-container h1 {
+            font-size: 6rem;
+            font-weight: bold;
+            color: var(--bs-danger, #dc3545); /* Brug BS variabel */
+        }
+        .error-container h2 {
+             margin-top: -1rem;
+             margin-bottom: 1.5rem;
+             color: var(--bs-secondary-color, #adb5bd); /* Brug BS variabel */
+        }
+        /* Knappen arver styling fra base */
+    </style>
+{% endblock %}
+
+{# <<< TILFØJET: Indhold placeres i content-blokken #}
+{% block content %}
+<div class="container"> {# Brug standard container #}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="error-container">
+                <h1 class="display-1">500</h1>
+                <h2>Intern Server Fejl</h2>
+                <p class="lead">Beklager, noget gik galt på serveren. Prøv venligst igen senere.</p>
+                {# Vis evt. fejl ID hvis det sendes med for support #}
+                {# {% if error_id %} #}
+                {#   <p class="text-muted small">Fejlreference: {{ error_id }}</p> #}
+                {# {% endif %} #}
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-3">Tilbage til forsiden</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {# Slut på content-blokken #}
+
+{# <<< TILFØJET: Tom scripts_extra blok med super() #}
+{% block scripts_extra %}
+    {{ super() }} {# Arv fra base #}
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination, render_user_avatar_link %}
+
+{% block title %}{{ title }} - Forum{% endblock %}
+
+{% block head_extra %}
+    {{ super() }}
+    {# Add specific CSS if needed for search results #}
+    <style>
+        .search-result-item {
+            border-bottom: 1px solid var(--bs-border-color-translucent);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+        .search-result-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+        .search-result-meta {
+            font-size: 0.85rem;
+            color: var(--bs-secondary-color);
+        }
+        .search-result-body-snippet {
+            font-size: 0.9rem;
+            max-height: 100px; /* Limit snippet height */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            /* Consider adding a fade-out effect if needed */
+        }
+        mark { /* Style for potential future highlighting */
+            background-color: var(--bs-warning-bg-subtle);
+            padding: 0.1em 0.2em;
+            border-radius: 3px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Hjem</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}">Forum</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+        </ol>
+    </nav>
+
+    <h1 class="h4 mb-4">{{ title }}</h1>
+
+    {# Simple Search Form (Consider moving to base or forum layout) #}
+    <form action="{{ url_for('forum.search') }}" method="get" class="mb-4">
+        <div class="input-group">
+            <input type="search" name="q" class="form-control" placeholder="Søg i forum..." value="{{ query|e }}" aria-label="Søg i forum">
+            <button class="btn btn-outline-primary" type="submit"><i class="bi bi-search"></i> Søg</button>
+        </div>
+    </form>
+
+    {% if query %}
+        {% if pagination and pagination.total > 0 %}
+            <p class="text-muted mb-3">Fandt {{ pagination.total }} resultat{{ 'er' if pagination.total > 1 else '' }}.</p>
+
+            <div class="search-results-list">
+                {% for post in results %}
+                    {% set author_data = authors_data.get(post.author_username) or {'username': post.author_username, 'avatar_url': url_for('static', filename='avatars/default_avatar.png')} %}
+                    <div class="search-result-item">
+                        <div class="d-flex align-items-start mb-2">
+                            <div class="flex-shrink-0 me-2">
+                                {{ render_user_avatar_link(author_data, size=32) }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">
+                                    <a href="{{ url_for('forum.view_thread', thread_id=post.thread_id, _anchor='post-' ~ post.id) }}" class="text-decoration-none">
+                                        {{ post.thread.title }}
+                                    </a>
+                                </h6>
+                                <div class="search-result-meta">
+                                    af {{ render_user_avatar_link(author_data, only_link=True) }}
+                                    i <a href="{{ url_for('forum.view_category', slug=post.thread.category.slug) }}">{{ post.thread.category.name }}</a>
+                                    - <span title="{{ post.created_at.isoformat() }}">{{ post.created_at | dt(relative=True) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {# Display snippet - Using body_html which is sanitized #}
+                        {# Highlighting is not implemented here, but could be added server-side or client-side #}
+                        <div class="search-result-body-snippet ms-md-5 ps-md-1">
+                            {{ post.body_html | safe }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            {# Pagination #}
+            <div class="mt-4">
+                {{ render_pagination(pagination, 'forum.search', q=query) }}
+            </div>
+
+        {% elif query %}
+            <div class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle me-2"></i> Ingen resultater fundet for '{{ query|e }}'. Prøv et andet søgeord.
+            </div>
+        {% endif %}
+    {% endif %} {# End if query #}
+
+</div>
+{% endblock %}

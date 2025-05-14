@@ -1,0 +1,121 @@
+/* variables.css - Opgraderet v3 */
+
+:root {
+  /* =============================
+     FARVER (HEX & RGB)
+     ============================= */
+  /* --- Primære Farver --- */
+  --primary-color-hex:      #00cca3;  /* Definer hex først */
+  --primary-color:          var(--primary-color-hex); /* Brug hex her */
+  --primary-color-rgb:      0, 204, 163; /* Til brug i rgba() - VIGTIGT! */
+  --primary-hover:          #00b38f;  /* Lidt mørkere til hover */
+
+  /* --- Status Farver --- */
+  --danger-color-hex:       #ff4444;
+  --danger-color:           var(--danger-color-hex);
+  --danger-color-rgb:       255, 68, 68;
+  --success-color-hex:      #00cc66;
+  --success-color:          var(--success-color-hex);
+  --success-color-rgb:      0, 204, 102;
+  --info-color-hex:         #17a2b8;
+  --info-color:             var(--info-color-hex);
+  --info-color-rgb:         23, 162, 184;
+  --warning-color-hex:      #ffc107;
+  --warning-color:          var(--warning-color-hex);
+  --warning-color-rgb:      255, 193, 7;
+
+  /* --- Sekundære / Neutrale Farver --- */
+  --secondary-color-hex:    #6c757d; /* Grå */
+  --secondary-color:        var(--secondary-color-hex);
+  --secondary-color-rgb:    108, 117, 125;
+  --secondary-color-hover:  #5a6268;  /* Mørkere grå hover */
+
+  /* --- Custom Ekstra Farver --- */
+  --bs-turquoise:           #40E0D0;  /* Turkish grøn */
+  --bs-sand:                #CDBF9A;  /* Sandfarve */
+  /* --bs-danger-dark: #B02A37; */ /* Mørkerød hvis nødvendigt */
+
+  /* =============================
+     BAGGRUNDE
+     ============================= */
+  --dark-bg:                 #1a1a1a;  /* Primær mørk baggrund (Body) */
+  --secondary-bg:            #1c1c1c;  /* Sekundær (Topbar) */
+  --secondary-bg-lighter:    #2b2b2b;  /* Lidt lysere (Sidebar) */
+  --secondary-bg-hover:      #343a40;  /* Hover for grå elementer */
+  --card-bg:                 #222222;  /* Standard kort baggrund */
+  --card-bg-darker:          #1a1d20;  /* Mørkere variant */
+  --card-header-bg:          rgba(0, 0, 0, 0.1); /* Semi-transparent header overlay */
+  /* Alpha baggrunde */
+  --light-bg-alpha:          rgba(255, 255, 255, 0.05); /* Til let overlay */
+  --light-bg-hover-alpha:    rgba(255, 255, 255, 0.08); /* Let hover overlay */
+
+  /* =============================
+     TEKST FARVER
+     ============================= */
+  --font-color-highlight:    #ffffff;  /* Ren hvid til vigtig tekst/kontrast */
+  --font-color-base:         #dee2e6;  /* Standard brødtekst */
+  --font-color-muted:        #adb5bd;  /* Nedtonet/sekundær tekst */
+  --font-color-muted-lighter:#cccccc;  /* Lettere nedtonet */
+  --font-color-header:       #f1f3f5;  /* Lidt lysere/skarpere til headers */
+  --button-text-dark:        #111111;  /* Mørk tekst til lyse knapper */
+  --link-color:              var(--primary-color); /* Standard link farve */
+  --link-hover-color:        var(--primary-hover);
+
+  /* =============================
+     KANTER (BORDERS)
+     ============================= */
+  --border-color-dark:         #495057; /* Tydelig kant mellem sektioner */
+  --border-color-medium:       #6c757d; /* Mindre tydelig */
+  --border-color-light:        #adb5bd; /* Meget svag */
+  --border-color-light-alpha:  rgba(255, 255, 255, 0.1); /* Alpha kanter */
+  --border-color-lighter-alpha:rgba(255, 255, 255, 0.15);
+
+  /* =============================
+     SKYGER (SHADOWS)
+     ============================= */
+  --card-shadow-dark:        0 4px 12px rgba(0, 0, 0, 0.4); /* Standard mørk skygge */
+  --card-shadow-light:       0 2px 8px rgba(0, 0, 0, 0.2); /* Lettere skygge */
+  --card-shadow-inset:       inset 0 1px 4px rgba(0, 0, 0, 0.3); /* Indre skygge */
+  --text-shadow-light:       1px 1px 2px rgba(0, 0, 0, 0.5); /* Til lys tekst */
+
+  /* =============================
+     MODAL SPECIFIK
+     ============================= */
+  --modal-bg:                var(--secondary-bg, #1c1c1c);
+  --modal-border-color:      var(--border-color-lighter-alpha, rgba(255, 255, 255, 0.15));
+
+  /* =============================
+     GENERELLE INPUT FIELDS
+     ============================= */
+  --input-bg:                var(--secondary-bg-lighter, #2b2b2b); /* Matcher sidebar? */
+  --input-color:             var(--font-color-base, #dee2e6);
+  --input-border-color:      var(--border-color-dark, #495057);
+  --input-placeholder-color: var(--font-color-muted, #adb5bd);
+  --input-bg-focus:          #31373b; /* Lidt lysere focus */
+  --input-color-focus:       var(--font-color-highlight, #ffffff);
+  --input-border-focus:      var(--primary-color); /* Brug primær farve til kant */
+  --input-focus-shadow:      0 0 0 0.2rem rgba(var(--primary-color-rgb), 0.25); /* Glow med primær farve */
+
+  /* =============================
+     NAVBAR SPECIFIK (Inkl. søgning)
+     ============================= */
+  /* Selve navbarens baggrund (hvis nødvendigt at override standard) */
+  /* --navbar-bg: var(--secondary-bg, #1c1c1c); */
+  /* --- Navbar Search --- */
+  --navbar-search-input-bg:        var(--secondary-bg-hover, #343a40); /* Brug hover-farven? Eller lidt lysere end --secondary-bg */
+  --navbar-search-input-border:    var(--border-color-dark, #495057);
+  --navbar-search-input-color:     var(--font-color-base, #ced4da);
+  --navbar-search-input-placeholder: var(--font-color-muted, #6c757d);
+  --navbar-search-focus-border:    var(--primary-color); /* Samme som --input-border-focus */
+
+  /* =============================
+     IKONER & DIVERSE
+     ============================= */
+  --icon-color-muted:        #8699ae;
+  /* Afrunding */
+  --card-border-radius:      0.5rem;   /* Standard afrunding */
+  --card-border-radius-sm:   0.375rem; /* Mindre afrunding */
+  --bs-border-radius-pill:   50rem;    /* Bootstrap 5's værdi for fuld runding */
+  /* Bruges f.eks. i den nye layout.css til søgefeltet */
+  --bs-border-radius-lg:     0.5rem;    /* Matcher din standard, men kan justeres hvis Bootstrap temaet har en anden stor radius */
+}

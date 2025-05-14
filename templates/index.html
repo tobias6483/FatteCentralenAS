@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ APP_NAME }}{% endblock %} {# Brug App Navn fra Config #}
+
+{% block head_extra %}
+    {# --- REDUNDANT FontAwesome LINK FJERNET --- #}
+    {# Font Awesome loades fra base.html via lokal fil #}
+
+    {# --- LINK DINE CSS FILER --- #}
+    {# Grundlæggende variabler (Overvej om denne også skal loades globalt i base.html?) #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+
+{% endblock %}
+
+{% block content %}
+{# Brug .container-fluid for fuld bredde eller .container for begrænset bredde med padding #}
+<div class="container-fluid">
+    <!-- Welcome Header -->
+    <header class="welcome-header fade-in-down">
+        <h1 class="display-5">Velkommen, {{ currentUser | default('Bruger') | title }}!</h1>
+        <p class="lead intro-text fst-italic">
+            Her handler det om skills, mavefornemmelse... og måske lidt held! <i class="fas fa-dice"></i> Vis os dit talent!
+        </p>
+    </header>
+
+    <!-- First Row of Stats -->
+    <div class="row g-4 mb-4">
+        <!-- Saldo Card -->
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-4 mb-xl-0">
+            <div class="card dashboard-card text-light fade-in-up" style="animation-delay: 0.1s;">
+                <div class="card-body">
+                    <h6 class="stat-title">Saldo</h6>
+                    <p class="stat-value mb-0">
+                        <i class="fas fa-wallet fa-fw"></i>
+                        <span id="dashboardBalance">{{ current_user_balance | default('0.00') | currency }}</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Wins/Losses Card -->
+        <div class="col-xl-3 col-lg-6 col-md-6 mb-4 mb-xl-0">
+            <div id="winsLossesCard" class="card dashboard-card text-light fade-in-up" style="animation-delay: 0.2s;">
+                <div class="card-body">
+                    <h6 class="stat-title">Wins / Losses</h6>
+                    <p class="stat-value mb-0">
+                        <i class="fas fa-trophy fa-fw"></i>
+                        <span>
+                           <span id="dashboardTotalWins" class="text-success win-loss-value">{{ wins | default(0) }}</span>
+                           <span class="mx-1">/</span>
+                           <span id="dashboardTotalLosses" class="text-danger win-loss-value">{{ losses | default(0) }}</span>
+                        </span>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="col-xl-6 col-lg-12">
+            <div class="card dashboard-card profile-card text-light fade-in-up" style="animation-delay: 0.3s;">
+                <div class="card-body d-flex align-items-center flex-wrap"> {# Allow wrapping for smaller screens #}
+                    {# Use the 'user' object passed from the route for fresh data #}
+                    <img src="{{ user.avatar_url | default(url_for('static', filename=DEFAULT_AVATAR)) }}"
+                         alt="Avatar for {{ user.username | default('Bruger') | title }}"
+                         class="avatar-circle flex-shrink-0 mb-3 mb-sm-0" /> {# Margin on bottom on small screens #}
+                    <div class="flex-grow-1 ms-sm-3"> {# Margin start on slightly larger screens #}
+                        <h5 id="dashboardProfileName">{{ user.username | default('Bruger') | title }}</h5>
+                        <p><i class="fas fa-envelope fa-fw"></i>
+                            <span id="dashboardProfileEmail">{{ user.email | default('Ikke angivet') }}</span>
+                        </p>
+
+                        {% set rank_bg_class = 'bg-secondary' %} {# Standard: grå #}
+                        {% if user.rank == 'System Admin' %}
+                            {% set rank_bg_class = 'bg-danger' %}
+                        {% elif user.rank == 'Grundlægger' %}
+                            {% set rank_bg_class = 'bg-primary' %}
+                        {% endif %}
+
+                        <p><i class="fas fa-certificate fa-fw"></i> Rank:
+                            <span id="dashboardProfileRank" class="badge {{ rank_bg_class }} rank-badge">
+                                {{ user.rank | default('N/A') }}
+                            </span>
+                        </p>
+
+                        <p class="mb-0"><i class="far fa-clock fa-fw"></i> Sidst set:
+                            {# Apply local-datetime class and data attribute for JS conversion #}
+                            <small id="dashboardProfileLastLogin" class="local-datetime" data-utc-datetime="{{ user.last_login.isoformat() if user.last_login else '' }}" title="{{ user.last_login | dt if user.last_login else 'Ukendt' }}">
+                                {{ user.last_login | default('Ukendt') | dt(relative=True) }} {# Show relative time as fallback #}
+                            </small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> <!-- Slut på FØRSTE RÆKKE -->
+
+
+    <!-- Second Row of Stats -->
+    <div class="row g-4 mb-4">
+        <!-- Største Gevinst -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card dashboard-card text-light fade-in-up" style="animation-delay: 0.4s;">
+                <div class="card-body">
+                   <h6 class="stat-title">Største Gevinst</h6>
+                    <p class="stat-value mb-0 text-success">
+                        <i class="fas fa-arrow-trend-up fa-fw"></i>
+                        <span id="dashboardLargestWin">{{ largest_win | default('0.00') | currency }}</span>
+                   </p>
+               </div>
+            </div>
+       </div>
+
+        <!-- Største Tab -->
+        <div class="col-lg-3 col-md-6">
+           <div class="card dashboard-card text-light fade-in-up" style="animation-delay: 0.5s;">
+               <div class="card-body">
+                    <h6 class="stat-title">Største Tab</h6>
+                    <p class="stat-value mb-0 text-danger">
+                       <i class="fas fa-arrow-trend-down fa-fw"></i>
+                        <span id="dashboardLargestLoss">{{ largest_loss | default('0.00') | currency }}</span>
+                    </p>
+                </div>
+           </div>
+       </div>
+
+        <!-- Netto +/- -->
+        <div class="col-lg-3 col-md-6">
+           <div class="card dashboard-card text-light fade-in-up" style="animation-delay: 0.6s;">
+                <div class="card-body">
+                    <h6 class="stat-title">Netto +/-</h6>
+                    <p class="stat-value mb-0">
+                       <i class="fas fa-scale-balanced fa-fw"></i>
+                        <span id="dashboardNetDiff">{{ '0.00' | currency }}</span>
+                   </p>
+               </div>
+            </div>
+       </div>
+
+       <!-- Total Indsats -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card dashboard-card text-light fade-in-up" style="animation-delay: 0.7s;">
+                <div class="card-body">
+                   <h6 class="stat-title">Total Indsats</h6>
+                   <p class="stat-value mb-0">
+                      <i class="fas fa-coins fa-fw"></i>
+                       <span id="dashboardTotalStaked">{{ total_staked | default('0.00') | currency }}</span>
+                   </p>
+                </div>
+           </div>
+       </div>
+   </div>
+
+    {# ----- TREDJE RÆKKE - DIAGRAM & LISTE KORT ----- #}
+    <div class="row g-4 mb-4">
+
+       {# -- Diagram (Saldo Udvikling) -- #}
+        <div class="col-lg-8">
+             <div class="card dashboard-card text-light chart-card fade-in-up" style="animation-delay: 0.8s;">
+                 <div class="card-header">
+                     <h5><i class="fas fa-chart-area"></i> Saldo Udvikling (Sidste 7 dage)</h5>
+                 </div>
+                 <div class="card-body">
+                     <canvas id="balanceChart" style="display: none; min-height: 250px;"></canvas>
+                     <div id="chartPlaceholder" class="placeholder-container d-flex justify-content-center align-items-center text-muted">
+                         <div class="spinner-border spinner-border-sm me-2" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                         </div>
+                         <span>Indlæser diagram...</span>
+                     </div>
+                 </div>
+             </div>
+         </div>
+
+       {# -- Seneste Aktiviteter Kort -- #}
+       <div class="col-lg-4">
+           <div class="card dashboard-card text-light list-card fade-in-up" style="animation-delay: 0.9s;">
+                <div class="card-header">
+                    <h5><i class="fas fa-history"></i> Seneste Aktivitet</h5>
+                </div>
+               <div class="card-body list-card-body p-0">
+                    <ul class="list-group list-group-flush activity-list" id="recentActivityList" style="max-height: none; overflow-y: visible;">
+                         <div id="recentActivityPlaceholder" class="placeholder-container list-placeholder d-flex justify-content-center align-items-center text-muted p-3">
+                             <span>Henter aktivitet...</span>
+                         </div>
+                    </ul>
+               </div>
+           </div>
+       </div>
+    </div> <!-- Slut på TREDJE RÆKKE -->
+
+
+    {# ----- FJERDE RÆKKE - ANDRE LISTE KORT ----- #}
+    <div class="row g-4">
+       {# -- Nyt fra Forum -- #}
+       <div class="col-lg-4 col-md-6">
+           <div class="card dashboard-card text-light list-card fade-in-up" style="animation-delay: 1.0s;">
+                <div class="card-header">
+                    <h5><i class="far fa-comments"></i> Nyt fra Forum</h5>
+               </div>
+               <div class="card-body list-card-body p-0"> {# Ensured list-card-body #}
+                    <!-- *** OPDATERET ID HER *** -->
+                    <ul class="list-group list-group-flush activity-list custom-scrollbar" id="latestForumPostsList" style="max-height: 300px; overflow-y: auto;">
+                         {# Placeholder er stadig den samme ID #}
+                         <div id="forumPlaceholder" class="placeholder-container list-placeholder d-flex justify-content-center align-items-center text-muted p-3">
+                             <span>Henter forum posts...</span>
+                        </div>
+                         {# Indhold indsættes af AJAX vha. renderLatestPostItem #}
+                    </ul>
+                </div>
+            </div>
+       </div>
+
+       {# -- Åbne Sessions & Invites -- #}
+       <div class="col-lg-4 col-md-6">
+           <div class="card dashboard-card text-light list-card fade-in-up" style="animation-delay: 1.1s;">
+                <div class="card-header">
+                   <h5><i class="fas fa-gamepad"></i> Sessions & Invites</h5>
+                </div>
+               <div class="card-body list-card-body p-0"> {# Ensured list-card-body #}
+                   <ul class="list-group list-group-flush activity-list custom-scrollbar" id="sessionsInvitesList" style="max-height: 300px; overflow-y: auto;">
+                        {# Placeholder #}
+                        <div id="sessionsPlaceholder" class="placeholder-container list-placeholder d-flex justify-content-center align-items-center text-muted p-3">
+                           <span>Henter sessions...</span>
+                        </div>
+                        {# Indhold indsættes af AJAX #}
+                   </ul>
+                </div>
+            </div>
+        </div>
+
+        {# -- Hurtige Handlinger -- #}
+        <div class="col-lg-4 col-md-12">
+             <div class="card dashboard-card text-light list-card quick-actions-card fade-in-up" style="animation-delay: 1.2s;">
+                 <div class="card-header">
+                     <h5><i class="fas fa-bolt"></i> Hurtige Links</h5>
+                 </div>
+                 <div class="card-body text-center">
+                     <p class="text-muted mb-3 small">Direkte adgang til populære funktioner.</p>
+                     {# Eksempel knapper - Juster href efter dine routes #}
+                     <a href="{{ url_for('main.game_area_page') if 'main.game_area_page' in config['URL_RULES'] else '#' }}" class="btn btn-primary m-1 btn-sm"><i class="fas fa-dice-d6 me-1"></i> Start Spil</a>
+                     <a href="#" class="btn btn-success m-1 btn-sm" onclick="alert('Indbetaling ikke implementeret endnu!'); return false;"><i class="fas fa-wallet me-1"></i> Indbetal</a>
+                     <a href="{{ url_for('main.history') if 'main.history' in config['URL_RULES'] else '#' }}" class="btn btn-info m-1 btn-sm"><i class="fas fa-list me-1"></i> Se Historik</a>
+                     {# Link til profil - brug den korrekte username variabel fra context eller current_user #}
+                     <a href="{{ url_for('main.profile', username=current_user.username) if current_user.is_authenticated else '#' }}" class="btn btn-secondary m-1 btn-sm"><i class="fas fa-user-edit me-1"></i> Rediger Profil</a>
+                 </div>
+             </div>
+        </div>
+
+    </div> <!-- Slut på FJERDE RÆKKE -->
+
+    {# ----- Ekstra: Område til fejlmeddelelser fra JS ----- #}
+    <div id="dashboardErrorDisplay" class="alert alert-danger mt-4 d-none" role="alert">
+        {# Denne vises af JS ved f.eks. fejl i fetchDashboardStats #}
+    </div>
+
+</div> <!-- /container-fluid -->
+{% endblock %}
+
+{# ----- scripts_extra blok ----- #}
+{% block scripts_extra %}
+{# super() er unødvendig her, da base-blokken er tom #}
+
+{# Chart.JS BIBLIOTEK - Perfekt her, kun nødvendig for denne side #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+{# Husk date adapter hvis du bruger tidsakser med Chart.js #}
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js" defer></script>
+
+{# Dedikeret dashboard JS - Perfekt her #}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
+{% endblock %}
+

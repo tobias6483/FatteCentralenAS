@@ -1,0 +1,850 @@
+{% extends "base.html" %}
+
+{% block title %}Aktiedyst Dashboard - FatteCentralen ApS{% endblock %}
+
+{% block head_extra %}
+  {# Tilføj eventuel custom CSS her for at forfine udseendet #}
+  {# Link til den nye eksterne CSS fil for aktiedyst specifikke styles #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/aktiedyst.css') }}">
+{% endblock %}
+
+{% block content %}
+  <!-- Aktiedyst Dashboard Header -->
+  <header class="aktiedyst-header text-center mb-5">
+    {# Eventuelt et logo her #}
+    {# <img src="{{ url_for('static', filename='images/logo.png') }}" alt="FatteCentralen Logo" width="100"> #}
+    <h1 class="aktiedyst-title display-5">Aktiedyst Dashboard</h1>
+    <p class="aktiedyst-subtitle lead text-muted">
+      FatteCentralens A/S - Opret porteføljer, handl Aktier, ETF'er, Crypto, Indeks, Råvarer. Brug stop-loss, analyser, se grafer & dividender.
+    </p>
+  </header>
+
+  <!-- Dashboard Tabs Navigation -->
+  <nav>
+    <div class="nav nav-tabs custom-nav-tabs mb-4" id="aktiedystTabs" role="tablist">
+      {# TAB KNAPPER - Samme struktur, men opdateret navne/ikoner for klarhed #}
+      <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overviewTabPane" type="button" role="tab" aria-controls="overviewTabPane" aria-selected="true">
+        <i class="bi bi-grid-1x2-fill me-1"></i> Oversigt & Handel
+      </button>
+      <button class="nav-link" id="portfolio-tab" data-bs-toggle="tab" data-bs-target="#portfolioTabPane" type="button" role="tab" aria-controls="portfolioTabPane" aria-selected="false">
+        <i class="bi bi-briefcase-fill me-1"></i> Porteføljer & Beholdning
+      </button>
+      <button class="nav-link" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlistTabPane" type="button" role="tab" aria-controls="watchlistTabPane" aria-selected="false">
+        <i class="bi bi-star-fill me-1"></i> Watchlist
+      </button>
+      <button class="nav-link" id="orders-tab" data-bs-toggle="tab" data-bs-target="#ordersTabPane" type="button" role="tab" aria-controls="ordersTabPane" aria-selected="false">
+        <i class="bi bi-lightning-charge-fill me-1"></i> Avancerede Ordrer
+      </button>
+      <button class="nav-link" id="analytics-tab" data-bs-toggle="tab" data-bs-target="#analyticsTabPane" type="button" role="tab" aria-controls="analyticsTabPane" aria-selected="false">
+        <i class="bi bi-graph-up-arrow me-1"></i> Analyse & Grafer
+      </button>
+      <button class="nav-link" id="dividends-tab" data-bs-toggle="tab" data-bs-target="#dividendsTabPane" type="button" role="tab" aria-controls="dividendsTabPane" aria-selected="false">
+        <i class="bi bi-piggy-bank-fill me-1"></i> Dividender
+      </button>
+      <button class="nav-link" id="transactions-tab" data-bs-toggle="tab" data-bs-target="#transactionsTabPane" type="button" role="tab" aria-controls="transactionsTabPane" aria-selected="false">
+        <i class="bi bi-clock-history me-1"></i> Transaktionshistorik
+      </button>
+      <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settingsTabPane" type="button" role="tab" aria-controls="settingsTabPane" aria-selected="false">
+        <i class="bi bi-gear-fill me-1"></i> Indstillinger
+      </button>
+    </div>
+  </nav>
+
+  <!-- Tabs Content -->
+  {# Give container ID to potentially scope aktiedyst.js selectors if needed #}
+  <div class="tab-content" id="aktiedystContainer"> {# Added ID here #}
+
+    <!-- ===== OVERSIGT & HURTIG HANDEL TAB ===== -->
+    <section class="tab-pane fade show active" id="overviewTabPane" role="tabpanel" aria-labelledby="overview-tab" tabindex="0">
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-wallet2 me-1"></i> Økonomisk Status (Samlet)</div>
+        <div class="card-body">
+          <div class="row text-center g-3">
+            <div class="col-md-4">
+              <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-muted">Kontant Saldo</h6>
+                  <p id="display-balance" class="aktiedyst-value data-placeholder"> Laster... DKK</p> {# Added placeholder class #}
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+               <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-muted">Total Porteføljeværdi</h6>
+                  <p id="display-portfolio-value" class="aktiedyst-value data-placeholder">Laster... DKK</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+               <div class="card h-100">
+                <div class="card-body">
+                  <h6 class="card-title text-muted">Samlet Resultat (I dag)</h6>
+                  <p id="display-profit-loss" class="aktiedyst-value no-change data-placeholder">Laster... DKK (0.00%)</p> {# Start with no-change #}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hurtig Søgning & Handel -->
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-search me-1"></i> Hurtig Søgning & Handel</div>
+        <div class="card-body">
+          {# -- SØGNING -- #}
+          <form id="asset-search-form" class="mb-4">
+            <label for="asset-symbol-input" class="form-label">Søg symbol (Aktie, ETF, Indeks, Crypto, Råvare...)</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="text" class="form-control form-control-lg" id="asset-symbol-input" placeholder="F.eks. AAPL, NOVO B, DAX, BTC-USD, GULD" aria-label="Søg symbol" list="commonSymbols">
+               {# Autocomplete/datalist kan populeres af JS #}
+               <datalist id="commonSymbols">
+                  <option value="AAPL">
+                  <option value="MSFT">
+                  <option value="NOVO B">
+                  <option value="^OMXC25">
+                  <option value="BTC-USD">
+                  <option value="GC=F"> {/* Gold Futures */}
+                </datalist>
+              <button class="btn btn-primary" type="submit" id="search-button">
+                <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                <span class="btn-text">Søg</span>
+                </button>
+            </div>
+            <div id="search-error" class="text-danger mt-1 error-message"></div>
+          </form>
+
+          {# -- SØGERESULTAT & KURSDISPLAY -- #}
+          <div id="asset-info-display" class="mb-4 p-3 bg-dark rounded" style="display: none;"> {# Skjult indtil søgning #}
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 id="asset-name" class="data-placeholder">[Asset Name]</h5>
+                <small id="asset-symbol" class="text-muted">[SYMBOL]</small>
+              </div>
+              <div class="text-end">
+                <h4 id="asset-price" class="aktiedyst-value data-placeholder">0.00</h4>
+                <span id="asset-change" class="no-change">[Change]</span>
+              </div>
+            </div>
+            <small class="text-muted">Senest opdateret: <span id="asset-timestamp" class="data-placeholder">-</span></small>
+          </div>
+
+          {# -- KØB/SÆLG KORT -- #}
+          <div class="row g-3">
+            <!-- Køb-kort -->
+            <div class="col-md-6">
+              <div class="card buy-card h-100">
+                <div class="card-header"><i class="bi bi-arrow-up-circle-fill me-1"></i> Køb</div>
+                <div class="card-body">
+                  <form id="quick-buy-form">
+                    <input type="hidden" id="buy-asset-symbol" name="symbol"> {# Sættes af JS efter søgning #}
+                    <div class="form-floating mb-3">
+                      <input type="number" class="form-control" id="buy-shares" placeholder="Antal" required min="0" step="any">
+                      <label for="buy-shares">Antal / Mængde</label>
+                    </div>
+                    <div class="form-floating mb-3">
+                       <input type="number" class="form-control" id="buy-limit-price" placeholder="Valgfri" step="any" min="0">
+                       <label for="buy-limit-price">Limit Købspris (valgfri)</label>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                          <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                          <span class="btn-text">Køb Nu</span>
+                         </button>
+                    </div>
+                     <div id="buy-error" class="text-danger mt-2 error-message"></div>
+                     <small class="form-text text-light opacity-75 data-placeholder">Køber <span id="buy-asset-name-display">[VÆLG ASSET]</span>. Kræver <span id="buy-cost-estimate">0.00</span> DKK.</small> {# Estimat beregnes af JS #}
+                  </form>
+                </div>
+              </div>
+            </div>
+            <!-- Sælg-kort -->
+            <div class="col-md-6">
+              <div class="card sell-card h-100">
+                <div class="card-header"><i class="bi bi-arrow-down-circle-fill me-1"></i> Sælg</div>
+                <div class="card-body">
+                  <form id="quick-sell-form">
+                     <input type="hidden" id="sell-asset-symbol" name="symbol"> {# Sættes af JS efter søgning eller fra beholdning #}
+                     <div class="form-floating mb-3">
+                      <input type="number" class="form-control" id="sell-shares" placeholder="Antal" required min="0" step="any">
+                      <label for="sell-shares">Antal / Mængde</label>
+                    </div>
+                     <div class="form-floating mb-3">
+                       <input type="number" class="form-control" id="sell-limit-price" placeholder="Valgfri" step="any" min="0">
+                       <label for="sell-limit-price">Limit Salgspris (valgfri)</label>
+                    </div>
+                    <div class="d-grid">
+                         <button type="submit" class="btn btn-danger btn-lg">
+                           <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                           <span class="btn-text">Sælg Nu</span>
+                          </button>
+                    </div>
+                    <div id="sell-error" class="text-danger mt-2 error-message"></div>
+                     <small class="form-text text-light opacity-75 data-placeholder">Sælger <span id="sell-asset-name-display">[VÆLG ASSET]</span>. Max <span id="sell-available-shares">0</span> stk tilgængelig.</small> {# Antal hentes af JS #}
+                  </form>
+                </div>
+              </div>
+            </div>
+          </div> {# /row for Køb/Sælg #}
+        </div> {# /card-body #}
+      </div> {# /card - Hurtig Søgning & Handel #}
+    </section>
+
+    <!-- ===== PORTEFØLJER & BEHOLDNING TAB ===== -->
+    <section class="tab-pane fade" id="portfolioTabPane" role="tabpanel" aria-labelledby="portfolio-tab" tabindex="0">
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-folder-plus me-1"></i> Administrer Porteføljer</div>
+            <div class="card-body">
+                <form id="portfolio-management-form" class="row g-3 align-items-end mb-4 border-bottom pb-4">
+                    <div class="col-md-5">
+                        <div class="form-floating">
+                            <input type="text" id="portfolio-name" class="form-control" placeholder="Navn på ny portefølje" required>
+                            <label for="portfolio-name">Porteføljenavn</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-floating">
+                            <select id="portfolio-currency" class="form-select" required>
+                                <option value="" disabled selected>Vælg valuta...</option>
+                                <option value="DKK">DKK (Danske Kroner)</option>
+                                <option value="USD">USD (US Dollar)</option>
+                                <option value="EUR">EUR (Euro)</option>
+                                {# Flere valutaer kan tilføjes her #}
+                            </select>
+                            <label for="portfolio-currency">Valuta</label>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-success w-100">
+                            <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                            <span class="btn-text"><i class="bi bi-plus-circle me-1"></i> Opret Ny</span>
+                        </button>
+                    </div>
+                     <div id="portfolio-create-error" class="col-12 text-danger mt-2 error-message"></div>
+                </form>
+
+                <h5 class="mb-3">Eksisterende Porteføljer</h5>
+                <div id="portfolio-list-container">
+                  <p id="portfolio-loading-msg" class="data-placeholder">Henter porteføljer...</p>
+                  <div id="portfolio-list-error" class="alert alert-danger error-message"></div>
+                  <ul id="portfolio-list" class="list-group">
+                      {# Eksempel / Placeholder struktur - Genereres af JS #}
+                      <li class="list-group-item d-flex justify-content-between align-items-center data-placeholder" style="opacity: 0.5;">
+                          <span>
+                            <strong class="portfolio-item-name">[Laster...]</strong>
+                            <small class="text-muted ms-2">([---])</small>
+                          </span>
+                          <span>
+                            <button class="btn btn-sm btn-outline-primary me-2" disabled><i class="bi bi-pencil-square"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" disabled><i class="bi bi-trash"></i></button>
+                          </span>
+                      </li>
+                  </ul>
+                </div>
+            </div> {# /card-body #}
+        </div> {# /card - Administrer Porteføljer #}
+
+        <div class="card mb-4">
+          <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-stack me-1"></i> Detaljeret Beholdning</span>
+                <div class="col-md-4">
+                    <select id="portfolio-filter-detailed" class="form-select form-select-sm" aria-label="Filtrer beholdning efter portefølje">
+                        <option value="all" selected>Vis for Alle Porteføljer</option>
+                        {# Options tilføjes af JS baseret på portfolio-list #}
+                        {# <option value="[ID1]">Min Aktieportefølje (DKK)</option> #}
+                         {# <option value="[ID2]">Min Crypto (USD)</option> #}
+                    </select>
+                </div>
+            </div>
+           </div>
+          <div class="card-body">
+             <p id="holdings-loading-msg" class="data-placeholder">Henter beholdning...</p>
+             <div id="holdings-error" class="alert alert-danger error-message"></div>
+            <div class="table-responsive">
+              <table class="table table-dark table-striped table-hover align-middle" id="detailed-holdings-table">
+                <thead>
+                  <tr>
+                    <th scope="col">Type</th> {# Sort/Filter ikoner tilføjes evt. af JS eller fjernes #}
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Navn</th>
+                    <th scope="col" class="text-end">Antal</th>
+                    <th scope="col" class="text-end">Gns. Købspris</th>
+                    <th scope="col" class="text-end">Nuv. Kurs</th>
+                    <th scope="col" class="text-end">Markedsværdi</th>
+                    <th scope="col" class="text-end">Gevinst/Tab (%)</th>
+                    <th scope="col" class="text-center">Handlinger</th>
+                  </tr>
+                </thead>
+                <tbody id="detailed-holdings-body">
+                  {# Placeholder Række VIGTIG for UX mens data hentes #}
+                  <tr id="holdings-placeholder-row" class="data-placeholder">
+                      <td colspan="9" class="text-center py-4">
+                           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                           Henter data...
+                      </td>
+                  </tr>
+                  {# "Ingen Data" række - skjult by default, vist af JS #}
+                  <tr id="holdings-no-results-row" style="display: none;">
+                      <td colspan="9" class="text-center text-muted py-3">Ingen beholdning fundet for valgte portefølje.</td>
+                  </tr>
+                  {# Data rækker genereres af JS #}
+                </tbody>
+                <tfoot id="holdings-table-foot" style="display: none;"> {# Skjult indtil data #}
+                    <tr>
+                        <td colspan="6" class="text-end fw-bold border-0">Total Værdi:</td>
+                        <td id="holdings-total-value" class="text-end fw-bold border-0 data-placeholder"> Laster...</td>
+                        <td id="holdings-total-profit" class="text-end fw-bold border-0 no-change data-placeholder">Laster...</td>
+                        <td class="border-0"></td> {# Tom celle for handlings kolonne #}
+                    </tr>
+                </tfoot>
+              </table>
+            </div>
+            <small class="text-muted">*Kurser opdateres periodisk. Gevinst/tab er urealiseret.</small>
+          </div> {# /card-body #}
+        </div> {# /card - Detaljeret Beholdning #}
+    </section>
+
+    <!-- ===== WATCHLIST TAB ===== -->
+    <section class="tab-pane fade" id="watchlistTabPane" role="tabpanel" aria-labelledby="watchlist-tab" tabindex="0">
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-bookmark-plus-fill me-1"></i> Tilføj til Watchlist</div>
+        <div class="card-body">
+          <form id="add-watchlist-form" class="row g-3 align-items-end">
+             <div class="col-md-5">
+                 <div class="form-floating">
+                   <input type="text" id="watchlist-symbol" class="form-control" placeholder="Symbol" required list="commonSymbols">
+                   <label for="watchlist-symbol">Symbol (Aktie/ETF/Crypto osv.)</label>
+                 </div>
+            </div>
+             <div class="col-md-5">
+                 <div class="form-floating">
+                   <input type="text" id="watchlist-note" class="form-control" placeholder="Note (valgfri)">
+                   <label for="watchlist-note">Notat (valgfri)</label>
+                 </div>
+            </div>
+            <div class="col-md-2">
+               <button type="submit" class="btn btn-primary w-100">
+                  <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                  <span class="btn-text"><i class="bi bi-plus-lg"></i> Tilføj</span>
+                </button>
+            </div>
+             <div id="watchlist-add-error" class="col-12 text-danger mt-2 error-message"></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="card mb-4">
+          <div class="card-header"><i class="bi bi-star-fill me-1"></i> Min Watchlist</div>
+          <div class="card-body">
+             <p id="watchlist-loading-msg" class="data-placeholder">Henter watchlist...</p>
+             <div id="watchlist-error" class="alert alert-danger error-message"></div>
+            <div class="table-responsive">
+              <table class="table table-dark table-striped table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Navn</th>
+                    <th scope="col" class="text-end">Seneste Kurs</th>
+                    <th scope="col" class="text-end">Ændring (dag)</th>
+                    <th scope="col">Notat</th>
+                    <th scope="col" class="text-center">Handlinger</th>
+                  </tr>
+                </thead>
+                <tbody id="watchlist-body">
+                  {# Placeholder række #}
+                   <tr id="watchlist-placeholder-row" class="data-placeholder">
+                       <td colspan="6" class="text-center py-4">
+                           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                           Henter data...
+                      </td>
+                  </tr>
+                   {# "Ingen Data" række #}
+                  <tr id="watchlist-no-results-row" style="display: none;">
+                      <td colspan="6" class="text-center text-muted py-3">Din watchlist er tom. Tilføj symboler ovenfor.</td>
+                  </tr>
+                   {# Data rækker genereres af JS #}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+    </section>
+
+    <!-- ===== AVANCEREDE ORDRER TAB ===== -->
+    <section class="tab-pane fade" id="ordersTabPane" role="tabpanel" aria-labelledby="orders-tab" tabindex="0">
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-shield-lock-fill me-1"></i> Opret Avanceret Ordre</div>
+            <div class="card-body">
+                 <form id="advanced-order-form" class="row g-3 align-items-end">
+                     <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="text" id="adv-order-symbol" class="form-control" placeholder="Symbol" required list="ownedSymbols"> {# Måske liste over egne aktier #}
+                             <label for="adv-order-symbol">Symbol</label>
+                        </div>
+                        <datalist id="ownedSymbols">
+                          {# Populeres af JS med brugerens beholdning #}
+                           {# <option value="AAPL"> #}
+                           {# <option value="MSFT"> #}
+                        </datalist>
+                     </div>
+                      <div class="col-md-3">
+                         <div class="form-floating">
+                             <select id="adv-order-type" class="form-select" required>
+                                 <option value="" disabled selected>Vælg ordretype...</option>
+                                 <option value="stop-loss">Stop-Loss (Sælg ved/under pris)</option>
+                                 <option value="take-profit">Take-Profit (Sælg ved/over pris)</option>
+                                 <option value="limit-buy">Limit Køb (Køb ved/under pris)</option>
+                                 <option value="limit-sell">Limit Sælg (Sælg ved/over pris)</option>
+                             </select>
+                             <label for="adv-order-type">Ordretype</label>
+                         </div>
+                     </div>
+                      <div class="col-md-2">
+                         <div class="form-floating">
+                             <input type="number" id="adv-order-price" class="form-control" placeholder="Pris" required step="any" min="0">
+                             <label for="adv-order-price" id="adv-order-price-label">Trigger/Limit Pris</label> {# Label ændres evt. af JS #}
+                         </div>
+                     </div>
+                      <div class="col-md-2">
+                         <div class="form-floating">
+                             <input type="number" id="adv-order-shares" class="form-control" placeholder="Antal" required step="any" min="0">
+                             <label for="adv-order-shares">Antal / Mængde</label>
+                         </div>
+                     </div>
+                      <div class="col-md-2">
+                          <button type="submit" class="btn btn-warning w-100">
+                              <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                              <span class="btn-text"><i class="bi bi-plus-circle-dotted"></i> Opret Ordre</span>
+                            </button>
+                      </div>
+                      <div id="adv-order-error" class="col-12 text-danger mt-2 error-message"></div>
+                      <div class="col-12">
+                         <small class="text-muted data-placeholder">F.eks: Sæt et Stop-Loss på AAPL ved 170 USD for 5 aktier.</small>
+                     </div>
+                 </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+          <div class="card-header"><i class="bi bi-list-check me-1"></i> Aktive Avancerede Ordrer</div>
+          <div class="card-body">
+              <p id="active-orders-loading-msg" class="data-placeholder">Henter aktive ordrer...</p>
+             <div id="active-orders-error" class="alert alert-danger error-message"></div>
+            <div class="table-responsive">
+              <table class="table table-dark table-striped table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th scope="col">Oprettet</th>
+                    <th scope="col">Symbol</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="text-end">Trigger/Limit Pris</th>
+                    <th scope="col" class="text-end">Antal</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-center">Annuller</th>
+                  </tr>
+                </thead>
+                <tbody id="active-advanced-orders-body">
+                   {# Placeholder række #}
+                   <tr id="adv-orders-placeholder-row" class="data-placeholder">
+                       <td colspan="7" class="text-center py-4">
+                           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                           Henter data...
+                      </td>
+                  </tr>
+                   {# "Ingen Data" række #}
+                  <tr id="adv-orders-no-results-row" style="display: none;">
+                      <td colspan="7" class="text-center text-muted py-3">Ingen aktive avancerede ordrer.</td>
+                  </tr>
+                  {# Data rækker genereres af JS #}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+    </section>
+
+    <!-- ===== ANALYSE & GRAFER TAB ===== -->
+    <section class="tab-pane fade" id="analyticsTabPane" role="tabpanel" aria-labelledby="analytics-tab" tabindex="0">
+       <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-binoculars-fill me-1"></i> Værktøjer til Analyse</div>
+        <div class="card-body">
+            <form id="analysis-form" class="row g-3 align-items-end mb-4"> {# Made it a form #}
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input type="text" id="analysis-symbol" class="form-control" placeholder="Symbol" list="allSymbols" required> {# Added required #}
+                        <label for="analysis-symbol">Vælg Symbol</label>
+                    </div>
+                    <datalist id="allSymbols">
+                         {# Populeres af JS #}
+                    </datalist>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <select id="analysis-indicator" class="form-select">
+                            <option value="price" selected>Pris Graf</option>
+                            <option value="rsi">RSI (Relative Strength Index)</option>
+                            <option value="macd">MACD (Moving Average Convergence Divergence)</option>
+                            <option value="bollinger">Bollinger Bands</option>
+                        </select>
+                         <label for="analysis-indicator">Vælg Indikator/Analyse</label>
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <div class="btn-group" role="group" aria-label="Tidsramme for graf" id="analysis-interval-group">
+                      <input type="radio" class="btn-check" name="analysis_interval" id="int-1d" value="1d" checked>
+                      <label class="btn btn-outline-secondary" for="int-1d">1D</label>
+
+                      <input type="radio" class="btn-check" name="analysis_interval" id="int-5d" value="5d">
+                      <label class="btn btn-outline-secondary" for="int-5d">5D</label>
+
+                      <input type="radio" class="btn-check" name="analysis_interval" id="int-1mo" value="1mo">
+                      <label class="btn btn-outline-secondary" for="int-1mo">1M</label>
+
+                       <input type="radio" class="btn-check" name="analysis_interval" id="int-6mo" value="6mo">
+                      <label class="btn btn-outline-secondary" for="int-6mo">6M</label>
+
+                       <input type="radio" class="btn-check" name="analysis_interval" id="int-1y" value="1y">
+                      <label class="btn btn-outline-secondary" for="int-1y">1Å</label>
+
+                       <input type="radio" class="btn-check" name="analysis_interval" id="int-max" value="max">
+                      <label class="btn btn-outline-secondary" for="int-max">MAX</label>
+                    </div>
+                </div>
+                 <div class="col">
+                   <button type="submit" class="btn btn-primary w-100" id="run-analysis-btn">
+                       <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                       <span class="btn-text"><i class="bi bi-graph-up"></i> Vis Analyse</span>
+                    </button>
+                </div>
+            </form>
+
+             <div id="analysis-result-container">
+                  <div id="analysis-loading" class="text-center py-5" style="display: none;"> {# Changed from loading-spinner class #}
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Genererer analyse for <span id="analysis-loading-symbol"></span>...</p>
+                 </div>
+                 <div id="analysis-error" class="alert alert-danger error-message"></div>
+
+                 <div id="chart-placeholder" class="bg-dark p-3 rounded" style="display: none;">
+                      <canvas id="aktiedystChart"></canvas>
+                      {# Placeholder message removed, show loading or error instead #}
+                 </div>
+                 <div id="text-analysis-placeholder" class="mt-4 p-3 bg-dark rounded" style="display: none;">
+                    <h5>Nøgletal for <span id="key-figures-symbol"></span></h5>
+                    <div id="key-figures-content" class="data-placeholder">Henter nøgletal...</div>
+                </div>
+             </div>
+        </div> {# /card-body #}
+       </div> {# /card #}
+    </section>
+
+    <!-- ===== DIVIDENDER TAB ===== -->
+     <section class="tab-pane fade" id="dividendsTabPane" role="tabpanel" aria-labelledby="dividends-tab" tabindex="0">
+         <div class="card mb-4">
+           <div class="card-header d-flex justify-content-between align-items-center">
+             <span><i class="bi bi-calendar-check-fill me-1"></i> Modtagne & Forventede Dividender</span>
+           </div>
+           <div class="card-body">
+              <p id="dividends-loading-msg" class="data-placeholder">Henter dividende data...</p>
+             <div id="dividends-error" class="alert alert-danger error-message"></div>
+               <div class="table-responsive">
+                   <table class="table table-dark table-striped table-hover align-middle">
+                     <thead>
+                       <tr>
+                         <th scope="col">Symbol</th>
+                         <th scope="col">Ex-Dividend Dato</th>
+                         <th scope="col">Betalingsdato</th>
+                         <th scope="col" class="text-end">Beløb pr. Aktie</th>
+                         <th scope="col" class="text-end">Antal Aktier</th>
+                         <th scope="col" class="text-end">Total Modtaget (før skat)</th>
+                         <th scope="col">Status</th>
+                       </tr>
+                     </thead>
+                     <tbody id="dividends-table-body">
+                        {# Placeholder række #}
+                       <tr id="dividends-placeholder-row" class="data-placeholder">
+                           <td colspan="7" class="text-center py-4">
+                               <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                               Henter data...
+                          </td>
+                      </tr>
+                       {# "Ingen Data" række #}
+                      <tr id="dividends-no-results-row" style="display: none;">
+                          <td colspan="7" class="text-center text-muted py-3">Ingen dividendeinformation fundet.</td>
+                      </tr>
+                      {# Data rækker genereres af JS #}
+                     </tbody>
+                     <tfoot id="dividends-table-foot" style="display: none;"> {# Skjult indtil data #}
+                        <tr>
+                            <td colspan="5" class="text-end fw-bold border-0">Total Modtaget (Sidste 12mdr):</td> {# Eller anden periode? #}
+                            <td id="dividends-total" class="text-end fw-bold border-0 data-placeholder"> Laster...</td>
+                            <td class="border-0"></td>
+                        </tr>
+                     </tfoot>
+                   </table>
+               </div>
+                 <small class="text-muted">*Data er vejledende og kan afhænge af broker. Skat er ikke medregnet.</small>
+           </div>
+         </div>
+     </section>
+
+    <!-- ===== TRANSAKTIONSHISTORIK TAB ===== -->
+    <section class="tab-pane fade" id="transactionsTabPane" role="tabpanel" aria-labelledby="transactions-tab" tabindex="0">
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-filter-circle-fill me-1"></i> Filtrer Transaktioner</div>
+         <div class="card-body">
+            <form id="transaction-filter-form" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                     <div class="form-floating">
+                         <select id="filter-trans-type" class="form-select">
+                             <option value="all" selected>Alle Typer</option>
+                             <option value="buy">Køb</option>
+                             <option value="sell">Sælg</option>
+                             <option value="dividend">Dividende</option>
+                             <option value="fee">Gebyr</option>
+                             <option value="deposit">Indskud</option> {# Eksempel #}
+                             <option value="withdraw">Udbetaling</option> {# Eksempel #}
+                         </select>
+                         <label for="filter-trans-type">Transaktionstype</label>
+                     </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-floating">
+                        <input type="text" id="filter-trans-symbol" class="form-control" placeholder="Symbol" list="allSymbols">
+                        <label for="filter-trans-symbol">Symbol (valgfri)</label>
+                    </div>
+                </div>
+                 <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="date" id="filter-trans-date-from" class="form-control">
+                        <label for="filter-trans-date-from">Fra Dato</label>
+                    </div>
+                </div>
+                 <div class="col-md-2">
+                    <div class="form-floating">
+                        <input type="date" id="filter-trans-date-to" class="form-control">
+                        <label for="filter-trans-date-to">Til Dato</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                     <button type="submit" class="btn btn-primary w-100">
+                        <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                        <span class="btn-text"><i class="bi bi-funnel"></i> Filtrer</span>
+                      </button>
+                 </div>
+                 <div id="trans-filter-error" class="col-12 text-danger mt-2 error-message"></div>
+            </form>
+         </div>
+      </div>
+
+      <div class="card mb-4">
+        <div class="card-header"><i class="bi bi-receipt-cutoff me-1"></i> Transaktionshistorik</div>
+        <div class="card-body">
+           <p id="transactions-loading-msg" class="data-placeholder">Henter transaktioner...</p>
+           <div id="transactions-error" class="alert alert-danger error-message"></div>
+           <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover table-sm align-middle"> {# table-sm for mere kompakt view #}
+              <thead>
+                <tr>
+                  <th scope="col">Tidspunkt</th>
+                  <th scope="col">Type</th>
+                  <th scope="col">Symbol</th>
+                  <th scope="col" class="text-end">Antal</th>
+                  <th scope="col" class="text-end">Pris pr. Enhed</th>
+                  <th scope="col" class="text-end">Total Beløb</th>
+                  <th scope="col">Valuta</th>
+                   <th scope="col">Portefølje</th>
+                  <th scope="col">Kommentar</th>
+                </tr>
+              </thead>
+              <tbody id="transaction-history-body">
+                 {# Placeholder række #}
+                 <tr id="trans-placeholder-row" class="data-placeholder">
+                     <td colspan="9" class="text-center py-4">
+                          <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         Henter data...
+                    </td>
+                 </tr>
+                  {# "Ingen Data" række #}
+                 <tr id="trans-no-results-row" style="display: none;">
+                      <td colspan="9" class="text-center text-muted py-3">Ingen transaktioner fundet for de valgte filtre.</td>
+                 </tr>
+                 {# Data rækker genereres af JS #}
+              </tbody>
+            </table>
+           </div>
+           {# Eventuel Paginering her - tilføj element og logik i JS #}
+            <nav id="transaction-pagination" aria-label="Transaktioner navigation" class="mt-3" style="display: none;">
+              <ul class="pagination pagination-sm justify-content-center">
+                 {# Paginering knapper genereres af JS #}
+                 {# <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true">Forrige</a></li> #}
+                 {# <li class="page-item active" aria-current="page"><span class="page-link">1</span></li> #}
+                 {# <li class="page-item"><a class="page-link" href="#">2</a></li> #}
+                 {# <li class="page-item"><a class="page-link" href="#">Næste</a></li> #}
+               </ul>
+             </nav>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== INDSTILLINGER TAB ===== -->
+     <section class="tab-pane fade" id="settingsTabPane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
+        <div class="card">
+            <div class="card-header"><i class="bi bi-sliders me-1"></i> Indstillinger & Præferencer</div>
+            <div class="card-body">
+                 <h5 class="mb-3">Generelle Indstillinger</h5>
+                <form id="settings-form">
+                     {# Sektion til API Keys hvis nødvendigt #}
+                     <div class="api-keys-section mb-4 p-3 border border-secondary rounded">
+                          <h6 class="text-warning"><i class="bi bi-key-fill me-2"></i>API Integration (Valgfri)</h6>
+                           <p class="small text-muted">Indtast API nøgler hvis du ønsker at hente data fra eksterne kilder (f.eks. til realtidskurser eller udvidet analyse).</p>
+                           <div class="row mb-3">
+                              <label for="setting-datasource-api-key" class="col-sm-3 col-form-label">Ekstern Datakilde API</label>
+                             <div class="col-sm-9">
+                                 <input type="password" class="form-control" id="setting-datasource-api-key" placeholder="Indtast din API nøgle" autocomplete="off">
+                             </div>
+                          </div>
+                          {# Flere API nøgle felter efter behov #}
+                     </div>
+
+                     <hr>
+                     <h5 class="mb-3 mt-4">Visningsindstillinger</h5>
+                     <div class="row mb-3">
+                        <label for="setting-default-currency" class="col-sm-3 col-form-label">Standard Valuta</label>
+                        <div class="col-sm-9">
+                          <select id="setting-default-currency" name="default_currency" class="form-select w-auto"> {# Added name #}
+                              <option value="DKK">DKK</option>
+                              <option value="USD">USD</option>
+                              <option value="EUR">EUR</option>
+                          </select>
+                          <small class="text-muted d-block">Valuta brugt til oversigts-totaler.</small>
+                        </div>
+                     </div>
+                    {# Fjernede Tema, da det styres globalt? Eller skal det være aktiedyst specifikt? #}
+                     <div class="row mb-3">
+                        <label for="setting-refresh-rate" class="col-sm-3 col-form-label">Opdateringsfrekvens</label>
+                        <div class="col-sm-9">
+                          <select id="setting-refresh-rate" name="refresh_rate" class="form-select w-auto"> {# Added name #}
+                              <option value="30">30 sekunder</option>
+                              <option value="60" selected>1 minut</option>
+                              <option value="300">5 minutter</option>
+                               <option value="0">Manuelt</option>
+                          </select>
+                           <small class="text-muted d-block">Hvor ofte kurser skal forsøges opdateret (kræver aktiv fane).</small>
+                        </div>
+                     </div>
+                     <hr>
+                      <h5 class="mb-3 mt-4">Nulstil Aktiedyst</h5>
+                       <div class="alert alert-danger d-flex align-items-center" role="alert">
+                         <i class="bi bi-exclamation-triangle-fill me-3 fs-4"></i>
+                         <div>
+                           <strong>Advarsel:</strong> Nulstilling sletter ALLE dine porteføljer, beholdninger, ordrer og transaktioner i aktiedysten permanent. Din startkapital vil blive gendannet.
+                           <button type="button" class="btn btn-danger ms-3" id="resetAktiedystBtn">
+                              <i class="bi bi-trash3-fill"></i> Nulstil Min Aktiedyst Nu
+                            </button>
+                         </div>
+                       </div>
+
+                     <hr>
+                     <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+                            <span class="btn-text"><i class="bi bi-save me-1"></i> Gem Indstillinger</span>
+                        </button>
+                    </div>
+                     <div id="settings-save-feedback" class="feedback-area mt-2"></div> {# General feedback area #}
+                 </form>
+            </div>
+        </div>
+     </section>
+
+  </div> <!-- /tab-content -->
+
+  {# ----- MODALS ----- #}
+   <!-- Slet Portefølje Bekræft Modal -->
+    <div class="modal fade" id="deletePortfolioModal" tabindex="-1" aria-labelledby="deletePortfolioModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light">
+          <div class="modal-header border-secondary">
+            <h5 class="modal-title" id="deletePortfolioModalLabel"><i class="bi bi-trash3-fill text-danger me-2"></i> Bekræft Sletning</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            Er du sikker på, at du vil slette porteføljen "<strong id="portfolioNameToDelete"></strong>"? Denne handling sletter porteføljen og dens tilknytning til dine nuværende beholdninger og transaktioner. Beholdninger uden portefølje vises under "Standard".
+            <input type="hidden" id="portfolioIdToDelete">
+             {# Tilføjet advarsel om permanent sletning for standard-portefølje? Skal nok forhindres. #}
+             <div id="deleteDefaultPortfolioWarning" class="alert alert-warning mt-3 small" style="display: none;">
+                <strong>OBS:</strong> Dette ser ud til at være din standardportefølje. Hvis du sletter den, vil en ny blive oprettet.
+             </div>
+          </div>
+          <div class="modal-footer border-secondary">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="button" class="btn btn-danger" id="confirmDeletePortfolioBtn">
+               <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+               <span class="btn-text"><i class="bi bi-trash"></i> Slet Portefølje</span>
+              </button>
+          </div>
+            <div id="deletePortfolioFeedback" class="modal-feedback p-3 text-center small"></div> {# Feedback inde i modalen #}
+        </div>
+      </div>
+    </div>
+
+     <!-- Nulstil Aktiedyst Bekræft Modal -->
+    <div class="modal fade" id="resetAktiedystModal" tabindex="-1" aria-labelledby="resetAktiedystModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-danger text-white"> {# Fare farve #}
+          <div class="modal-header border-light">
+            <h5 class="modal-title" id="resetAktiedystModalLabel"><i class="bi bi-exclamation-octagon-fill me-2"></i> Bekræft Total Nulstilling</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+             <p>Er du <strong>helt sikker</strong> på, at du vil nulstille din aktiedyst?</p>
+             <ul class="small">
+               <li>Alle dine oprettede porteføljer vil blive slettet.</li>
+               <li>Al din nuværende beholdning (aktier, crypto etc.) vil blive slettet.</li>
+               <li>Alle åbne og lukkede ordrer vil blive slettet.</li>
+               <li>Al transaktionshistorik vil blive slettet.</li>
+               <li>Din saldo vil blive nulstillet til startbeløbet.</li>
+             </ul>
+             <p class="fw-bold">Denne handling kan IKKE fortrydes!</p>
+             {# Ekstra bekræftelse #}
+              <div class="form-floating mt-3">
+                  <input type="text" class="form-control form-control-sm" id="resetConfirmationInput" placeholder="Skriv NULSTIL her">
+                  <label for="resetConfirmationInput">Skriv "NULSTIL" for at bekræfte</label>
+              </div>
+          </div>
+          <div class="modal-footer border-light">
+            <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Annuller</button>
+            <button type="button" class="btn btn-light text-danger fw-bold" id="confirmResetAktiedystBtn" disabled> {# Starter deaktiveret #}
+               <span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>
+               <span class="btn-text"><i class="bi bi-trash3-fill"></i> Ja, Nulstil ALT</span>
+              </button>
+          </div>
+            <div id="resetAktiedystFeedback" class="modal-feedback p-3 text-center small"></div> {# Feedback #}
+        </div>
+      </div>
+    </div>
+
+
+{% endblock %}
+
+
+{% block scripts_extra %}
+    {{ super() }} {# Sørger for at base.html's scripts (inkl. utils.js) loades først #}
+
+    {# Betinget loading af Chart.js, hvis nødvendigt for denne side #}
+     {% if config.get('USE_CHARTJS', False) %}
+     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" integrity="sha256-8mqDWlfPy9xjOBwB/09r7MyzqnE4PdBbjx82E6S5Xyc=" crossorigin="anonymous"></script>
+     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    {% endif %}
+
+    {# Loader aktiedyst-specifik JavaScript #}
+    <script src="{{ url_for('static', filename='js/aktiedyst.js') }}" defer></script>
+
+    {# Kommentaren om initialisering er fin at beholde som påmindelse #}
+    {# Flyt initialisering af Aktiedyst data ind i aktiedyst.js on DOMContentLoaded #}
+{% endblock %}

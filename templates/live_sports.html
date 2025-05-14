@@ -1,0 +1,310 @@
+{# templates/live_sports.html - V4 Ready #} {% extends "base.html" %} {% block
+title %}Live Sports Odds - {{ APP_NAME | default('FatteCentralen ApS') }}{%
+endblock %} {% block head_extra %} {# Link til den specifikke Live Sports CSS
+(efter globale CSS) #}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/live_sports.css') }}"
+/>
+{% endblock %} {% block content %}
+<div class="container-fluid pt-4">
+  {# Side Header med titel og kontrolknapper #}
+  <header
+    class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2"
+  >
+    <h1 class="h3 mb-0 me-auto">Live Sports Odds</h1>
+    <div class="d-flex align-items-center flex-wrap gap-2">
+      <button
+        id="show_sports_catalog_btn"
+        class="btn btn-sm btn-outline-secondary"
+        type="button"
+        title="Vis sportskatalog"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#sports_catalog_container"
+        aria-controls="sports_catalog_container"
+      >
+        <span
+          class="spinner-border spinner-border-sm"
+          role="status"
+          aria-hidden="true"
+          style="display: none"
+        ></span>
+        <i class="bi bi-list-ul btn-icon me-1"></i> Sports Katalog
+      </button>
+      <div class="form-check form-switch ms-2">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="auto_refresh_checkbox"
+          title="Slå automatisk opdatering til/fra"
+        />
+        <label class="form-check-label small" for="auto_refresh_checkbox"
+          >Auto Refresh</label
+        >
+      </div>
+      <button
+        id="refresh_sports_btn"
+        class="btn btn-sm btn-primary"
+        type="button"
+        title="Opdatér data manuelt"
+      >
+        <span
+          class="spinner-border spinner-border-sm"
+          role="status"
+          aria-hidden="true"
+          style="display: none"
+        ></span>
+        <i class="bi bi-arrow-clockwise btn-icon"></i> Opdatér Nu
+      </button>
+    </div>
+  </header>
+
+  {# Filter-sektion #}
+  <div class="card dashboard-card mb-4" id="live-sports-filters">
+    <div class="card-header">
+      <h5 class="mb-0 card-header-title">
+        <i class="bi bi-filter-square me-2"></i> Filtrér Begivenheder
+      </h5>
+    </div>
+    <div class="card-body">
+      <form id="sportsFilterForm" onsubmit="return false;">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-3 col-sm-6">
+            <label for="filter_sport_select" class="form-label form-label-sm"
+              >Sport / Liga</label
+            >
+            <select
+              id="filter_sport_select"
+              class="form-select form-select-sm"
+              disabled
+            >
+              {# Starter disabled indtil JS har loadet #} {# Options indsættes
+              af displaySportsCatalog #}
+              <option value="">Indlæser katalog...</option>
+              {# Placeholder indtil katalog er loadet #}
+            </select>
+          </div>
+          <div class="col-md-2 col-sm-6">
+            <label for="filter_region_select" class="form-label form-label-sm"
+              >Region</label
+            >
+            <select id="filter_region_select" class="form-select form-select-sm">
+              <option value="eu" selected>Europa (EU)</option>
+              <option value="us">USA (US)</option>
+              <option value="uk">UK</option>
+              <option value="au">Australien (AU)</option>
+            </select>
+          </div>
+          <div class="col-md-3 col-sm-6">
+            <label for="filter_markets_select" class="form-label form-label-sm"
+              >Marked(er)</label
+            >
+            <select
+              id="filter_markets_select"
+              class="form-select form-select-sm"
+            >
+              <option value="h2h" selected>Kampvinder (H2H)</option>
+              <option value="spreads">Spreads</option>
+              <option value="totals">Totaler (O/U)</option>
+              <option value="h2h,totals">H2H + Totals</option>
+            </select>
+          </div>
+          <div class="col-md-auto col-sm-6 ms-md-auto">
+            <button
+              id="apply_filter_btn"
+              type="button"
+              class="btn btn-primary btn-sm w-100"
+            >
+              <span
+                class="spinner-border spinner-border-sm"
+                role="status"
+                aria-hidden="true"
+                style="display: none"
+              ></span>
+              <i class="bi bi-funnel btn-icon me-1"></i> Anvend Filter
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {# Sports Katalog Offcanvas #}
+  <div
+    class="offcanvas offcanvas-end text-bg-dark"
+    tabindex="-1"
+    id="sports_catalog_container"
+    aria-labelledby="sportsCatalogLabel"
+  >
+    <div class="offcanvas-header border-bottom border-secondary">
+      <h5 class="offcanvas-title" id="sportsCatalogLabel">
+        <i class="bi bi-book me-2"></i>Sportsgrene Katalog
+      </h5>
+      <button
+        type="button"
+        class="btn-close btn-close-white"
+        data-bs-dismiss="offcanvas"
+        aria-label="Close"
+      ></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      {# Container for fejl og loading i katalog #}
+      <div id="catalogLoadingErrorContainer" class="p-3">
+        <div
+          id="catalogLoading"
+          class="text-center py-4 loading-state"
+          style="display: none"
+        >
+          <div
+            class="spinner-border spinner-border-sm text-light"
+            role="status"
+          ></div>
+          <p class="text-muted small mt-2 mb-0">Henter katalog...</p>
+        </div>
+        <div
+          id="catalogError"
+          class="alert alert-warning small error-state"
+          role="alert"
+          style="display: none"
+        >
+          <p class="mb-1">Fejl ved hentning af katalog.</p>
+          {# Tekst sættes af JS #}
+          <a href="#" id="retry_catalog_link" class="alert-link fw-semibold"
+            >Prøv igen</a
+          >.
+        </div>
+      </div>
+      {# Liste med sportsgrene #}
+      <div class="list-group list-group-flush" id="sports_catalog_list">
+        <p
+          id="catalogEmptyMessage"
+          class="text-muted p-3 text-center fst-italic"
+          style="display: none"
+        >
+          Ingen sportsgrene i kataloget.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  {# Container til dynamisk sports data #}
+{# Container for Kupon / Bet Slip #}
+  <div id="coupon_display_area" class="mb-4 p-3 border rounded bg-light-subtle">
+    {# Indhold genereres af static/js/live_sports.js #}
+    <h4>Min Kupon</h4>
+    <p><i>Vælg odds fra listen for at tilføje til din kupon.</i></p>
+  </div>
+  <section id="sports_data_container" aria-live="polite">
+    {# Loading State #}
+    <div
+      id="sportsDataLoading"
+      class="text-center py-5 loading-state d-flex" {# Initially visible #}
+    >
+      {# Start skjult #}
+      <div
+        class="spinner-border text-primary"
+        style="width: 3rem; height: 3rem"
+        role="status"
+      ></div>
+      <p class="lead text-muted mt-3">Henter sports data...</p>
+    </div>
+
+    {# Error State #}
+    <div
+      id="sportsDataError"
+      class="alert alert-danger d-flex align-items-center error-state"
+      role="alert"
+      style="display: none"
+    >
+      {# Start skjult #}
+      <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+      <div>
+        <h5 class="alert-heading">Fejl ved Hentning af Data</h5>
+        <p class="mb-1">
+          Kunne ikke indlæse sportsbegivenheder. Tjek evt. konsollen (F12).
+        </p>
+        {# Generel tekst #}
+        <button
+          class="btn btn-sm btn-danger alert-link mt-2 retry-fetch-link"
+          type="button"
+        >
+          <i class="bi bi-arrow-repeat"></i> Prøv igen
+        </button>
+      </div>
+    </div>
+
+    {# "Ingen Data" besked #}
+    <div
+      id="noDataMessage"
+      class="alert alert-info text-center py-4"
+      style="display: none"
+    >
+      {# Start skjult #}
+      <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+      Ingen sportsbegivenheder fundet for de aktuelle filtre. {# Generel tekst #}
+    </div>
+
+    {# Selve listen #}
+    <div id="sports_events_list" style="display: none">
+      {# Start skjult indtil data er klar #}
+      <!-- Dynamisk indhold indsættes her -->
+    </div>
+  </section>
+{# ----- Session Settings Modal (Identical to game_area.html) ----- #}
+    <div class="modal fade modal-custom" id="sessionSettingsModal" tabindex="-1" aria-labelledby="sessionSettingsModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sessionSettingsModalLabel"><i class="bi bi-gear-wide-connected me-2"></i>Session Indstillinger</h5>
+                    {# No close button in header to force using Cancel/Create #}
+                </div>
+                <div class="modal-body">
+                    <form id="sessionSettingsForm">
+                        {# Session Name (Can be pre-filled by JS) #}
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="modalSessionName" name="session_name" placeholder="." required>
+                            <label for="modalSessionName">Session Navn</label>
+                        </div>
+
+                        {# Max Players #}
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control" id="modalMaxPlayers" name="max_players" placeholder="." min="0" value="0">
+                            <label for="modalMaxPlayers">Max Antal Spillere (0 = Ubegrænset)</label>
+                        </div>
+
+                        {# Private Session Checkbox #}
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="modalIsPrivate" name="is_private">
+                            <label class="form-check-label" for="modalIsPrivate">Privat Session (Kræver Kodeord)</label>
+                        </div>
+
+                        {# Session Password (Shown only if Private is checked) #}
+                        <div class="form-floating mb-3" id="modalPasswordGroup" style="display: none;">
+                            <input type="password" class="form-control" id="modalSessionPassword" name="session_password" placeholder=".">
+                            <label for="modalSessionPassword">Session Kodeord</label>
+                        </div>
+
+                        {# Feedback Area #}
+                        <div id="modalSettingsFeedback" class="feedback-area small text-danger mt-2"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="modalCancelBtn">Annuller</button>
+                    <button type="button" class="btn btn-success" id="modalCreateBtn">
+                        <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                        <i class="bi bi-check-lg btn-icon"></i>
+                        <span class="btn-text">Opret Session</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# ----- End Session Settings Modal ----- #}
+</div>
+{# /container-fluid #} {% endblock %} {% block scripts_extra %} {{ super() }}
+<script
+  src="{{ url_for('static', filename='js/live_sports.js') }}"
+  defer
+></script>
+{% endblock %}

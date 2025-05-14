@@ -1,0 +1,83 @@
+{# templates/active_sessions.html - OPDATERET #}
+{% extends "base.html" %}
+
+{% block title %}Aktive Spil Sessions - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    {# Link til den nye CSS fil #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/active_sessions.css') }}">
+    {# Inline style fjernet #}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4"> {# Brug container-fluid #}
+
+    {# Brug samme header som andre sider #}
+    <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--border-color-medium) !important;">
+        <h1 class="h2 page-title mb-0"><i class="bi bi-controller me-2"></i> Aktive Spil Sessions</h1>
+        <button id="refresh_sessions_btn" class="btn btn-sm btn-outline-primary"> {# Standard outline knap #}
+           {# Spinner/Ikon struktur for loading state #}
+            <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+            <i class="bi bi-arrow-clockwise fs-6 btn-icon"></i>
+            <span class="btn-text d-none d-sm-inline ms-1">Opdater</span>
+        </button>
+     </header>
+
+    {# Feedback container #}
+     <div id="sessionsError" class="alert alert-danger alert-dismissible fade show" role="alert" style="display: none;">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> Kunne ikke hente sessions data. Prøv venligst igen.
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+     </div>
+
+    <!-- Container med tabel -->
+    {# Brug standard dashboard-card styling #}
+    <div class="card dashboard-card shadow-sm">
+        <div class="card-header">
+            <i class="bi bi-play-circle-fill me-2"></i><strong>Aktuelle Spil Sessions</strong>
+        </div>
+        <div class="card-body p-0">
+           <div class="table-responsive">
+                {# Brug de generelle tabelklasser, fjernet table-dark #}
+                <table class="table table-striped table-hover mb-0 align-middle">
+                    <thead> {# Brug thead for korrekt struktur #}
+                       <tr>
+                           <th scope="col"> <i class="bi bi-joystick"></i> Session Navn / Beskrivelse</th>
+                           <th scope="col" style="width: 25%;"> <i class="bi bi-hash"></i> Session ID</th>
+                           <th scope="col" style="width: 20%;"> <i class="bi bi-calendar-plus"></i> Oprettet</th>
+                            <th scope="col" class="text-center" style="width: 15%;"> <i class="bi bi-people-fill"></i> Spillere</th> {# Ændret ikon #}
+                            <th scope="col" class="text-center" style="width: 10%;"> <i class="bi bi-box-arrow-in-right"></i> Deltag</th>
+                        </tr>
+                   </thead>
+                   <tbody id="sessionsTableBody"> {# Føj is-loading/has-no-data klasse via JS #}
+                        <tr class="table-loading-row" style="display: none;"> {# Start skjult #}
+                           <td colspan="5">
+                               <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                Henter aktive sessions...
+                            </td>
+                       </tr>
+                        <tr class="table-no-data-row" style="display: none;"> {# Start skjult #}
+                           <td colspan="5">
+                                Der er ingen aktive spil sessions i øjeblikket.
+                            </td>
+                        </tr>
+                       {# Data rækker indsættes her via JS #}
+                   </tbody>
+               </table>
+           </div>
+         </div> {# /card-body #}
+     </div> {# /card #}
+
+    <div class="text-center mt-4">
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary"> {# Samme tilbageknap som history #}
+           <i class="bi bi-arrow-left-circle me-1"></i> Tilbage til Dashboard
+         </a>
+    </div>
+
+</div> {# /container-fluid #}
+{% endblock %}
+
+
+{% block scripts_extra %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='js/active_sessions.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,1054 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Panel - {{ APP_NAME | default('FatteCentralen ApS') }}{% endblock %} {# Brug App Navn fra Config #}
+
+{% block head_extra %}
+    {{ super() }} {# Hent ekstra head elementer fra base.html #}
+    {# Grundlæggende globale styles loades fra base.html #}
+    {# TILFØJET: Link til den dedikerede admin CSS fil #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_menu.css') }}">
+    {# Lille stil justering direkte her for at sikre feedback beskeder er synlige #}
+    <style>
+        .feedback-message:not(:empty) {
+            margin-top: 0.5rem; /* Sørg for lidt plads over feedback */
+        }
+        .admin-tab-content {
+             background-color: var(--bs-dark-bg-subtle, #1a1a1a); /* Match baggrund for tab indhold */
+             padding: 1rem;
+             border: 1px solid var(--bs-border-color-translucent, rgba(255, 255, 255, 0.15));
+             border-top: none; /* Fjern top border da tabs dækker den */
+             border-radius: 0 0 var(--bs-border-radius) var(--bs-border-radius); /* Rund kun bund hjørner */
+        }
+         /* Styling for loading row (nu med text span) */
+        .table-loading-row td {
+             color: var(--bs-secondary-color); /* Brug en sekundær farve */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+{# Brug container-fluid for at udnytte bredden bedre i admin panelet #}
+<div class="container-fluid mt-4 mb-5"> {# Tilføjet lidt bund margin #}
+
+    {# Panel Header - Styling via .admin-panel-header i CSS #}
+    <header class="d-flex justify-content-between align-items-center mb-4 pb-3 admin-panel-header">
+        <h1 class="h4 mb-0 fw-bold"> <i class="bi bi-shield-shaded me-2"></i> Admin Panel</h1> {# Justeret størrelse/ikon #}
+        <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-secondary">
+           <i class="bi bi-arrow-left-circle me-1"></i> Tilbage til Forsiden
+        </a>
+    </header>
+
+    <!-- Admin Tab Navigation - Bruger .admin-tabs klassen for styling & scroll -->
+    <nav>
+        {# Sørg for at bruge relevante ikoner #}
+        <ul class="nav nav-tabs admin-tabs mb-0" id="adminTab" role="tablist">
+             <li class="nav-item" role="presentation">
+                 <button class="nav-link active" id="invite-tab" data-bs-toggle="tab" data-bs-target="#invitePane" type="button" role="tab" aria-controls="invitePane" aria-selected="true">
+                     <i class="bi bi-envelope-plus-fill me-1"></i> Invite Codes
+                 </button>
+             </li>
+             <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="sessions-tab" data-bs-toggle="tab" data-bs-target="#sessionsPane" type="button" role="tab" aria-controls="sessionsPane" aria-selected="false">
+                    <i class="bi bi-collection-play-fill me-1"></i> Game Sessions
+                 </button>
+             </li>
+             <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="users-tab" data-bs-toggle="tab" data-bs-target="#usersPane" type="button" role="tab" aria-controls="usersPane" aria-selected="false">
+                    <i class="bi bi-people-fill me-1"></i> Users
+                 </button>
+            </li>
+             <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="balance-tab" data-bs-toggle="tab" data-bs-target="#balancePane" type="button" role="tab" aria-controls="balancePane" aria-selected="false">
+                    <i class="bi bi-currency-exchange me-1"></i> Update Balance
+                 </button>
+            </li>
+             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="settings-tab" data-bs-toggle="tab" data-bs-target="#settingsPane" type="button" role="tab" aria-controls="settingsPane" aria-selected="false">
+                     <i class="bi bi-gear-fill me-1"></i> System Settings
+                </button>
+            </li>
+             <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="logs-tab" data-bs-toggle="tab" data-bs-target="#logsPane" type="button" role="tab" aria-controls="logsPane" aria-selected="false">
+                    <i class="bi bi-journal-text me-1"></i> Audit Logs
+                 </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="maintenance-tab" data-bs-toggle="tab" data-bs-target="#maintenancePane" type="button" role="tab" aria-controls="maintenancePane" aria-selected="false">
+                    <i class="bi bi-tools me-1"></i> Maintenance
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reportsPane" type="button" role="tab" aria-controls="reportsPane" aria-selected="false">
+                    <i class="bi bi-file-earmark-bar-graph-fill me-1"></i> Reports
+                </button>
+            </li>
+             <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasksPane" type="button" role="tab" aria-controls="tasksPane" aria-selected="false">
+                     <i class="bi bi-clock-history me-1"></i> Tasks {# Ikon skiftet #}
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="server-tab" data-bs-toggle="tab" data-bs-target="#serverPane" type="button" role="tab" aria-controls="serverPane" aria-selected="false">
+                    <i class="bi bi-hdd-stack-fill me-1"></i> Server Health
+                 </button>
+             </li>
+              <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="feedback-tab" data-bs-toggle="tab" data-bs-target="#feedbackPane" type="button" role="tab" aria-controls="feedbackPane" aria-selected="false">
+                     <i class="bi bi-chat-left-text-fill me-1"></i> User Feedback
+                </button>
+             </li>
+              <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="moderation-tab" data-bs-toggle="tab" data-bs-target="#moderationPane" type="button" role="tab" aria-controls="moderationPane" aria-selected="false">
+                    <i class="bi bi-shield-fill-exclamation me-1"></i> Moderation
+                </button>
+            </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="email-tab" data-bs-toggle="tab" data-bs-target="#emailPane" type="button" role="tab" aria-controls="emailPane" aria-selected="false">
+                     <i class="bi bi-envelope-fill me-1"></i> Emailing
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                 <button class="nav-link" id="cache-tab" data-bs-toggle="tab" data-bs-target="#cachePane" type="button" role="tab" aria-controls="cachePane" aria-selected="false">
+                    <i class="bi bi-memory me-1"></i> Cache Mgmt
+                </button>
+             </li>
+<li class="nav-item" role="presentation">
+                 <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#securityPane" type="button" role="tab" aria-controls="securityPane" aria-selected="false">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Security
+                 </button>
+             </li>
+<li class="nav-item" role="presentation">
+                <button class="nav-link" id="password-reset-tab" data-bs-toggle="tab" data-bs-target="#passwordResetPane" type="button" role="tab" aria-controls="passwordResetPane" aria-selected="false">
+                   <i class="bi bi-shield-lock me-1"></i> Password Resets
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Tab Content Area - Styling via .admin-tab-content i CSS -->
+    <div class="tab-content admin-tab-content" id="adminTabContent">
+
+        <!-- Invite Codes Tab -->
+        <section class="tab-pane fade show active" id="invitePane" role="tabpanel" aria-labelledby="invite-tab" tabindex="0">
+            {# Card 1: Generate New Code #}
+            <div class="card admin-section-card mb-4"> {# Tilføjet bund margin #}
+                 <div class="card-header"><i class="bi bi-envelope-plus me-2"></i>Generer Ny Invite Kode</div>
+                 <div class="card-body">
+                    <button id="generate_invite_btn" class="btn btn-primary admin-action-btn btn-sm mb-3">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <i class="bi bi-magic btn-icon me-1"></i>
+                         <span class="btn-text">Generer Kode</span>
+                    </button>
+                     <div class="input-group input-group-sm mb-2">
+                         <span class="input-group-text"><i class="bi bi-clipboard-check me-1"></i> Ny Kode</span>
+                         <input type="text" id="new_invite_code_display" class="form-control" readonly placeholder="Klik 'Generer Kode'...">
+                         <button class="btn btn-outline-secondary" type="button" id="copyInviteCodeBtn" title="Kopiér kode" disabled> {# Start disabled indtil kode genereret #}
+                            <i class="bi bi-clipboard"></i>
+                         </button>
+                    </div>
+                    <div id="generate_invite_msg" class="feedback-message"></div>
+                </div>
+            </div>
+
+             {# Card 2: Existing Codes List #}
+             <div class="card admin-section-card">
+                 <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-list-check me-2"></i>Eksisterende Invite Koder</span> {# Fjernet (Aktive) da alle vises nu #}
+                     <button id="refresh_invites_btn" class="btn btn-outline-primary admin-action-btn btn-sm"> {# Opdateret farve for consistency #}
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <i class="bi bi-arrow-clockwise btn-icon"></i>
+                         <span class="btn-text ms-1">Opdater</span>
+                     </button>
+                 </div>
+                 <div class="card-body p-0">
+                     <div class="table-responsive">
+                         <table class="table table-dark table-striped table-hover table-sm mb-0 align-middle">
+                            <thead class="thead-dark"> {# Brug thead-dark for at sikre mørk header #}
+                                <tr>
+                                    <th scope="col">Kode</th>
+                                    <th scope="col">Oprettet af</th>
+                                    <th scope="col">Oprettelsesdato</th>
+                                    <th scope="col" class="text-center">Status / Brugt Af</th> {# Ændret header tekst #}
+                                    <th scope="col" class="text-center">Handlinger</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invitesTableBody">
+                                 {# Fjerner kommentar for renere kode #}
+                                 <tr class="table-loading-row">
+                                     <td colspan="5" class="text-center py-4"> {# Sørg for at colspan matcher antal kolonner (5) #}
+                                         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                         <span class="loading-text">Indlæser koder...</span>
+                                    </td>
+                                 </tr>
+                                 {# Data rows will be inserted here by JS #}
+                             </tbody>
+                        </table>
+                    </div>
+                 </div>
+                 <div class="card-footer feedback-message" id="invites_table_msg"></div>
+            </div>
+        </section>
+
+         <!-- Sessions Tab -->
+         <section class="tab-pane fade" id="sessionsPane" role="tabpanel" aria-labelledby="sessions-tab" tabindex="0">
+            <div class="card admin-section-card">
+                 <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-collection-play me-2"></i>Game Session Oversigt</span>
+                    <button id="refresh_sessions_btn" class="btn btn-outline-primary admin-action-btn btn-sm">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1">Opdater</span>
+                     </button>
+                 </div>
+                 <div class="card-body p-0">
+                    <div class="table-responsive">
+                         <table class="table table-dark table-striped table-hover table-sm mb-0 align-middle">
+                             <thead class="thead-dark">
+                                 <tr>
+                                     <th scope="col">Session ID</th>
+                                     <th scope="col">Oprettet</th>
+                                     <th scope="col">Game Mode</th>
+                                     <th scope="col">Admin Kode</th>
+                                     <th scope="col" class="text-center"># Spillere</th>
+                                     <th scope="col" class="text-center"># Bets</th>
+                                     <th scope="col" class="text-center">Status</th>
+                                     <th scope="col" class="text-center">Handlinger</th>
+                                 </tr>
+                             </thead>
+                             <tbody id="sessionsTableBody">
+                                 {# Fjerner kommentar for renere kode #}
+                                 <tr class="table-loading-row">
+                                     <td colspan="8" class="text-center py-4"> {# Sørg for colspan passer (8) #}
+                                         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                         <span class="loading-text">Indlæser sessioner...</span>
+                                     </td>
+                                </tr>
+                                {# Data indsættes her af JS #}
+                            </tbody>
+                         </table>
+                     </div>
+                 </div>
+                 <div class="card-footer feedback-message" id="sessions_msg"></div>
+             </div>
+         </section>
+
+         <!-- Users Tab -->
+        <section class="tab-pane fade" id="usersPane" role="tabpanel" aria-labelledby="users-tab" tabindex="0">
+             {# Card 1: User List #}
+             <div class="card admin-section-card mb-4"> {# Tilføjet bund margin #}
+                 <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-people me-2"></i>Bruger Administration</span>
+                     <button id="refresh_users_btn" class="btn btn-outline-primary admin-action-btn btn-sm">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1">Opdater</span>
+                     </button>
+                 </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                         <table class="table table-dark table-striped table-hover table-sm mb-0 align-middle">
+                             <thead class="thead-dark">
+                                 <tr>
+                                     <th scope="col" style="width: 8%;">UID</th>
+                                     <th scope="col">Brugernavn</th>
+                                     <th scope="col">Email</th>
+                                     <th scope="col" class="text-end">Balance (DKK)</th>
+                                     <th scope="col" class="text-center">Roller</th>
+                                     <th scope="col">Oprettet</th>
+                                     <th scope="col">Sidst Aktiv</th>
+                                     <th scope="col" class="text-center">Status</th>
+                                     <th scope="col" class="text-center" style="width: 10%;">Handlinger</th>
+                                </tr>
+                            </thead>
+                             <tbody id="usersTableBody">
+                                 {# Fjerner kommentar for renere kode #}
+                                 <tr class="table-loading-row">
+                                    <td colspan="9" class="text-center py-4"> {# Colspan skal matche antal headers (9) #}
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        <span class="loading-text">Indlæser brugere...</span>
+                                     </td>
+                                </tr>
+                                 {# Data indsættes her af JS #}
+                             </tbody>
+                         </table>
+                     </div>
+                 </div>
+                 <div class="card-footer feedback-message" id="users_table_msg"></div> {# Omdøbt feedback ID for klarhed #}
+             </div>
+
+             {# Card 2: Delete User #}
+             <div class="card admin-section-card">
+                 <div class="card-header"><i class="bi bi-person-x-fill me-2 text-danger"></i>Slet Bruger</div>
+                 <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-8">
+                             <div class="form-floating">
+                                 <select id="delete_user_select" class="form-select form-select-sm" aria-label="Vælg bruger at slette" required disabled> {# Start disabled indtil loaded #}
+                                     <option value="" selected disabled>Indlæser brugere...</option>
+                                     {# Options indsættes dynamisk via JS #}
+                                </select>
+                                 <label for="delete_user_select">Bruger at slette</label>
+                             </div>
+                         </div>
+                         <div class="col-md-4">
+                             {# Knap til at åbne bekræftelsesmodal #}
+                             <button id="delete_user_trigger_btn" type="button" class="btn btn-danger admin-action-btn btn-sm w-100" disabled> {# Tilføjet admin-action-btn klasse, start disabled #}
+                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                 <i class="bi bi-trash btn-icon"></i> <span class="btn-text ms-1">Slet Valgte Bruger</span>
+                             </button>
+                         </div>
+                     </div>
+                     {# Feedback specifikt for delete dropdown/button #}
+                    <div id="delete_user_action_msg" class="feedback-message"></div>
+                 </div>
+             </div>
+         </section>
+
+        <!-- Update Balance Tab -->
+         <section class="tab-pane fade" id="balancePane" role="tabpanel" aria-labelledby="balance-tab" tabindex="0">
+            <div class="card admin-section-card">
+                 <div class="card-header"><i class="bi bi-currency-exchange me-2"></i>Opdater Bruger Balance</div>
+                 <div class="card-body">
+                     {# Tilføjet 'needs-validation' hvis du bruger Bootstrap validation styles #}
+                    <form id="updateBalanceForm" novalidate class="needs-validation">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                 <div class="form-floating">
+                                     {# Omdøbt ID for at undgå konflikt med slette dropdown #}
+                                     <select id="balance_update_user_select" name="username" class="form-select" required aria-label="Vælg bruger til balance opdatering" disabled> {# Start disabled #}
+                                         <option value="" selected disabled>Indlæser brugere...</option>
+                                         {# Options indsættes dynamisk via JS (fra users data) #}
+                                     </select>
+                                     <label for="balance_update_user_select">Vælg Bruger</label>
+                                     <div class="invalid-feedback">Vælg venligst en bruger.</div> {# Feedback for select #}
+                                 </div>
+                             </div>
+                            <div class="col-md-4">
+                                <div class="form-floating">
+                                     <input type="number" step="0.01" min="0.01" id="balance_amount" name="amount" class="form-control" placeholder="Beløb (DKK)" required> {# Tilføjet min værdi #}
+                                     <label for="balance_amount">Beløb (DKK)</label>
+                                     <div class="invalid-feedback">Indtast venligst et gyldigt positivt beløb.</div>
+                                 </div>
+                            </div>
+                             <div class="col-md-3">
+                                <div class="form-floating">
+                                    <input type="text" id="balance_reason" name="reason" class="form-control" placeholder="Årsag" required> {# Gør årsag påkrævet #}
+                                     <label for="balance_reason">Årsag</label>
+                                     <div class="invalid-feedback">Angiv venligst en årsag.</div>
+                                 </div>
+                            </div>
+                        </div>
+                         <div class="mt-3 d-flex gap-2 justify-content-end">
+                            {# Ændret knap type til "submit" - JS håndterer action via event.submitter #}
+                            <button type="submit" id="add_money_btn" class="btn btn-success admin-action-btn btn-sm" data-action="add" disabled> {# Start disabled indtil bruger valgt #}
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-plus-circle-fill btn-icon me-1"></i> <span class="btn-text">Tilføj Penge</span>
+                             </button>
+                            <button type="submit" id="remove_money_btn" class="btn btn-warning admin-action-btn btn-sm" data-action="remove" disabled> {# Start disabled indtil bruger valgt #}
+                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-dash-circle-fill btn-icon me-1"></i> <span class="btn-text">Fjern Penge</span>
+                            </button>
+                              <button type="submit" id="set_money_btn" class="btn btn-info admin-action-btn btn-sm" data-action="set" disabled> {# Start disabled indtil bruger valgt #}
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-input-cursor-text btn-icon me-1"></i> <span class="btn-text">Sæt Penge</span>
+                             </button>
+                        </div>
+                     </form>
+                    <div id="update_balance_msg" class="feedback-message"></div>
+                 </div>
+             </div>
+         </section>
+
+
+         <!-- System Settings Tab -->
+        <section class="tab-pane fade" id="settingsPane" role="tabpanel" aria-labelledby="settings-tab" tabindex="0">
+            <div class="card admin-section-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-gear me-2"></i>System Indstillinger</span>
+                     <button id="refresh_settings_btn" class="btn btn-outline-primary admin-action-btn btn-sm" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1">Genindlæs</span>
+                     </button>
+                </div>
+                 <div class="card-body">
+                     {# Brug form til gruppering og submit handling #}
+                     <form id="systemSettingsForm" novalidate class="needs-validation">
+                        {# Tilføj help text/beskrivelser? #}
+                         <div class="row g-3 mb-3">
+                             <div class="col-md-6">
+                                 <div class="form-floating">
+                                    <input type="password" id="setting_api_key" name="api_key" class="form-control" placeholder="API Nøgle" aria-describedby="apiKeyHelp" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                                     <label for="setting_api_key">Sports API Nøgle</label>
+                                     <div id="apiKeyHelp" class="form-text">Efterlad tom for at beholde nuværende nøgle.</div>
+                                </div>
+                             </div>
+                             <div class="col-md-6">
+                                 <div class="form-floating">
+                                     <input type="number" min="1" max="100" step="1" id="setting_max_players" name="max_players" class="form-control" placeholder="Max spillere pr. session" required disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                                     <label for="setting_max_players">Max spillere pr. session</label>
+                                     <div class="invalid-feedback">Indtast et tal mellem 1 og 100.</div>
+                                </div>
+                            </div>
+                         </div>
+                         <div class="row g-3 mb-3">
+                              <div class="col-md-6">
+                                 <div class="form-floating">
+                                     <input type="number" min="0.01" max="99999" step="0.01" id="setting_min_bet" name="min_bet" class="form-control" placeholder="Minimum bet beløb (DKK)" required disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                                    <label for="setting_min_bet">Minimum Bet (DKK)</label>
+                                    <div class="invalid-feedback">Indtast et gyldigt positivt minimum beløb.</div>
+                                 </div>
+                            </div>
+                              <div class="col-md-6">
+                                <div class="form-floating">
+                                     <input type="number" min="1" max="100000" step="1" id="setting_max_bet" name="max_bet" class="form-control" placeholder="Maximum bet beløb (DKK)" required disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                                    <label for="setting_max_bet">Maximum Bet (DKK)</label>
+                                    <div class="invalid-feedback">Indtast et gyldigt maximum beløb.</div>
+                                 </div>
+                             </div>
+                         </div>
+                        <div class="mb-3 form-check form-switch">
+                             <input class="form-check-input" type="checkbox" role="switch" id="setting_registration_enabled" name="registration_enabled" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                            <label class="form-check-label" for="setting_registration_enabled">Tillad ny brugerregistrering</label>
+                         </div>
+                         <div class="mb-3">
+                             <div class="form-floating">
+                                 <textarea id="setting_welcome_message" name="welcome_message" class="form-control" style="height: 100px" placeholder="Velkomstbesked til nye brugere" disabled title="Funktion ikke implementeret"></textarea> {# Deaktiveret placeholder #}
+                                 <label for="setting_welcome_message">Velkomstbesked (nye brugere)</label>
+                            </div>
+                         </div>
+                         {# Placeholder for andre settings #}
+                         <div class="row g-3 mb-3">
+                              <div class="col-md-6">
+                                 <div class="form-floating">
+                                     <input type="number" min="1" max="1000" step="1" id="setting_session_timeout" name="session_timeout" class="form-control" placeholder="Session Timeout (minutter)" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                                    <label for="setting_session_timeout">Session Timeout (minutter)</label>
+                                    <div class="invalid-feedback">Angiv et gyldigt antal minutter.</div>
+                                 </div>
+                            </div>
+                              <div class="col-md-6">
+                                {/* Tilføj flere indstillinger her */}
+                             </div>
+                         </div>
+
+                         <div class="d-flex justify-content-end">
+                             <button id="save_settings_btn" type="submit" class="btn btn-primary admin-action-btn btn-sm" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-save btn-icon me-1"></i> <span class="btn-text">Gem Indstillinger</span>
+                            </button>
+                        </div>
+                     </form>
+                     <div id="settings_msg" class="feedback-message mt-3"></div> {# Omdøbt ID #}
+                     <div class="alert alert-info mt-3 small" role="alert">
+                        <i class="bi bi-info-circle me-2"></i>System Settings er kun placeholder og gemmer ikke ændringer endnu.
+                     </div>
+                </div>
+            </div>
+        </section>
+
+         <!-- Audit Logs Tab -->
+        <section class="tab-pane fade" id="logsPane" role="tabpanel" aria-labelledby="logs-tab" tabindex="0">
+             <div class="card admin-section-card">
+                <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2"> {# Tillad wrap for mindre skærme #}
+                    <span><i class="bi bi-journal-text me-2"></i>Audit Logs</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="search" id="logFilterInput" class="form-control form-control-sm" placeholder="Filtrér logs..." style="max-width: 200px;" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                        <button id="refresh_logs_btn" class="btn btn-outline-primary admin-action-btn btn-sm flex-shrink-0" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1 d-none d-sm-inline">Opdater</span> {# Skjul tekst på små skærme #}
+                         </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;"> {# Max højde + scroll #}
+                        <table class="table table-dark table-striped table-hover table-sm mb-0 align-middle small"> {# 'small' klasse for mindre tekst #}
+                            <thead class="sticky-top bg-dark"> {# Sticky header #}
+                                <tr>
+                                    <th scope="col" style="width: 18%;">Dato/Tid</th>
+                                    <th scope="col" style="width: 15%;">Handling</th>
+                                    <th scope="col" style="width: 15%;">Admin</th>
+                                    <th scope="col" style="width: 15%;">Mål</th>
+                                    <th scope="col">Detaljer</th>
+                                </tr>
+                           </thead>
+                             <tbody id="logsTableBody">
+                                 <tr class="table-placeholder-row"> {# Ændret klasse for placeholder #}
+                                     <td colspan="5" class="text-center text-muted py-5">
+                                        <i class="bi bi-info-circle fs-4 d-block mb-2"></i>
+                                        Audit Log funktion er ikke implementeret.
+                                     </td>
+                                </tr>
+                                 {# Logs indsættes her af JS, hvis/når det implementeres #}
+                             </tbody>
+                        </table>
+                    </div>
+                 </div>
+                <div class="card-footer d-flex justify-content-between align-items-center">
+                    <span id="log_count_display" class="text-muted small"></span> {# Tekst sættes af JS #}
+                    <div id="logs_msg" class="feedback-message m-0 p-0 flex-grow-1 text-end"></div> {# Flyttet ID #}
+                </div>
+            </div>
+        </section>
+
+         <!-- Maintenance Tab -->
+         <section class="tab-pane fade" id="maintenancePane" role="tabpanel" aria-labelledby="maintenance-tab" tabindex="0">
+            <div class="card admin-section-card mb-4"> {# Adskil kortene #}
+                 <div class="card-header"><i class="bi bi-tools me-2"></i>System Vedligeholdelse</div>
+                <div class="card-body">
+                    <h6 class="text-primary">Cache & Indeksering</h6>
+                    <div class="mb-3 d-flex gap-2 flex-wrap"> {# Tillad wrap #}
+                         <button id="clear_cache_btn" class="btn btn-warning admin-action-btn btn-sm">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                             <i class="bi bi-trash3 btn-icon me-1"></i><span class="btn-text">Ryd System Cache</span>
+                         </button>
+                         <button id="reindex_search_btn" class="btn btn-info admin-action-btn btn-sm" disabled title="Funktion ikke implementeret"> {# Deaktiveret som eksempel #}
+                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                             <i class="bi bi-search btn-icon me-1"></i><span class="btn-text">Re-indekser Søgning</span>
+                         </button>
+                         <button id="run_cleanup_btn" class="btn btn-secondary admin-action-btn btn-sm" disabled title="Funktion ikke implementeret"> {# Deaktiveret placeholder #}
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            <i class="bi bi-recycle btn-icon me-1"></i><span class="btn-text">Kør Oprydningsjob</span>
+                         </button>
+                    </div>
+                    <div id="maintenance_action_msg" class="feedback-message mb-3"></div>
+
+                     <hr>
+                     <h6 class="text-primary">Vedligeholdelsestilstand</h6>
+                     <form id="maintenanceModeForm" novalidate>
+                          <div class="form-check form-switch mb-2">
+                               <input class="form-check-input" type="checkbox" role="switch" id="maintenance_mode_toggle" name="maintenance_mode">
+                               <label class="form-check-label" for="maintenance_mode_toggle">Aktiver Vedligeholdelsestilstand</label>
+                           </div>
+                           <div class="form-floating mb-2">
+                              <textarea id="maintenance_message" name="notification_message" class="form-control" style="height: 80px" placeholder="Skriv din besked her..." disabled></textarea> {# Start disabled #}
+                               <label for="maintenance_message">Besked til brugere (valgfri)</label>
+                           </div>
+                           <div class="d-flex justify-content-end">
+                               <button type="submit" id="apply_maintenance_btn" class="btn btn-success admin-action-btn btn-sm">
+                                  <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                   <i class="bi bi-check-lg btn-icon me-1"></i><span class="btn-text">Anvend Status</span>
+                                </button>
+                           </div>
+                      </form>
+                     <div id="maintenance_mode_msg" class="feedback-message mt-2"></div>
+
+                 </div>
+            </div>
+
+             <div class="card admin-section-card"> {# Adskilt kort for broadcast #}
+                  <div class="card-header"><i class="bi bi-megaphone-fill me-2"></i>Global Besked</div>
+                 <div class="card-body">
+                    <form id="broadcastForm" novalidate class="needs-validation">
+                        <div class="form-floating mb-2">
+                             <textarea id="broadcast_message" name="message" class="form-control" style="height: 80px" placeholder="Skriv din globale besked her..." required></textarea>
+                            <label for="broadcast_message">Besked til alle aktive brugere</label>
+                             <div class="invalid-feedback">Besked må ikke være tom.</div>
+                         </div>
+                         <div class="d-flex justify-content-end">
+                            <button type="submit" id="send_broadcast_btn" class="btn btn-success admin-action-btn btn-sm">
+                               <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-send btn-icon me-1"></i><span class="btn-text">Send Besked Nu</span>
+                             </button>
+                         </div>
+                    </form>
+                    <div id="broadcast_msg" class="feedback-message mt-2"></div>
+                      <div class="alert alert-info mt-3 small" role="alert">
+                         <i class="bi bi-info-circle me-2"></i>Broadcast funktionen er kun <strong>simuleret</strong> i frontend og sender pt. ingen reel besked.
+                      </div>
+                 </div>
+             </div>
+         </section>
+
+        {# ----- Placeholders for Remaining Tabs ----- #}
+        {# Brug en ensartet struktur for placeholders for at gøre det nemmere at implementere senere #}
+        {% macro placeholder_tab(icon, title, description, msg_id) %}
+        <div class="card admin-section-card">
+            <div class="card-header"><i class="bi {{ icon }} me-2"></i>{{ title }}</div>
+            <div class="card-body">
+                <p class="text-muted fst-italic">
+                   <i class="bi bi-hourglass-split me-1"></i> Funktion ikke implementeret endnu.
+                    <br> {{ description }}
+                </p>
+                <div id="{{ msg_id }}" class="feedback-message"></div>
+            </div>
+        </div>
+        {% endmacro %}
+
+        <section class="tab-pane fade" id="reportsPane" role="tabpanel" aria-labelledby="reports-tab" tabindex="0">
+             <div class="card admin-section-card">
+                 <div class="card-header d-flex justify-content-between align-items-center">
+                     <span><i class="bi bi-file-earmark-bar-graph-fill me-2"></i>Finansielle Rapporter</span>
+                      <button id="generate_report_btn" class="btn btn-primary admin-action-btn btn-sm">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <i class="bi bi-bar-chart-line btn-icon me-1"></i><span class="btn-text">Generer Rapport</span>
+                     </button>
+                </div>
+                <div class="card-body">
+                     <p class="text-muted">Klik på knappen for at generere en real-time finansiel oversigt.</p>
+                     <pre><code id="report_output_area" class="language-json" style="max-height: 400px; display: block; overflow: auto; background-color: #212529; color: #adb5bd; border-radius: var(--bs-border-radius); padding: 1em;">{
+    "besked": "Ingen rapport genereret endnu."
+}</code></pre>
+                     {# Måske tilføje Highlight.js for pænere JSON visning #}
+                     {# <link rel="stylesheet" href="path/to/highlightjs/styles/github-dark.css"> #}
+                     {# <script src="path/to/highlightjs/highlight.min.js"></script> #}
+                     {# <script>hljs.highlightAll();</script> #}
+                    <div id="reports_msg" class="feedback-message mt-2"></div>
+                 </div>
+             </div>
+         </section>
+
+         <section class="tab-pane fade" id="tasksPane" role="tabpanel" aria-labelledby="tasks-tab" tabindex="0">
+            <div class="card admin-section-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-clock-history me-2"></i>Planlagte Tasks (APScheduler Jobs)</span>
+                    <button id="refresh_tasks_btn" class="btn btn-outline-primary admin-action-btn btn-sm">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1">Opdater</span>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-hover table-sm mb-0 align-middle small">
+                            <thead class="thead-dark sticky-top bg-dark">
+                                <tr>
+                                    <th scope="col">ID</th>
+                                    <th scope="col">Navn</th>
+                                    <th scope="col">Funktion</th>
+                                    <th scope="col">Trigger</th>
+                                    <th scope="col">Næste Kørsel (UTC)</th>
+                                    <th scope="col" class="text-center">Pending</th>
+                                    {# <th scope="col" class="text-center">Handlinger</th> #}
+                                </tr>
+                            </thead>
+                            <tbody id="scheduledTasksTableBody">
+                                <tr class="table-loading-row">
+                                    <td colspan="6" class="text-center py-4"> {# Colspan updated to 6 #}
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        <span class="loading-text">Indlæser planlagte tasks...</span>
+                                    </td>
+                                </tr>
+                                <!-- Task rows will be inserted here by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer feedback-message" id="tasks_table_msg">
+                    <span id="tasks_count_display" class="text-muted small"></span>
+                </div>
+            </div>
+        </section>
+
+         <section class="tab-pane fade" id="serverPane" role="tabpanel" aria-labelledby="server-tab" tabindex="0">
+              <div class="card admin-section-card">
+                  <div class="card-header d-flex justify-content-between align-items-center">
+                     <span><i class="bi bi-hdd-stack-fill me-2"></i>Server Sundhed</span>
+                      <button id="check_health_btn" class="btn btn-primary admin-action-btn btn-sm">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                          <i class="bi bi-heart-pulse btn-icon me-1"></i><span class="btn-text">Check Sundhed</span>
+                     </button>
+                 </div>
+                 <div class="card-body">
+                      <p class="text-muted">Klik på knappen for at køre et hurtigt sundhedstjek.</p>
+                     <pre><code id="health_output_area" class="language-json" style="max-height: 400px; display: block; overflow: auto; background-color: #212529; color: #adb5bd; border-radius: var(--bs-border-radius); padding: 1em;">{
+    "status": "Ukendt",
+    "besked": "Ingen tjek kørt endnu."
+}</code></pre>
+                    <div id="server_health_msg" class="feedback-message mt-2"></div>
+                 </div>
+             </div>
+         </section>
+
+         <section class="tab-pane fade" id="feedbackPane" role="tabpanel" aria-labelledby="feedback-tab" tabindex="0">
+             {{ placeholder_tab('bi-chat-left-text-fill', 'Bruger Feedback', 'System til at modtage og håndtere brugerfeedback.', 'feedback_list_msg') }}
+         </section>
+
+        <section class="tab-pane fade" id="moderationPane" role="tabpanel" aria-labelledby="moderation-tab" tabindex="0">
+            <div class="card admin-section-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-chat-square-quote-fill me-2"></i>Forum Post Moderation</span>
+                    <button id="refresh_forum_posts_btn" class="btn btn-outline-primary admin-action-btn btn-sm">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1">Opdater Posts</span>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-dark table-striped table-hover table-sm mb-0 align-middle small">
+                            <thead class="thead-dark sticky-top bg-dark">
+                                <tr>
+                                    <th scope="col" style="width: 15%;">Dato</th>
+                                    <th scope="col" style="width: 15%;">Forfatter</th>
+                                    <th scope="col" style="width: 25%;">Tråd Titel</th>
+                                    <th scope="col">Uddrag</th>
+                                    <th scope="col" class="text-center" style="width: 10%;">Handlinger</th>
+                                </tr>
+                            </thead>
+                            <tbody id="forumPostsTableBody">
+                                <tr class="table-loading-row">
+                                    <td colspan="5" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        <span class="loading-text">Indlæser posts...</span>
+                                    </td>
+                                </tr>
+                                <!-- Post rows will be inserted here by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer feedback-message" id="forum_posts_table_msg">
+                     <span id="forum_posts_count_display" class="text-muted small"></span>
+                </div>
+            </div>
+
+            <!-- Placeholder for User Reports / Warnings -->
+             <div class="card admin-section-card mb-4">
+                <div class="card-header">
+                    <span><i class="bi bi-flag-fill me-2"></i>Bruger Rapporter & Advarsler</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted fst-italic">
+                        <i class="bi bi-hourglass-split me-1"></i> Funktion til håndtering af brugerrapporter og advarsler er ikke implementeret endnu.
+                    </p>
+                    <div id="user_reports_msg" class="feedback-message"></div>
+                </div>
+            </div>
+
+            <!-- Placeholder for Registration Settings -->
+             <div class="card admin-section-card">
+                <div class="card-header">
+                    <span><i class="bi bi-person-check-fill me-2"></i>Registreringsindstillinger</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted fst-italic">
+                        <i class="bi bi-hourglass-split me-1"></i> Funktion til at slå invite koder til/fra og manuel godkendelse er ikke implementeret endnu.
+                    </p>
+                    <div id="registration_settings_msg" class="feedback-message"></div>
+                </div>
+            </div>
+         </section>
+
+         <section class="tab-pane fade" id="emailPane" role="tabpanel" aria-labelledby="email-tab" tabindex="0">
+             {{ placeholder_tab('bi-envelope-fill', 'Emailing & Kampagner', 'Funktioner til at sende emails (enkeltvis eller kampagner).', 'email_msg') }}
+         </section>
+
+<!-- Security Tab -->
+         <section class="tab-pane fade" id="securityPane" role="tabpanel" aria-labelledby="security-tab" tabindex="0">
+            <div class="card admin-section-card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-shield-slash me-2"></i>Mislykkede Login Forsøg</span>
+                    <button id="refresh_failed_logins_btn" class="btn btn-outline-primary admin-action-btn btn-sm">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1">Opdater</span>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-dark table-striped table-hover table-sm mb-0 align-middle small">
+                            <thead class="thead-dark sticky-top bg-dark">
+                                <tr>
+                                    <th scope="col" style="width: 25%;">Dato/Tid (UTC)</th>
+                                    <th scope="col" style="width: 20%;">IP Adresse</th>
+                                    <th scope="col" style="width: 20%;">Brugernavnsforsøg</th>
+                                    <th scope="col">User Agent</th>
+                                </tr>
+                            </thead>
+                            <tbody id="failedLoginsTableBody">
+                                <tr class="table-loading-row">
+                                    <td colspan="4" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        <span class="loading-text">Indlæser data...</span>
+                                    </td>
+                                </tr>
+                                <!-- Data rows will be inserted here by JS -->
+<form id="passwordComplexityForm" novalidate class="needs-validation">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="number" min="6" max="128" step="1" id="setting_password_min_length" name="password_min_length" class="form-control form-control-sm" placeholder="Minimum Længde" required>
+                                    <label for="setting_password_min_length">Minimum Password Længde</label>
+                                    <div class="invalid-feedback">Angiv en længde (f.eks. 8-32).</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6 col-lg-3">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="setting_password_require_uppercase" name="password_require_uppercase">
+                                    <label class="form-check-label" for="setting_password_require_uppercase">Kræv Stort Bogstav</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="setting_password_require_lowercase" name="password_require_lowercase">
+                                    <label class="form-check-label" for="setting_password_require_lowercase">Kræv Lille Bogstav</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="setting_password_require_number" name="password_require_number">
+                                    <label class="form-check-label" for="setting_password_require_number">Kræv Tal</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="setting_password_require_symbol" name="password_require_symbol">
+                                    <label class="form-check-label" for="setting_password_require_symbol">Kræv Symbol</label>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="d-flex justify-content-end mt-3">
+                             <button id="save_password_complexity_btn" type="button" class="btn btn-primary admin-action-btn btn-sm">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <i class="bi bi-save btn-icon me-1"></i> <span class="btn-text">Gem Password Regler</span>
+                            </button>
+                        </div>
+                    </form>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer feedback-message" id="failed_logins_table_msg">
+                    <span id="failed_logins_count_display" class="text-muted small"></span>
+                </div>
+            </div>
+
+            <!-- Placeholder for Password Complexity Rules -->
+            <div class="card admin-section-card">
+                <div class="card-header">
+                    <span><i class="bi bi-key-fill me-2"></i>Password Kompleksitetsregler</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted fst-italic">
+                        <i class="bi bi-hourglass-split me-1"></i> Funktion til konfiguration af password kompleksitet er ikke implementeret endnu.
+                    </p>
+                    <div id="password_complexity_msg" class="feedback-message"></div>
+                </div>
+            </div>
+        </section>
+<![CDATA[
+        <!-- Password Resets Tab -->
+        <section class="tab-pane fade" id="passwordResetPane" role="tabpanel" aria-labelledby="password-reset-tab" tabindex="0">
+            <div class="card admin-section-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-shield-lock me-2"></i>Afventende Password Nulstillingsanmodninger</span>
+                    <button id="refresh_password_requests_btn" class="btn btn-outline-primary admin-action-btn btn-sm">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text ms-1">Opdater</span>
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm mb-0 align-middle small">
+                            <thead class="sticky-top">
+                                <tr>
+                                    <th scope="col">Request ID</th>
+                                    <th scope="col">Bruger ID</th>
+                                    <th scope="col">Brugernavn</th>
+                                    <th scope="col">Anmodet (UTC)</th>
+                                    <th scope="col" class="text-center">Status</th>
+                                    <th scope="col" class="text-center">Handlinger</th>
+                                </tr>
+                            </thead>
+                            <tbody id="passwordRequestsTableBody">
+                                <tr class="table-loading-row">
+                                    <td colspan="6" class="text-center py-4">
+                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                        <span class="loading-text">Indlæser anmodninger...</span>
+                                    </td>
+                                </tr>
+                                <!-- Request rows will be inserted here by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer feedback-message" id="password_requests_table_msg">
+                    <span id="password_requests_count_display" class="text-muted small"></span>
+                </div>
+            </div>
+        </section>
+]]>
+         <section class="tab-pane fade" id="cachePane" role="tabpanel" aria-labelledby="cache-tab" tabindex="0">
+            {# Cache Management fane kan indeholde den eksisterende "Ryd Cache" knap + mere #}
+             <div class="card admin-section-card">
+                 <div class="card-header"><i class="bi bi-memory me-2"></i>Cache Management</div>
+                 <div class="card-body">
+                      <h6 class="text-primary mb-3">Global Cache</h6>
+                     <button id="clear_cache_btn_detailed" class="btn btn-warning admin-action-btn btn-sm">
+                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <i class="bi bi-trash3 btn-icon me-1"></i><span class="btn-text">Ryd Hele System Cache</span>
+                     </button>
+                      <p class="form-text mt-2">Dette er den samme handling som på Maintenance fanen.</p>
+                      <hr class="my-4">
+                     <h6 class="text-primary mb-3">Detaljeret Cache Info (Placeholder)</h6>
+                     <p class="text-muted fst-italic">
+                       <i class="bi bi-info-circle me-1"></i> Her kunne man vise cache statistik (antal keys, størrelse, hit rate) eller tillade rydning af specifikke cache regioner. Ikke implementeret.
+                     </p>
+                     <div id="cache_mgmt_msg_detailed" class="feedback-message"></div>
+                 </div>
+             </div>
+         </section>
+
+
+    </div> <!-- /End Tab Content Area -->
+
+</div> <!-- /container-fluid -->
+
+{# ----- MODALS ----- #}
+
+<!-- Modal: Edit Session -->
+<div class="modal fade modal-custom" id="editSessionModal" tabindex="-1" aria-labelledby="editSessionModalLabel" aria-hidden="true" data-bs-backdrop="static"> {# Static backdrop #}
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"> {# Tillad scroll i body #}
+         <div class="modal-content">
+            <div class="modal-header">
+                 <h5 class="modal-title text-primary" id="editSessionModalLabel">
+                     <i class="bi bi-pencil-square me-2"></i>Rediger Session (<small id="editSessionModalSessionId" class="text-muted fw-normal">ID...</small>) {# Bedre ID navn #}
+                 </h5>
+                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+             <div class="modal-body">
+                  <div class="alert alert-warning small p-2 mb-3" role="alert">
+                     <i class="bi bi-exclamation-triangle-fill me-2"></i><strong>Advarsel:</strong> Session redigering er ustabil pga. backend begrænsninger. Ændringer gemmes muligvis ikke korrekt.
+                  </div>
+                <form id="editSessionForm" novalidate>
+                     <input type="hidden" id="edit_session_internal_id" name="session_id"> {# Bevar dette til at holde ID'et #}
+                    <div class="row g-3 mb-3">
+                         <div class="col-md-6">
+                             <div class="form-floating">
+                                <input type="text" class="form-control" id="edit_session_game_mode" name="game_mode" readonly disabled placeholder="Game Mode">
+                                 <label for="edit_session_game_mode">Game Mode</label>
+                             </div>
+                         </div>
+                         <div class="col-md-6">
+                            <div class="form-floating">
+                                 <input type="text" class="form-control" id="edit_session_admin_code" name="admin_code" readonly disabled placeholder="Admin Code">
+                                <label for="edit_session_admin_code">Admin Kode</label>
+                             </div>
+                         </div>
+                    </div>
+
+                     <hr class="my-4">
+                     <h6 class="mb-3 text-primary">Rediger Udfald / Odds</h6>
+                    {# Placeholder for udfald - JS indsætter felter her #}
+                     <div id="edit_outcomes_container" class="mb-3">
+                        <div class="text-center text-muted py-3 outcomes-loading-indicator"> {# Tydeligere klasse #}
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            <span class="loading-text">Indlæser udfald...</span> {# Brug loading-text #}
+                         </div>
+                         {# Example outcome row (JS template): - Fjernet for klarhed #}
+                     </div>
+
+                     <hr class="my-4">
+                    <div class="form-check form-switch mb-3">
+                         <input class="form-check-input" type="checkbox" role="switch" id="edit_session_clear_bets" name="clear_bets">
+                         <label class="form-check-label" for="edit_session_clear_bets">
+                            <strong class="text-warning">Nulstil/Slet alle bets i sessionen?</strong> (Uigenkaldelig)
+                         </label>
+                     </div>
+
+                 </form>
+                 {# Feedback specifikt for denne modal #}
+                 <div id="edit_session_feedback_msg" class="feedback-message"></div> {# Tydeligere ID #}
+             </div>
+             <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuller</button>
+                 <button type="button" class="btn btn-success admin-action-btn" id="save_session_changes_btn">
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <i class="bi bi-check-lg btn-icon me-1"></i> <span class="btn-text">Gem Ændringer</span>
+                </button>
+            </div>
+        </div>
+     </div>
+</div>
+
+<!-- Modal: Delete User Confirmation -->
+<div class="modal fade modal-custom" id="deleteUserConfirmModal" tabindex="-1" aria-labelledby="deleteUserConfirmModalLabel" aria-hidden="true" data-bs-backdrop="static">
+     <div class="modal-dialog modal-dialog-centered">
+         <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteUserConfirmModalLabel"><i class="bi bi-exclamation-triangle-fill me-2"></i> Bekræft Sletning</h5>
+                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+             </div>
+            <div class="modal-body">
+                <p>Er du sikker på, at du vil slette brugeren <strong id="userToDeleteName" class="text-info">(brugernavn)</strong> permanent?</p> {# Opdateret placeholder #}
+                <p class="text-danger fw-bold mb-0"><i class="bi bi-exclamation-octagon me-1"></i> Denne handling kan IKKE fortrydes!</p>
+                 {# Skjult input til at holde user id #}
+                <input type="hidden" id="userToDeleteId">
+                {# Område til fejlbeskeder INDE i modalen #}
+                 <div class="feedback-area mt-3"></div>
+             </div>
+            <div class="modal-footer">
+                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                 <button type="button" class="btn btn-danger admin-action-btn" id="confirmDeleteUserBtn">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                     <i class="bi bi-trash btn-icon me-1"></i> <span class="btn-text">Ja, Slet Bruger</span>
+                 </button>
+            </div>
+         </div>
+     </div>
+</div>
+
+<!-- <<< START: EDIT USER MODAL >>> -->
+<div class="modal fade modal-custom" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable"> {# Gør den lidt større (lg) og scrollable #}
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title text-primary" id="editUserModalLabel"><i class="bi bi-person-lines-fill me-2"></i>Rediger Bruger (<span id="editUserModalUsername" class="text-muted fw-normal">username</span>)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {# Form til redigering #}
+                <form id="editUserForm" novalidate>
+                    {# Skjult felt til at gemme det *oprindelige* brugernavn (nøglen til backend) #}
+                    <input type="hidden" id="edit_user_username" name="username">
+
+                    {# E-mail Felt #}
+                    <div class="form-floating mb-3">
+                        <input type="email" class="form-control" id="edit_user_email" name="email" placeholder="navn@example.com">
+                        <label for="edit_user_email">Email</label>
+                        {# Tilføjet plads til serverside validation feedback #}
+                        <div class="invalid-feedback" data-field="email">Angiv venligst en gyldig email.</div>
+                    </div>
+
+                    {# Rolle Vælger #}
+                    <div class="form-floating mb-3">
+                         <select class="form-select" id="edit_user_role" name="role" required aria-label="Vælg brugerrolle">
+                            <option value="user">Bruger (User)</option>
+                            <option value="admin">Administrator (Admin)</option>
+                        </select>
+                        <label for="edit_user_role">Brugerrolle</label>
+                        <div class="invalid-feedback" data-field="role">Vælg venligst en rolle.</div>
+                    </div>
+
+                    {# Om Mig Felt #}
+                    <div class="form-floating mb-3">
+                        <textarea class="form-control" id="edit_user_about_me" name="about_me" style="height: 100px" placeholder="Fortæl lidt om brugeren..."></textarea>
+                        <label for="edit_user_about_me">Om Mig (About Me)</label>
+                        {# Mulighed for validation på about_me hvis der er begrænsninger #}
+                        <div class="invalid-feedback" data-field="about_me">Beskrivelsen er for lang.</div>
+                    </div>
+
+                     {# Område til generelle beskeder / fejl fra serveren #}
+                    <div id="edit_user_feedback_msg" class="feedback-message alert d-none" role="alert"> {# Skjult fra start #}
+                        {# Indhold sættes af JS #}
+                    </div>
+
+                 </form>
+            </div>
+             <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuller</button>
+                 <button type="button" class="btn btn-success admin-action-btn" id="saveUserChangesBtn">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                     <i class="bi bi-save btn-icon me-1"></i> <span class="btn-text">Gem Ændringer</span>
+                 </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ... (resten af content blokken) ... #}
+{% endblock content %} {# Korrekt lukning af content blocken #}
+
+{# ----- SCRIPT BLOCK - KORREKT PLACERING ----- #}
+{# Flyttet til at være *efter* content blocken #}
+{% block scripts_extra %}
+    {{ super() }} {# Includes scripts from base.html (bootstrap, socket.io, utils.js, global.js etc.) #}
+    {# Sørg for at utils.js er loadet FØR admin_menu.js, typisk defineret i base.html #}
+    <script src="{{ url_for('static', filename='js/admin_menu.js') }}" defer></script>
+{% endblock scripts_extra %} {# Eksplicit navn for klarhed #}

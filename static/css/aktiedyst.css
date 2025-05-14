@@ -1,0 +1,457 @@
+/* aktiedyst.css */
+
+/* Baggrund for hele content-området */
+#content_area {
+  background: linear-gradient(135deg, #0d0d0d 0%, #1c1c1c 100%);
+  border-radius: 8px;
+  padding-bottom: 40px; /* Lidt ekstra bund-padding */
+}
+
+/* Avanceret header */
+.aktiedyst-header {
+  margin-bottom: 30px;
+  padding: 15px;
+  background-color: #2b2b2b;
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.5);
+  animation: fadeInDown 0.8s ease-in-out forwards;
+}
+.aktiedyst-title {
+  font-size: 2.4rem;
+  color: var(--primary-color, #00cca3);
+  margin-bottom: 0.5rem;
+  text-shadow: 1px 1px 2px #000;
+}
+.aktiedyst-subtitle {
+  color: #ccc;
+  font-size: 1.05rem;
+  margin-bottom: 0;
+}
+
+/* Custom Nav Tabs - fjerner den hvide linje og tilføjer en diskret bundlinje */
+.custom-nav-tabs {
+  border-bottom: none;
+  position: relative;
+  margin-bottom: 0.5rem;
+}
+.custom-nav-tabs::after {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: #333;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+}
+.custom-nav-tabs .nav-link {
+  color: #ccc;
+  background-color: #2a2a2a;
+  border: none;
+  border-radius: 0;
+  transition: background-color 0.2s;
+  position: relative;
+  z-index: 2;
+}
+.custom-nav-tabs .nav-link.active {
+  background-color: var(--primary-color, #00cca3);
+  color: #000;
+  font-weight: bold;
+}
+.custom-nav-tabs .nav-link:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Tab-pane animeret fade */
+.tab-pane {
+  animation: fadeInUp 0.5s ease-in-out;
+}
+
+/* Kort og kort-header */
+.card {
+  background-color: #1c1c1c;
+  border: none;
+  margin-bottom: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.6);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(0,0,0,0.7);
+}
+.card .card-header {
+  background-color: var(--header-bg, #333);
+  color: var(--font-color, #fff);
+  font-weight: bold;
+  border-bottom: 2px solid var(--primary-color, #00cca3);
+  text-shadow: 1px 1px 2px #000;
+}
+
+/* Værdier i oversigten */
+.aktiedyst-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--primary-color, #00cca3);
+  transition: color 0.3s ease;
+}
+/* Resultatfarver */
+.profit-positive {
+  color: #00ff00 !important;  /* Grøn for overskud */
+}
+.profit-negative {
+  color: #ff3333 !important;  /* Rød for tab */
+}
+
+/* Stock price display */
+.aktiedyst-stockprice {
+  font-size: 1.5rem;
+  color: var(--primary-color, #00cca3);
+  font-weight: bold;
+}
+
+/* Formularer */
+input.form-control,
+select.form-select {
+  background-color: #2b2b2b;
+  border: 1px solid #444;
+  color: var(--font-color, #fff);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Placeholder fix */
+input.form-control::placeholder,
+select.form-select::placeholder {
+  color: #aaa;
+  opacity: 1;
+}
+input.form-control:-ms-input-placeholder,
+select.form-select:-ms-input-placeholder {
+  color: #aaa;
+}
+input.form-control::-ms-input-placeholder,
+select.form-select::-ms-input-placeholder {
+  color: #aaa;
+}
+
+/* Fokus-styling */
+input.form-control:focus,
+select.form-select:focus {
+  border-color: var(--primary-color, #00cca3);
+  outline: none;
+  box-shadow: 0 0 4px rgba(0, 204, 163, 0.5);
+}
+
+/* Knap-styling */
+.btn-primary {
+  background-color: var(--primary-color, #00cca3);
+  border: none;
+  color: #000;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+.btn-primary:hover {
+  background-color: var(--primary-hover, #00b38f);
+  color: #fff;
+}
+.btn-success,
+.btn-danger,
+.btn-warning {
+  font-weight: 600;
+  border: none;
+}
+.btn-success:hover,
+.btn-danger:hover,
+.btn-warning:hover {
+  opacity: 0.9;
+}
+
+/* Tabel-styling */
+.table-dark {
+  background-color: #1c1c1c;
+}
+.table-dark th {
+  background-color: #333;
+  border-bottom: 2px solid var(--primary-color, #00cca3);
+  text-shadow: 1px 1px 2px #000;
+}
+.table-dark tbody tr:hover {
+  background-color: #2f2f2f;
+}
+.table-responsive {
+  overflow-x: auto;
+}
+
+/* Overblik over eksisterende porteføljer */
+#portfolio-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+#portfolio-list li {
+  background-color: #2b2b2b;
+  margin-bottom: 6px;
+  border: 1px solid #444;
+  border-radius: 4px;
+  padding: 10px;
+  transition: background-color 0.2s;
+}
+#portfolio-list li:hover {
+  background-color: #3a3a3a;
+}
+
+/* Watchlist styling */
+#watchlist-body tr:hover {
+  background-color: #2f2f2f;
+}
+
+/* Chart container */
+#chart-container {
+  min-height: 400px;
+  border: 1px solid #444;
+  border-radius: 6px;
+  animation: fadeIn 0.7s ease-in-out;
+}
+
+/* Animationer */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes fadeInDown {
+  0% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Ekstra spacing */
+.mb-4 {
+  margin-bottom: 1.5rem !important;
+}
+.mt-4 {
+  margin-top: 1.5rem !important;
+}
+
+/* KØB-KORT: Grønt tema */
+.buy-card {
+  border: 1px solid #28a745; /* Grøn kant */
+  border-radius: 6px;
+}
+.buy-card .card-header {
+  background-color: rgba(40, 167, 69, 0.1); /* Lys grøn baggrund */
+  color: #28a745;
+  font-weight: bold;
+  border-bottom: none;
+}
+
+/* SÆLG-KORT: Rødt tema */
+.sell-card {
+  border: 1px solid #dc3545; /* Rød kant */
+  border-radius: 6px;
+}
+.sell-card .card-header {
+  background-color: rgba(220, 53, 69, 0.1); /* Lys rød baggrund */
+  color: #dc3545;
+  font-weight: bold;
+  border-bottom: none;
+}
+
+/* Card body padding kan justeres */
+.buy-card .card-body,
+.sell-card .card-body {
+  padding: 16px;
+}
+
+/* Gør knappen bred i sin kolonne */
+.btn-success.w-100,
+.btn-danger.w-100 {
+  /* w-100 sikrer 100% bredde i kolonnen */
+}
+
+/* Evt. justér margin bund på row, hvis du vil have mere luft: */
+.row.g-3.mb-2 {
+  margin-bottom: 0.8rem; /* fx */
+}
+
+/* Sørger for at fanerne ikke hopper ned på næste linje.
+   De bliver “scrollbare” hvis der er for mange til at passe på skærmen. */
+
+.custom-nav-tabs {
+  white-space: nowrap;     /* ingen line-break mellem faner */
+  overflow-x: auto;        /* vis scrollbar, hvis for lange til at passe */
+  overflow-y: hidden;      /* undgå lodret scroll */
+  -webkit-overflow-scrolling: touch; /* for “smooth” scrolling på iOS */
+}
+
+/* Fjerner eventuel standard wrap fra Bootstrap */
+.custom-nav-tabs .nav-item {
+  float: none; /* Overrule */
+}
+
+/* Lidt styling, så fanerne ikke er alt for brede:
+   Her er et eksempel, men juster selv. */
+.custom-nav-tabs .nav-link {
+  padding: 0.5rem 0.75rem;
+  margin-right: 2px; /* en smule afstand mellem fanerne */
+  white-space: nowrap; /* bevar navne i én linje */
+}
+
+/* Evt. for at sikre, at knapperne ikke bliver for brede: */
+.custom-nav-tabs .nav-link i {
+  margin-right: 4px;
+}
+
+/* Hvis du vil have en diskret scrollbar-stil (Chrome, Safari) */
+.custom-nav-tabs::-webkit-scrollbar {
+  height: 6px; /* lav scrollbars */
+}
+.custom-nav-tabs::-webkit-scrollbar-track {
+  background: #1c1c1c;
+}
+.custom-nav-tabs::-webkit-scrollbar-thumb {
+  background-color: #444;
+  border-radius: 3px;
+}
+
+/* For at undgå at tab-linjen får en for stor “bottom-border”,
+   kan du justere .nav-tabs selv, fx: */
+.custom-nav-tabs.nav-tabs {
+  border-bottom: 1px solid #444;
+}
+
+/* ----- Generel Aktiedyst Styling ----- */
+.custom-nav-tabs .nav-link {
+  color: #adb5bd; /* Lidt lysere grå til inaktive tabs */
+  border-bottom: 3px solid transparent;
+  margin-bottom: -1px; /* Kompenser for border */
+}
+.custom-nav-tabs .nav-link.active {
+  color: #fff;
+  background-color: #343a40; /* Lidt mørkere baggrund for aktiv tab */
+  border-color: #0d6efd #343a40 #fff; /* Top/sider/bund - Tjek om #fff bundfarve er ønsket */
+  border-bottom-width: 3px;
+}
+.custom-nav-tabs .nav-link:hover:not(.active) {
+  color: #dee2e6;
+  border-bottom-color: #adb5bd; /* Svag highlight ved hover */
+}
+.buy-card .card-header { background-color: #198754 !important; color: white; } /* Added !important if needed */
+.sell-card .card-header { background-color: #dc3545 !important; color: white; } /* Added !important if needed */
+.aktiedyst-value { font-size: 1.2rem; font-weight: bold; }
+.positive-change { color: #198754; } /* Grøn for positiv */
+.negative-change { color: #dc3545; } /* Rød for negativ */
+.no-change { color: #adb5bd; } /* Grå for ingen ændring */
+
+/* Fælles class for data placeholders og loading */
+.data-placeholder { color: #6c757d; font-style: italic; opacity: 0.7; }
+.loading-spinner { display: none; /* Vises af JS */ }
+.error-message { display: none; color: #dc3545; /* Vises af JS */}
+.feedback-area .alert { margin-top: 0.5rem !important; font-size: 0.9em; padding: 0.5rem 0.75rem; }
+.modal-feedback { display: none; /* For feedback inside modals */ }
+
+
+/* ----- Specifikke Dark Mode Overrides for Aktiedyst Tabs ----- */
+/* Da base.html formodentlig sætter body bg og text farve,
+   fokuserer vi på elementer INDE i aktiedyst-tabsne. */
+#aktiedystContainer .card { background-color: #343a40; border-color: #495057; margin-bottom: 1.5rem; /* Added margin */ }
+#aktiedystContainer .card-header { background-color: #495057; border-bottom: 1px solid #555c63; /* Lidt lysere kant */ }
+#aktiedystContainer .list-group-item { background-color: #343a40; color: #dee2e6; border-color: #495057; }
+#aktiedystContainer .list-group-item:hover { background-color: #495057; } /* Hover effect */
+#aktiedystContainer .input-group-text { background-color: #495057; border-color: #6c757d; color: #ced4da; /* Lidt lysere ikon farve */ }
+
+/* Sørger for at forms inden i aktiedyst tab container er mørke */
+#aktiedystContainer .form-control,
+#aktiedystContainer .form-select {
+  background-color: #495057;
+  color: #fff;
+  border: 1px solid #6c757d;
+}
+#aktiedystContainer .form-control::placeholder { color: #adb5bd; opacity: 1; }
+#aktiedystContainer .form-floating > label { color: #adb5bd; }
+#aktiedystContainer .form-control:focus,
+#aktiedystContainer .form-select:focus {
+  background-color: #5a6268;
+  color: #fff;
+  border-color: #86b7fe; /* Bootstrap default focus blue */
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Bootstrap default focus shadow */
+}
+/* Særskilt for invalid inputs inden for containeren */
+#aktiedystContainer .form-control.is-invalid,
+#aktiedystContainer .form-select.is-invalid {
+    border-color: #dc3545;
+    background-image: none; /* Fjerner Bootstrap rød ikon */
+}
+#aktiedystContainer .form-control.is-invalid:focus,
+#aktiedystContainer .form-select.is-invalid:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+}
+#aktiedystContainer .form-floating > .form-control.is-invalid ~ .invalid-feedback {
+    color: #f8d7da; /* Lidt lysere rød for feedback */
+}
+
+/* Særskilt for date input kalender ikon */
+#aktiedystContainer input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8); /* Gør ikonet lyst på mørk baggrund */
+}
+
+/* Særskilt for Tabeller inden for containeren */
+ #aktiedystContainer .table {
+     color: #dee2e6; /* Lys tekst */
+     border-color: #495057; /* Mørk kant */
+ }
+ #aktiedystContainer .table th,
+ #aktiedystContainer .table td {
+    border-top-color: #495057; /* Mørk linje mellem rækker */
+    vertical-align: middle;
+    padding: 0.6rem 0.5rem; /* Justeret padding */
+ }
+ #aktiedystContainer .table > thead {
+     vertical-align: bottom;
+     border-bottom: 2px solid #6c757d; /* Lidt tydeligere kant under header */
+ }
+ #aktiedystContainer .table-striped > tbody > tr:nth-of-type(odd) > * {
+      /* Override Bootstraps default (der kan være for lys) */
+      background-color: rgba(255, 255, 255, 0.03); /* Meget svag lysere tone */
+      color: inherit;
+ }
+ #aktiedystContainer .table-hover > tbody > tr:hover > * {
+      background-color: rgba(255, 255, 255, 0.07); /* Lidt tydeligere hover */
+      color: #fff;
+ }
+ #aktiedystContainer .table tfoot td,
+ #aktiedystContainer .table tfoot th {
+     border-top: 2px solid #6c757d; /* Tydelig kant over footer */
+ }
+ 
+ /* Styles moved from aktiedyst.html inline */
+ #analysis-loading .spinner-border {
+   width: 3rem;
+   height: 3rem;
+ }
+ 
+ #chart-placeholder {
+   min-height: 400px;
+ }
+
+/* Sørg for badges er læselige */
+#aktiedystContainer .badge.bg-warning { color: #000 !important; }
+#aktiedystContainer .badge.bg-info { color: #000 !important; }
+#aktiedystContainer .badge.bg-light { color: #000 !important; }
+
+/* Button Loading State (kan genbruges fra login.css?) */
+#aktiedystContainer .btn .loading-spinner { display: none; }
+#aktiedystContainer .btn.is-loading .loading-spinner {
+  display: inline-block;
+  vertical-align: text-bottom;
+  margin-right: 0.5em;
+}
+#aktiedystContainer .btn.is-loading > *:not(.loading-spinner) {
+   opacity: 0.65; /* Gør tekst/ikon svagere */
+   pointer-events: none; /* Undgå dobbeltklik */
+}
+

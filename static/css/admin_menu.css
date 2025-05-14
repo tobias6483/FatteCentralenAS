@@ -1,0 +1,639 @@
+/* ==========================================================
+   ADMIN PANEL STYLES - Modernized (v2.0)
+   static/css/admin_menu.css
+   ========================================================== */
+
+/* ----- Global Admin Styles & Variables ----- */
+:root {
+    --admin-text-primary: var(--font-color-base, #dee2e6);
+    --admin-text-secondary: var(--font-color-muted, #adb5bd);
+    --admin-text-highlight: var(--font-color-highlight, #ffffff);
+    --admin-bg-primary: var(--secondary-bg, #1c1c1c); /* Main tab content area */
+    --admin-bg-card: var(--card-bg, #222222); /* Card backgrounds */
+    --admin-bg-card-header: var(--secondary-bg-lighter, #2b2b2b); /* Slightly lighter for card headers */
+    --admin-bg-hover: var(--secondary-bg-hover, #343a40);
+    --admin-border-primary: var(--border-color-dark, #495057);
+    --admin-border-secondary: var(--border-color-medium, #6c757d);
+    --admin-border-interactive: var(--primary-color, #00cca3);
+    --admin-shadow-card: var(--card-shadow-light, 0 2px 8px rgba(0, 0, 0, 0.2));
+    --admin-shadow-card-hover: var(--card-shadow-dark, 0 4px 12px rgba(0, 0, 0, 0.4));
+    --admin-radius: var(--card-border-radius, 0.5rem);
+    --admin-radius-sm: var(--card-border-radius-sm, 0.375rem);
+}
+
+/* ----- Panel Header ----- */
+.admin-panel-header {
+    border-bottom: 1px solid var(--admin-border-primary);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem; /* Consistent spacing */
+}
+
+.admin-panel-header h1 {
+    color: var(--admin-text-highlight);
+    font-weight: 600; /* Bolder title */
+}
+
+.admin-panel-header h1 i {
+    color: var(--primary-color);
+    font-size: 1.3em; /* Slightly larger icon */
+    vertical-align: -0.15em;
+    margin-right: 0.5rem;
+}
+
+/* ----- Tab Navigation ----- */
+.admin-tabs {
+    border-bottom: 2px solid var(--admin-border-primary); /* Thicker bottom border for the whole tab bar */
+    display: flex;
+    flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 0; /* Remove default margin */
+}
+
+.admin-tabs .nav-item {
+    margin-right: 0.25rem; /* Space between tabs */
+    margin-bottom: -2px; /* Overlap the bottom border of the tab bar */
+}
+
+.admin-tabs .nav-link {
+    color: var(--admin-text-secondary);
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-bottom: 2px solid transparent; /* For active state indication */
+    border-radius: var(--admin-radius-sm) var(--admin-radius-sm) 0 0; /* Rounded top corners */
+    padding: 0.8rem 1.25rem; /* Generous padding */
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+
+.admin-tabs .nav-link:hover:not(.active) {
+    color: var(--admin-text-highlight);
+    background-color: var(--admin-bg-hover);
+    border-bottom-color: var(--admin-border-secondary); /* Subtle hover indication */
+}
+
+.admin-tabs .nav-link.active {
+    color: var(--admin-text-highlight);
+    background-color: var(--admin-bg-primary); /* Match tab content background */
+    font-weight: 600;
+    border-color: var(--admin-border-primary) var(--admin-border-primary) transparent var(--admin-border-primary);
+    border-bottom: 2px solid var(--admin-border-interactive); /* Prominent active indicator */
+}
+
+.admin-tabs .nav-link i {
+    margin-right: 0.5rem;
+    vertical-align: -0.1em;
+    font-size: 1.1em;
+}
+
+/* ----- Tab Content Area ----- */
+.admin-tab-content {
+    background-color: var(--admin-bg-primary);
+    border: 1px solid var(--admin-border-primary);
+    border-top: none;
+    border-radius: 0 0 var(--admin-radius) var(--admin-radius);
+    padding: 1.75rem; /* Increased padding */
+    min-height: 400px; /* Ensure sufficient height */
+}
+
+/* ----- Admin Section Cards ----- */
+.admin-section-card {
+    background-color: var(--admin-bg-card);
+    border: 1px solid var(--admin-border-primary);
+    border-radius: var(--admin-radius);
+    margin-bottom: 2rem; /* More space between cards */
+    box-shadow: var(--admin-shadow-card);
+    transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.admin-section-card:hover {
+   transform: translateY(-3px);
+   box-shadow: var(--admin-shadow-card-hover);
+}
+
+.admin-section-card:last-child {
+     margin-bottom: 0;
+}
+
+.admin-section-card .card-header {
+    background-color: var(--admin-bg-card-header);
+    color: var(--admin-text-highlight);
+    font-weight: 600;
+    font-size: 1.05rem; /* Slightly larger header text */
+    padding: 1rem 1.5rem; /* Consistent padding */
+    border-bottom: 1px solid var(--admin-border-primary);
+    border-radius: calc(var(--admin-radius) - 1px) calc(var(--admin-radius) - 1px) 0 0;
+}
+
+.admin-section-card .card-header i {
+     color: var(--primary-color);
+     margin-right: 0.6rem;
+     font-size: 1.15em;
+     vertical-align: -0.1em;
+}
+
+.admin-section-card .card-body {
+    padding: 1.5rem;
+}
+
+.admin-section-card .card-footer {
+    background-color: var(--admin-bg-card-header); /* Match header background */
+    border-top: 1px solid var(--admin-border-primary);
+    padding: 1rem 1.5rem;
+    border-radius: 0 0 calc(var(--admin-radius) - 1px) calc(var(--admin-radius) - 1px);
+}
+
+.admin-section-card .card-body.p-0 {
+    padding: 0 !important;
+}
+
+/* ----- Form Elements ----- */
+.admin-section-card .form-control,
+.admin-section-card .form-select,
+.modal-custom .form-control,
+.modal-custom .form-select {
+    color: var(--input-color, var(--admin-text-primary)) !important;
+    background-color: var(--input-bg, #212529) !important;
+    border: 1px solid var(--input-border-color, var(--admin-border-primary)) !important;
+    border-radius: var(--admin-radius-sm) !important;
+    font-size: 0.9rem;
+    padding: 0.75rem 1rem !important; /* Consistent padding */
+    transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    position: relative;
+    z-index: 2;
+}
+
+.admin-section-card .form-floating > textarea.form-control,
+.modal-custom .form-floating > textarea.form-control {
+    padding: 0.75rem 1rem !important;
+    min-height: calc(1.5em + 1.5rem + 2px); /* Adjust based on padding */
+}
+
+.admin-section-card .form-control::placeholder,
+.modal-custom .form-control::placeholder {
+    color: var(--input-placeholder-color, var(--admin-text-secondary)) !important;
+    opacity: 1 !important;
+}
+
+.admin-section-card .form-control:focus,
+.admin-section-card .form-select:focus,
+.modal-custom .form-control:focus,
+.modal-custom .form-select:focus {
+    color: var(--input-color-focus, var(--admin-text-highlight)) !important;
+    background-color: var(--input-bg-focus, #343a40) !important;
+    border-color: var(--input-border-focus, var(--admin-border-interactive)) !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb, 0, 204, 163), 0.3) !important; /* Softer focus shadow */
+    z-index: 3;
+}
+
+.admin-section-card .form-select,
+.modal-custom .form-select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23cccccc' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px 12px;
+}
+
+.admin-section-card .form-select:focus,
+.modal-custom .form-select:focus {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2300cca3' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.admin-section-card .form-control:disabled,
+.admin-section-card .form-control[readonly],
+.modal-custom .form-control:disabled,
+.modal-custom .form-control[readonly] {
+  background-color: var(--admin-bg-hover) !important;
+  color: var(--admin-text-secondary) !important;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Floating Labels */
+.admin-section-card .form-floating,
+.modal-custom .form-floating {
+    position: relative;
+}
+
+.admin-section-card .form-floating > label,
+.modal-custom .form-floating > label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    padding: 0.75rem 1rem; /* Match input padding */
+    pointer-events: none;
+    border: 1px solid transparent;
+    transform-origin: 0 0;
+    transition: opacity .1s ease-in-out, transform .1s ease-in-out, background-color .1s ease-in-out;
+    color: var(--input-placeholder-color, var(--admin-text-secondary));
+    font-size: 0.9rem;
+    line-height: 1.5;
+    z-index: 1;
+    opacity: 0; /* Start transparent, input background covers it */
+}
+
+.admin-section-card .form-floating > .form-control:focus ~ label,
+.admin-section-card .form-floating > .form-control:not(:placeholder-shown) ~ label,
+.admin-section-card .form-floating > textarea.form-control:focus ~ label,
+.admin-section-card .form-floating > textarea.form-control:not(:placeholder-shown) ~ label,
+.admin-section-card .form-floating > .form-select ~ label,
+.modal-custom .form-floating > .form-control:focus ~ label,
+.modal-custom .form-floating > .form-control:not(:placeholder-shown) ~ label,
+.modal-custom .form-floating > textarea.form-control:focus ~ label,
+.modal-custom .form-floating > textarea.form-control:not(:placeholder-shown) ~ label,
+.modal-custom .form-floating > .form-select ~ label {
+    opacity: 1 !important;
+    transform: scale(0.85) translateY(-0.75rem) translateX(0.15rem); /* Adjusted transform */
+    color: var(--font-color-muted-lighter, #ced4da);
+    font-size: 0.8rem; /* Slightly smaller floating label */
+    background-color: var(--input-bg, #212529) !important; /* Match input BG for cutout effect */
+    padding: 0.1rem 0.4rem !important; /* Padding for the label itself */
+    height: auto;
+    width: auto;
+    border-radius: 0.2rem;
+    z-index: 3; /* Above input border */
+}
+
+.admin-section-card .form-floating > .form-control:disabled ~ label,
+.admin-section-card .form-floating > .form-control[readonly] ~ label,
+.modal-custom .form-floating > .form-control:disabled ~ label,
+.modal-custom .form-floating > .form-control[readonly] ~ label {
+    background-color: transparent !important;
+    color: var(--admin-text-secondary) !important;
+    opacity: 0.6;
+}
+
+.input-group-text {
+    background-color: var(--admin-bg-hover);
+    border-color: var(--input-border-color, var(--admin-border-primary));
+    color: var(--admin-text-secondary);
+    font-size: 0.9rem;
+    border-radius: var(--admin-radius-sm);
+}
+.input-group .form-control { /* Ensure input group controls don't double radius */
+    border-radius: var(--admin-radius-sm);
+}
+.input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+    margin-left: -1px;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+.input-group > :not(:last-child):not(.dropdown-toggle):not(.dropdown-menu):not(.form-floating) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+
+/* ----- Tables ----- */
+.admin-section-card .table {
+    margin-bottom: 0;
+    border-collapse: separate; /* Allows for border-radius on table */
+    border-spacing: 0;
+}
+
+.admin-section-card .table thead th {
+    color: var(--admin-text-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid var(--admin-border-secondary) !important;
+    white-space: normal; /* Allow header text to wrap */
+    padding: 0.85rem 1rem; /* Consistent padding */
+    vertical-align: bottom;
+    background-color: var(--admin-bg-card-header); /* Match card header */
+}
+/* Apply border radius to first and last header cells */
+.admin-section-card .table thead tr:first-child th:first-child {
+    border-top-left-radius: calc(var(--admin-radius) - 1px);
+}
+.admin-section-card .table thead tr:first-child th:last-child {
+    border-top-right-radius: calc(var(--admin-radius) - 1px);
+}
+
+
+.admin-section-card .table tbody tr:hover td {
+   background-color: var(--admin-bg-hover) !important; /* Re-add !important for hover consistency */
+   color: var(--admin-text-highlight) !important; /* Re-add !important for hover consistency */
+}
+
+.admin-section-card .table tbody td {
+    font-size: 0.9rem;
+    padding: 0.85rem 1rem;
+    border-top: 1px solid var(--admin-border-primary);
+    vertical-align: middle;
+    color: var(--admin-text-primary) !important; /* FORCE light text */
+    background-color: transparent !important; /* Force transparent background to inherit from card */
+}
+
+/* Comment about striping remains */
+/* Dark theme friendly striping for tables - REMOVED as table-striped class was removed from HTML */
+
+
+.admin-section-card .table .table-loading-row td,
+.admin-section-card .table .table-placeholder-row td {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--admin-text-secondary);
+    font-style: italic;
+    background-color: transparent !important;
+}
+
+.admin-section-card .table .table-loading-row .spinner-border {
+    color: var(--primary-color);
+    width: 1.5rem;
+    height: 1.5rem;
+}
+.admin-section-card .table .table-placeholder-row i {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+
+.table tbody.is-loading tr:not(.table-loading-row) { display: none; }
+.table tbody:not(.is-loading) .table-loading-row { display: none; }
+
+.admin-section-card .table td .btn {
+    padding: 0.2rem 0.5rem; /* Slightly larger padding for table buttons */
+    font-size: 0.8rem;
+    margin: 0 2px;
+    /* Default to solid secondary button style */
+    background-color: var(--bs-secondary);
+    border-color: var(--bs-secondary);
+    color: var(--bs-light); /* Assuming secondary is dark */
+    transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+.admin-section-card .table td .btn:hover:not(:disabled) {
+    filter: brightness(90%); /* Simple hover effect */
+}
+
+/* Override for specific button types within tables */
+.admin-section-card .table td .btn-info {
+    background-color: var(--bs-info); border-color: var(--bs-info); color: var(--bs-light);
+}
+.admin-section-card .table td .btn-danger {
+    background-color: var(--bs-danger); border-color: var(--bs-danger); color: var(--bs-light);
+}
+.admin-section-card .table td .btn-primary {
+     background-color: var(--bs-primary); border-color: var(--bs-primary); color: var(--bs-light); /* Adjust color if primary is light */
+}
+.admin-section-card .table td .btn-success {
+     background-color: var(--bs-success); border-color: var(--bs-success); color: var(--bs-light);
+}
+.admin-section-card .table td .btn-warning {
+     background-color: var(--bs-warning); border-color: var(--bs-warning); color: var(--bs-dark); /* Warning often needs dark text */
+}
+
+/* Ensure disabled buttons look appropriately faded */
+.admin-section-card .table td .btn:disabled {
+    opacity: 0.65;
+    pointer-events: none;
+    /* Keep background/border for visual consistency, just faded */
+}
+
+
+.admin-section-card .table td .btn i {
+    font-size: 1.1em;
+    vertical-align: -0.05em;
+}
+
+/* ----- Buttons ----- */
+.admin-action-btn {
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    font-weight: 500;
+    border-radius: var(--admin-radius-sm);
+    padding: 0.5rem 1rem; /* Default padding */
+    font-size: 0.9rem;
+}
+.admin-action-btn.btn-sm {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.8rem;
+}
+
+.admin-action-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.admin-action-btn:active {
+    transform: translateY(0px);
+    box-shadow: none;
+}
+
+/* Specific button colors - ensure good contrast */
+.admin-action-btn.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--button-text-dark, #111);
+}
+.admin-action-btn.btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: var(--button-text-dark, #111);
+}
+
+.admin-action-btn.btn-outline-primary {
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+.admin-action-btn.btn-outline-primary:hover {
+    color: var(--button-text-dark, #111) !important;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.admin-action-btn.btn-outline-secondary {
+    color: var(--admin-text-secondary) !important;
+    border-color: var(--admin-border-secondary) !important;
+}
+.admin-action-btn.btn-outline-secondary:hover {
+    color: var(--admin-text-highlight) !important;
+    background-color: var(--admin-border-secondary) !important;
+    border-color: var(--admin-border-secondary) !important;
+}
+
+
+.admin-action-btn.btn-success { background-color: var(--success-color); border-color: var(--success-color); color: var(--button-text-dark, #111); }
+.admin-action-btn.btn-success:hover { background-color: #00b359; border-color: #00b359; color: var(--button-text-dark, #111); }
+
+.admin-action-btn.btn-danger { background-color: var(--danger-color); border-color: var(--danger-color); color: var(--admin-text-highlight); }
+.admin-action-btn.btn-danger:hover { background-color: #e02d2d; border-color: #e02d2d; color: var(--admin-text-highlight); }
+
+.admin-action-btn.btn-warning { background-color: var(--warning-color); border-color: var(--warning-color); color: var(--button-text-dark, #303030); }
+.admin-action-btn.btn-warning:hover { background-color: #e6ac00; border-color: #e6ac00; color: var(--button-text-dark, #303030); }
+
+.admin-action-btn.btn-info { background-color: var(--info-color); border-color: var(--info-color); color: var(--admin-text-highlight); }
+.admin-action-btn.btn-info:hover { background-color: #138ea1; border-color: #138ea1; color: var(--admin-text-highlight); }
+
+
+/* Loading state for buttons */
+.admin-action-btn .spinner-border {
+    display: none;
+    width: 0.8em; /* Adjust size relative to font */
+    height: 0.8em;
+    vertical-align: -0.1em;
+    margin-right: 0.4em;
+    border-width: 0.15em;
+}
+.admin-action-btn.is-loading {
+    pointer-events: none;
+    cursor: wait;
+    opacity: 0.85;
+}
+.admin-action-btn.is-loading .spinner-border { display: inline-block; }
+.admin-action-btn.is-loading .btn-text,
+.admin-action-btn.is-loading .btn-icon { opacity: 0.6; }
+
+/* ----- Feedback Messages ----- */
+.feedback-message {
+    min-height: 1.5rem; /* Ensure space even if empty */
+    font-size: 0.875rem;
+    margin-top: 1rem;
+    padding: 0;
+}
+.feedback-message .alert {
+    padding: 0.6rem 1.2rem; /* More padding */
+    margin-bottom: 0;
+    font-size: 1em;
+    border: none;
+    border-left: 4px solid; /* Accent border */
+    display: flex;
+    align-items: center;
+    border-radius: var(--admin-radius-sm);
+}
+.feedback-message .alert i { margin-right: 0.6rem; font-size: 1.2em; }
+
+.feedback-message .alert-success { border-left-color: var(--success-color); background-color: rgba(var(--success-color-rgb), 0.1); color: var(--success-color);}
+.feedback-message .alert-danger { border-left-color: var(--danger-color); background-color: rgba(var(--danger-color-rgb), 0.1); color: var(--danger-color);}
+.feedback-message .alert-warning { border-left-color: var(--warning-color); background-color: rgba(var(--warning-color-rgb), 0.1); color: var(--warning-color); }
+.feedback-message .alert-info { border-left-color: var(--info-color); background-color: rgba(var(--info-color-rgb), 0.1); color: var(--info-color); }
+
+
+/* ----- Modal Styling ----- */
+.modal-custom .modal-content {
+    background-color: var(--modal-bg, var(--admin-bg-card)); /* Use modal-bg or fallback */
+    color: var(--admin-text-primary);
+    border: 1px solid var(--modal-border-color, var(--admin-border-secondary));
+    border-radius: var(--admin-radius);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3); /* More prominent shadow for modals */
+}
+
+.modal-custom .modal-header {
+    border-bottom: 1px solid var(--modal-border-color, var(--admin-border-primary));
+    padding: 1.25rem 1.5rem; /* Generous padding */
+}
+
+.modal-custom .modal-header .modal-title {
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--admin-text-highlight);
+}
+.modal-custom .modal-header .modal-title i {
+    color: var(--primary-color);
+    margin-right: 0.5rem;
+}
+
+.modal-custom .modal-body {
+    padding: 1.5rem;
+}
+
+.modal-custom .modal-footer {
+    border-top: 1px solid var(--modal-border-color, var(--admin-border-primary));
+    padding: 1rem 1.5rem;
+    background-color: rgba(0,0,0,0.05); /* Subtle footer background */
+    border-radius: 0 0 calc(var(--admin-radius) - 1px) calc(var(--admin-radius) - 1px);
+}
+
+#editSessionModalLabel #editSessionModalSessionId,
+#editUserModalLabel #editUserModalUsername {
+    font-size: 0.75em;
+    color: var(--admin-text-secondary);
+    font-weight: 400;
+    margin-left: 0.3rem;
+    vertical-align: middle;
+}
+
+#deleteUserConfirmModal .modal-title { color: var(--danger-color) !important; }
+#deleteUserConfirmModal .modal-body strong#userToDeleteName { color: var(--info-color); }
+#deleteUserConfirmModal .modal-body p { font-size: 1rem; }
+
+
+/* ----- Validation States ----- */
+.admin-section-card .form-control.is-invalid, .modal-custom .form-control.is-invalid,
+.admin-section-card .form-select.is-invalid, .modal-custom .form-select.is-invalid {
+    border-color: var(--danger-color) !important;
+    box-shadow: 0 0 0 0.25rem rgba(var(--danger-color-rgb), 0.25) !important;
+}
+.admin-section-card .form-control.is-valid, .modal-custom .form-control.is-valid,
+.admin-section-card .form-select.is-valid, .modal-custom .form-select.is-valid {
+     border-color: var(--success-color) !important;
+     box-shadow: 0 0 0 0.25rem rgba(var(--success-color-rgb), 0.25) !important;
+}
+.invalid-feedback { color: var(--danger-color); font-size: 0.85rem; margin-top: 0.25rem; }
+.valid-feedback { color: var(--success-color); font-size: 0.85rem; margin-top: 0.25rem; }
+
+/* ----- Utilities ----- */
+.admin-section-card + .admin-section-card {
+   margin-top: 2rem; /* Match bottom margin */
+}
+
+/* Ensure sticky table headers have correct background */
+.table-responsive > .table > .sticky-top {
+    background-color: var(--admin-bg-card-header) !important; /* Match card header */
+}
+.table-responsive > .table > .sticky-top th {
+    background-color: inherit !important; /* Inherit from thead */
+}
+
+/* Small text utility for table footers etc. */
+.text-muted.small {
+    font-size: 0.85em;
+}
+
+/* Removed previous high-specificity fix for #passwordResetPane as the general rule above should cover it. */
+
+/* Removed specific password reset button styles, handled by general table button rules now */
+
+/* =============================================
+   FINAL ATTEMPT - FORCE TABLE CELL COLORS (End of File)
+   ============================================= */
+.admin-section-card .table tbody td,
+.admin-section-card .table thead th {
+    color: #dee2e6 !important; /* Force light text */
+    background-color: #222222 !important; /* Force dark background */
+}
+
+.admin-section-card .table tbody tr:hover td {
+   background-color: #343a40 !important; /* Force dark hover background */
+   color: #ffffff !important; /* Force white hover text */
+}
+
+/* Ensure links within table cells are also readable */
+.admin-section-card .table tbody td a {
+    color: var(--primary-color) !important; /* Use primary color for links */
+}
+.admin-section-card .table tbody td a:hover {
+    color: var(--primary-hover) !important; /* Darker primary on hover */
+}
+
+/* Ensure badges within table cells have contrast */
+.admin-section-card .table tbody td .badge.bg-success-subtle {
+    color: #0a3622 !important; /* Example: Force dark text on light green badge */
+}
+.admin-section-card .table tbody td .badge.bg-warning-subtle {
+    color: #664d03 !important; /* Example: Force dark text on light yellow badge */
+}
+.admin-section-card .table tbody td .badge.bg-secondary-subtle {
+    color: #1f2326 !important; /* Example: Force dark text on light gray badge */
+}
+.admin-section-card .table tbody td .badge.bg-danger-subtle {
+    color: #58151c !important; /* Example: Force dark text on light red badge */
+}
+.admin-section-card .table tbody td .badge.bg-info-subtle {
+    color: #055160 !important; /* Example: Force dark text on light blue badge */
+}

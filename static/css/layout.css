@@ -1,0 +1,305 @@
+/* layout.css - OPDATERET med opgraderet navbar search */
+
+/* Overordnet baggrund & tekstfarve (hvis ikke defineret i variables.css) */
+html, body {
+  margin: 0;
+  padding: 0; /* Nulstil padding for body initielt */
+  width: 100%;
+  min-height: 100vh; /* Sikrer body altid fylder mindst skærmhøjden */
+  box-sizing: border-box;
+  background-color: #1a1a1a; /* Ny, mindre intens mørk */
+  color: var(--font-color-base, #dee2e6); /* Sørg for tekstfarven stadig har god kontrast */
+  font-family: "Helvetica", sans-serif;
+  overflow-x: hidden; /* Forhindre vandret scroll */
+}
+
+/* === Håndtering af fixed-top navbar === */
+body {
+   /* Tilføjer plads i toppen af body, så indholdet ikke starter *under* navbar */
+   /* Juster 60px hvis din navbar har en anden højde */
+   padding-top: 60px;
+}
+
+/* === Sidebar Styling === */
+#sidebar {
+  position: fixed;      /* Låser sidebaren */
+  top: 60px;           /* Starter LIGE under navbar (match navbar højde) */
+  left: 0;
+  width: 220px;         /* Sidebarens bredde */
+  height: calc(100vh - 60px); /* Fylder resten af skærmens højde */
+  background-color: var(--secondary-bg-lighter, #2b2b2b); /* Brug din variabel */
+  padding: 20px;
+  box-sizing: border-box; /* Sikrer padding er inkluderet i height */
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;     /* Scroll hvis indholdet er for højt */
+  overflow-x: hidden;
+  z-index: 1020;        /* Under navbar (typisk 1030), over indhold */
+}
+
+#sidebar h5 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--primary-color, #00cca3);
+  font-weight: 700;
+}
+
+#sidebar a {
+  display: block;
+  margin: 6px 0;
+  padding: 10px 12px;
+  color: var(--font-color, #fff);
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  font-weight: 500;
+  white-space: nowrap;      /* Forhindrer tekstombrydning */
+  overflow: hidden;         /* Skjuler tekst, der går ud over boksen */
+  text-overflow: ellipsis;  /* Viser "..." for skjult tekst */
+}
+
+#sidebar hr.sidebar-divider {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border-color: var(--border-color-light-alpha, rgba(255, 255, 255, 0.1));
+  border-style: solid; /* Definer stilen */
+  border-width: 1px 0 0 0; /* Sæt KUN top-border bredde til 1px, resten 0 */
+  height: 0; /* Nulstil evt. default højde */
+  opacity: 1; /* Sørg for den er synlig */
+}
+
+#sidebar nav a:last-of-type {
+  margin-bottom: 0;
+}
+
+#sidebar a:hover {
+  background-color: var(--primary-color, #00cca3);
+  color: var(--button-text-dark, #000);
+}
+#sidebar a.active {
+  background-color: var(--primary-color, #00cca3);
+  color: var(--button-text-dark, #000);
+  font-weight: 600;
+}
+
+/* === Content-området === */
+#content_area { /* Gælder <main> når sidebar er vist */
+  margin-left: 220px;  /* VIGTIGT: Gør plads til sidebar (match #sidebar width) */
+  width: calc(100% - 220px); /* Sætter bredden til det resterende */
+  padding: 20px;       /* Giver luft omkring indholdet */
+}
+
+#content_area_public { /* Bruges på <main> når bruger IKKE er logget ind */
+  width: 100%;         /* Fylder hele bredden */
+  padding: 20px;       /* Standard padding */
+}
+
+/* Sikrer .container ikke får dobbelt padding */
+#content_area > .container,
+#content_area > .container-fluid,
+#content_area_public > .container,
+#content_area_public > .container-fluid {
+    padding-left: 0;
+    padding-right: 0;
+}
+
+/* Skjul elementer */
+.hidden {
+  display: none;
+}
+
+/* PAGE-TRANSITIONS */
+.page {
+  opacity: 1;
+  transition: opacity 0.4s ease-in-out;
+}
+.page.hidden {
+  opacity: 0;
+}
+
+/* === TOPBAR === */
+.topbar-custom {
+  background-color: var(--secondary-bg, #1c1c1c); /* Opdateret til variabel */
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
+  min-height: 60px; /* Match body padding-top */
+}
+
+.topbar-custom .search-form {
+  /* Behøver muligvis ikke denne regel hvis formen har d-flex el. lign. */
+  /* margin-left: auto;   */
+  /* margin-right: 20px; */
+  /* max-width: 300px; */ /* Corrected comment */
+  flex-grow: 1;        /* Tillad dette element at tage ledig plads */
+  margin-left: 27rem;   /* Eksperimenter med denne værdi (fx 1rem, 3rem, 5vw) */
+  margin-right: 2rem;  /* Eksperimenter med denne værdi (fx 1rem, 3rem, 5vw) */
+  
+}
+
+
+/* ====================================================== */
+/* ===== START: OPDATERET Navbar Søgefelt Styling ===== */
+/* ====================================================== */
+
+/* === ERSTAT GAMLE SØGEFELT REGLER MED DETTE === */
+
+/* --- Inputfeltet --- */
+/* Tjek din HTML - har input også 'form-control' klassen? Hvis ja, tilføj den for specificitet */
+.topbar-custom .search-form input {
+  background-color: var(--navbar-search-input-bg, #343a40); /* Check variables.css! */
+  border: 1px solid var(--navbar-search-input-border, #495057);/* Check variables.css! */
+  color: var(--navbar-search-input-color, #ced4da);          /* Check variables.css! */
+  border-radius: var(--bs-border-radius-lg, 0.5rem); /* Lidt rundere kanter */
+  padding: 0.4rem 0.8rem; /* Juster padding */
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: none;
+  width: 100%; /* Input skal fylde formen */
+}
+
+/* --- Placeholder Tekst --- */
+.topbar-custom .search-form input::placeholder {
+  color: var(--navbar-search-input-placeholder, #6c757d); /* Check variables.css! */
+  opacity: 1;
+}
+.topbar-custom .search-form input:-ms-input-placeholder { color: var(--navbar-search-input-placeholder, #6c757d); }
+.topbar-custom .search-form input::-ms-input-placeholder { color: var(--navbar-search-input-placeholder, #6c757d); }
+
+
+/* --- Focus State på Input --- */
+.topbar-custom .search-form input:focus {
+  background-color: var(--navbar-search-input-bg, #343a40);
+  color: var(--navbar-search-input-color, #ced4da);
+  border-color: var(--navbar-search-focus-border, var(--primary-color, #00cca3)); /* Bruger primær farve */
+  outline: 0;
+  /* Flot glow-effekt - Sørg for --primary-color-rgb er defineret i variables.css! */
+  box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb, 0, 204, 163), 0.35);
+}
+
+/* --- Søgeknap (Magnifying Glass) --- */
+.topbar-custom .search-form .btn {
+  /* Matcher input border-radius */
+  border-radius: var(--bs-border-radius-lg, 0.5rem);
+  /* Matcher input padding nogenlunde */
+  padding: 0.4rem 0.75rem;
+
+  /* Overvej at skifte til f.eks. btn-outline-secondary i HTML for et mere diskret look */
+  /* Hvis du beholder f.eks. btn-outline-success og vil tvinge grå farver: */
+  /* background-color: transparent !important; */
+  /* border-color: var(--navbar-search-input-border, #495057) !important; */
+  /* color: var(--navbar-search-input-placeholder, #6c757d) !important; */
+  /* Husk !important KUN hvis du overskriver en meget specifik Bootstrap-regel */
+}
+
+/* --- Focus/Hover på Knappen --- */
+.topbar-custom .search-form .btn:focus,
+.topbar-custom .search-form .btn:hover {
+  /* Standard Bootstrap :hover/focus er ofte fine, især for outline knapper */
+  /* Hvis du VIL have en custom hover med primærfarven: */
+  /* background-color: var(--primary-color); */
+  /* border-color: var(--primary-color); */
+  /* color: var(--button-text-dark, #111); */ /* Mørk tekst på primærfarven */
+  /* box-shadow: 0 0 0 0.25rem rgba(var(--primary-color-rgb, 0, 204, 163), 0.35); */
+}
+
+/* ================================================ */
+/* ===== SLUT: OPDATERET Navbar Søgefelt Styling ===== */
+/* ================================================ */
+
+
+/* Dropdown-menu i topbar (behøver sandsynligvis ingen ændring her) */
+.topbar-custom .dropdown-menu {
+  border-radius: 8px; /* Eller var(--card-border-radius) */
+  /* Baggrund og kant kan sættes med variable, hvis dropdown skal matche f.eks. kort */
+  /* background-color: var(--card-bg, #222); */
+  /* border: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1)); */
+}
+
+/* Avatar Cirkel (uændret) */
+.avatar-circle {
+  display: block;
+  margin: 0 auto 10px auto;
+  width: 100%;
+  max-width: 120px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Styles moved from base.html inline */
+body {
+  /* margin: 0; */ /* Already present */
+  /* padding: 0; */ /* Already present */
+  /* padding-top: 60px; is already set for fixed navbar */
+}
+
+.topbar-custom {
+  border-bottom: 1px solid #333;
+}
+
+.topbar-custom .navbar-brand {
+  color: #ccc;
+  font-weight: 700;
+}
+
+.topbar-custom .navbar-brand .bi-controller {
+  font-size: 1.4rem;
+  margin-right: 8px;
+}
+
+.topbar-custom .search-form .btn {
+  border: none;
+}
+
+.topbar-custom .dropdown-toggle {
+  color: #ccc;
+  border-radius: 8px;
+  padding: 5px 10px;
+}
+
+.topbar-custom .dropdown-toggle #topbarAvatarImg {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+}
+
+.topbar-custom .dropdown-menu {
+  background-color: #1c1c1c;
+  border: 1px solid #444;
+  border-radius: 8px;
+}
+
+.topbar-custom .dropdown-item {
+  color: #ccc;
+}
+
+.topbar-custom .dropdown-divider {
+  border-color: #444;
+}
+
+#main_section {
+  margin-top: 60px; /* Corresponds to body padding-top */
+}
+
+/* Ensure dropdown items in dark dropdowns are readable */
+.dropdown-menu-dark .dropdown-item {
+    color: rgba(255, 255, 255, 0.85); /* Lighter color for readability */
+}
+
+.dropdown-menu-dark .dropdown-item:hover,
+.dropdown-menu-dark .dropdown-item:focus {
+    color: #000; /* Darker text on hover/focus */
+    background-color: rgba(255, 255, 255, 0.9); /* Light background on hover/focus */
+}
+
+/* Style icons directly within topbar nav links */
+.topbar-custom .nav-link > i {
+    color: rgba(255, 255, 255, 0.8); /* Adjust opacity as needed */
+    vertical-align: middle; /* Align icon better with text if needed */
+}
+
+/* Optional: Style hover state for the icon's link */
+.topbar-custom .nav-link:hover > i {
+    color: #fff; /* Brighter white on hover */
+}

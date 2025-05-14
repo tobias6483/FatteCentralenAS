@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nulstil Password - FatteCentralen A/S</title>
+    {# Sørger for CSRF token er tilgængeligt for JS via meta tag #}
+    <meta name="csrf-token" content="{{ csrf_token() }}"> {# Antager global csrf_token() er tilgængelig #}
+
+    <!-- Bootstrap CSS (Lokal) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+
+    <!-- Bootstrap Icons (Lokal) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}">
+
+    <!-- Custom Login CSS (genbruger login stilarter) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+</head>
+<body>
+
+    {# ----- Container for Toast Beskeder ----- #}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+
+    <div class="login-container">
+        {# ===== LOGO / TITEL ===== #}
+        <h2 class="login-title mb-4">
+            <i class="bi bi-key me-2"></i> Nulstil Password
+        </h2>
+
+        {# ===== Server-side Flash Beskeder ===== #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages mb-3">
+                  {% for category, message in messages %}
+                    {% set alert_type = category | lower | default('info') %}
+                    {% if alert_type == 'error' %}{% set alert_type = 'danger' %}{% endif %}
+                    {% if alert_type == 'message' %}{% set alert_type = 'info' %}{% endif %}
+                    <div class="alert alert-{{ alert_type }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {# ===== REQUEST RESET FORM ===== #}
+        <form id="requestResetForm" method="POST" action="{{ url_for('auth.request_password_reset') }}" novalidate>
+             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> {# Direkte CSRF token #}
+
+            <p class="text-center small mb-3">Indtast dit brugernavn for at anmode om nulstilling af password. En administrator vil behandle din anmodning.</p>
+
+            {# --- USERNAME --- #}
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" name="username" placeholder="Brugernavn" required autocomplete="username">
+                <label for="username">Brugernavn</label>
+                <div class="invalid-feedback">Indtast venligst dit brugernavn.</div>
+            </div>
+
+            {# --- SUBMIT KNAP --- #}
+            <div class="d-grid mb-2">
+                 <button type="submit" class="btn btn-primary w-100" id="requestResetButton">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                     <span class="btn-text">Anmod om Nulstilling</span>
+                 </button>
+            </div>
+
+            {# Feedback område til JS #}
+            <div id="requestResetMessage" class="feedback-area text-center small mb-3"></div>
+            <hr>
+            {# Link tilbage til login #}
+            <div class="text-center small action-links">
+                <a href="{{ url_for('auth.login_route') }}" class="btn btn-link">Tilbage til Login</a>
+            </div>
+        </form> {# === END REQUEST RESET FORM === #}
+
+    </div> <!-- /login-container -->
+
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+
+    <!-- Dine JS Filer (hvis nødvendigt for denne side) -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}" defer></script>
+    {# <script src="{{ url_for('static', filename='js/request_reset.js') }}" defer></script> #} {# Evt. dedikeret JS #}
+
+</body>
+</html>

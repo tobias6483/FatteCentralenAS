@@ -1,0 +1,641 @@
+/* static/css/forum.css - FORSLAG TIL OPDATERINGER */
+
+/* ---------- GENEREL FORUM STYLING ---------- */
+.forum-container {
+    /* Lettere nedtonet tekst generelt i forummet? Matcher base.html bedre */
+    color: var(--font-color-base, #dee2e6);
+}
+
+.page-header h1.page-title,
+.page-header h2.page-title {
+    color: var(--font-color-header, #f1f3f5); /* Sørg for lyse overskrifter */
+    margin-bottom: 0; /* Fjern evt. default margin hvis knapper skal flugte */
+}
+.page-header h1.page-title i,
+.page-header h2.page-title i {
+    color: var(--primary-color); /* Farve på ikoner i header */
+    font-size: 0.9em; /* Gør ikonet lidt mindre end teksten */
+    vertical-align: baseline; /* Juster justering */
+}
+/* Fjern underlig baggrund på headers hvis den findes (ses ikke i CSS) */
+.page-header {
+    background-color: transparent !important; /* Sørg for ingen uønsket baggrund */
+    border-bottom: 1px solid var(--border-color-dark, #495057); /* Subtil bundlinje */
+    padding-bottom: 1rem; /* Lidt luft under linjen */
+}
+
+
+/* ---------- FORUM OVERSIGT (forum/index.html - Nu med .card) ---------- */
+
+/* Selve category-kortet bruger .dashboard-card, så det meste styling kommer derfra. */
+/* Specifikke justeringer til kategori-kort: */
+.category-item .card-header {
+    /* Lidt mørkere header end default card-body for struktur */
+    background-color: var(--card-header-bg, rgba(0, 0, 0, 0.1));
+    border-bottom: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1));
+}
+.category-item .card-header .category-link h5 {
+    color: var(--font-color-header, #f1f3f5);
+    transition: color 0.2s ease;
+}
+.category-item .card-header .category-link:hover h5 {
+    color: var(--primary-color);
+}
+.category-item .card-header .card-subtitle { /* Beskrivelsen */
+    color: var(--font-color-muted, #adb5bd);
+    font-size: 0.9rem;
+}
+
+.category-item .card-footer {
+    background-color: transparent; /* Ingen speciel footer baggrund */
+    border-top: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1));
+    font-size: 0.85rem; /* Lidt mindre skrift i footer */
+}
+.category-item .card-footer .link-dark { /* Seneste tråd link - Brug LYS farve */
+    color: var(--font-color-base, #dee2e6) !important; /* Overstyr BS dark */
+    transition: color 0.2s ease;
+}
+.category-item .card-footer .link-dark:hover {
+    color: var(--primary-color) !important;
+}
+.category-item .card-footer .link-secondary { /* Seneste poster link - Brug lys muted farve */
+     color: var(--font-color-muted-lighter, #cccccc) !important; /* Lysere muted */
+     transition: color 0.2s ease;
+}
+.category-item .card-footer .link-secondary:hover {
+    color: var(--link-hover-color, var(--primary-hover)) !important;
+}
+.category-item .card-footer .text-muted { /* Anden muted tekst */
+    color: var(--font-color-muted, #adb5bd) !important;
+}
+.category-item .card-footer .latest-time {
+     font-size: 0.9em; /* Gør tiden lidt mindre */
+}
+
+
+/* ---------- KATEGORI VISNING (forum/category.html - Liste af tråde) ---------- */
+
+.forum-category-list .card-header { /* Overskriftsrække i trådlisten */
+    background-color: rgba(var(--bs-secondary-rgb), 0.05) !important; /* Meget svag grå, behold din */
+    color: var(--font-color-muted, #adb5bd);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color-dark, #495057);
+    padding: 0.75rem 1rem; /* Match li padding for alignment */
+}
+
+/* Styling for en tråd-række i listen (.list-group-item) */
+.forum-list .list-group-item.thread-item {
+    background-color: transparent; /* Arv fra .card (eller sæt til card-bg?) */
+    /* Vi bruger list-group-flush, så border styres KUN her */
+    border-bottom: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1));
+    padding: 1rem; /* Tilpas padding for rækker */
+    transition: background-color 0.2s ease;
+}
+/* Fjern bundkant på sidste element */
+.forum-list .list-group-item.thread-item:last-child {
+    border-bottom: none;
+}
+
+.forum-list .list-group-item.thread-item:hover {
+    background-color: var(--light-bg-hover-alpha, rgba(255, 255, 255, 0.08));
+}
+
+/* Ikon for tråd status (Fasthæftet, låst etc.) */
+.thread-item .forum-item-icon i {
+    vertical-align: middle; /* Prøv at centrere ikonet */
+    /* Farver sættes nu med text-* klasser i HTML, hvilket er fint */
+}
+
+/* Titel og starter info */
+.thread-item .forum-item-info .item-title { /* Selve trådtitlen */
+    font-size: 1rem; /* Lidt mindre end kategori titel */
+    font-weight: 600;
+    color: var(--font-color-header, #f1f3f5);
+    margin-bottom: 0.15rem;
+}
+.thread-item .forum-item-info a.item-title:hover {
+    color: var(--primary-color);
+}
+
+.thread-item .forum-item-info .item-description { /* Starter + tid */
+    font-size: 0.8rem;
+    color: var(--font-color-muted, #adb5bd);
+}
+.thread-item .forum-item-info .item-description a { /* Link til starter profil */
+     color: var(--font-color-muted-lighter, #cccccc); /* Lysere end alm. muted */
+     text-decoration: none;
+}
+.thread-item .forum-item-info .item-description a:hover {
+    color: var(--link-hover-color, var(--primary-hover));
+    text-decoration: underline;
+}
+.thread-item .forum-item-info .item-description a.fst-italic.text-danger { /* Slettet bruger */
+    color: var(--danger-color) !important;
+    cursor: default;
+}
+.thread-item .forum-item-info .item-description span[title] { /* Tidspunkt for oprettelse */
+    cursor: help; /* Vis at man kan hovere for præcis tid */
+}
+
+
+/* Stats (Svar / Visninger) */
+.thread-item .forum-item-stats {
+    font-size: 0.8rem;
+    color: var(--font-color-muted, #adb5bd);
+    white-space: nowrap; /* Undgå at disse brydes */
+}
+.thread-item .forum-item-stats strong {
+    color: var(--font-color-base, #dee2e6); /* Tydeligere tal */
+    margin-left: 4px; /* Lidt luft */
+    font-weight: 600;
+    min-width: 20px; /* Undgå kollaps hvis tal er 0 */
+    display: inline-block; /* For min-width */
+}
+
+
+/* Seneste Indlæg Info */
+.thread-item .forum-item-latest {
+    font-size: 0.8rem;
+    color: var(--font-color-muted, #adb5bd);
+}
+.thread-item .forum-item-latest .link-dark { /* Link til seneste poster (Brug LYS farve) */
+     color: var(--font-color-base, #dee2e6) !important;
+     transition: color 0.2s ease;
+     font-weight: 500; /* var medium = 500? */
+}
+.thread-item .forum-item-latest .link-dark:hover {
+    color: var(--link-hover-color, var(--primary-hover)) !important;
+}
+.thread-item .forum-item-latest .latest-time { /* Tidsstempel */
+    font-size: 0.9em;
+    color: var(--font-color-muted, #adb5bd);
+     display: block; /* Sikrer det kommer under navnet */
+}
+.thread-item .forum-item-latest .latest-time[title] {
+    cursor: help;
+}
+
+
+/* Fasthæftet tråd styling (Valgfrit) */
+.sticky-thread {
+   /* Baggrund med alpha? Eller en subtil venstre kant? */
+   /* background-color: rgba(var(--info-color-rgb), 0.05); */
+   border-left: 3px solid var(--info-color, #17a2b8); /* Tydelig markering */
+}
+
+
+/* ----- BEHOLD FORUM POST STYLING HERFRA ----- */
+/* Det ser fornuftigt ud - Tjek om variablerne passer */
+
+/* Forum post styling */
+.forum-post {
+  background-color: var(--secondary-bg-lighter, #2b2b2b); /* Lidt lysere end category listen? */
+  border: 1px solid var(--border-color-dark, #495057);
+  border-radius: var(--card-border-radius-sm, 0.375rem);
+  margin-bottom: 1.5rem;
+  display: flex; /* Korrekt, brug flexbox */
+  flex-wrap: wrap; /* TILLAD wrap på små skærme */
+}
+
+@media (min-width: 768px) { /* Kun anvend flex-nowrap på md+ */
+    .forum-post {
+        flex-wrap: nowrap;
+    }
+}
+
+/* FORFATTER KOLONNE (venstre) */
+.post-author-info {
+  padding: 1rem;
+  border-right: none; /* Fjern fast border her */
+  border-bottom: 1px solid var(--border-color-dark, #495057); /* Bund border til mobil */
+  text-align: center;
+  background-color: rgba(0,0,0, 0.1); /* Match kategori header bg */
+  width: 100%; /* Fuld bredde på mobil */
+  flex-basis: 100%; /* Fuld bredde på mobil */
+  order: 1; /* Først på mobil */
+}
+
+@media (min-width: 768px) { /* Styling for desktop */
+    .post-author-info {
+        flex: 0 0 180px; /* Fast bredde på desktop */
+        border-right: 1px solid var(--border-color-dark, #495057); /* Højre border på desktop */
+        border-bottom: none; /* Fjern bund border på desktop */
+        width: auto; /* Reset width */
+        flex-basis: 180px; /* Gendan desktop basis */
+    }
+}
+
+.post-author-info .author-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* Border fra user_avatar makro nu, eller tilføj igen hvis ønsket */
+  /* border: 3px solid var(--primary-color, #00cca3); */
+  margin-bottom: 0.75rem;
+}
+
+.post-author-info .author-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--font-color-header, #f1f3f5);
+  display: block;
+  margin-bottom: 0.25rem;
+  /* 'link-dark' er fjernet i HTML, så denne farve bør slå igennem */
+  /* Hvis det er et link, så: */
+  text-decoration: none;
+}
+a.author-name:hover {
+    color: var(--primary-color);
+    text-decoration: underline;
+}
+
+.post-author-info .author-rank { /* Indeholder badge */
+    display: block;
+    margin-bottom: 0.5rem;
+    /* selve rank tekst unødvendig? badgen viser det */
+}
+.post-author-info .author-rank .badge {
+    font-size: 0.75rem;
+    padding: 0.3em 0.6em;
+}
+.post-author-info .author-details { /* 'Indlæg: xxx', 'Medlem: xx/xx' */
+    font-size: 0.8rem;
+    color: var(--font-color-muted, #adb5bd);
+    line-height: 1.4; /* Lidt mere luft */
+}
+.post-author-info .author-details strong {
+    color: var(--font-color-base); /* Tydeligere tal for post count */
+}
+
+/* INDLÆGSINDHOLD KOLONNE (højre) */
+.post-main {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%; /* Fuld bredde på mobil */
+  order: 2; /* Efter author info på mobil */
+}
+@media (min-width: 768px) {
+     .post-main {
+         width: auto; /* Reset width for desktop */
+     }
+}
+
+.post-header {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color-dark, #495057);
+  /* Vær forsigtig med baggrund her, måske ingen? */
+  /* background-color: rgba(0, 0, 0, 0.05); */
+  font-size: 0.85rem;
+  color: var(--font-color-muted, #adb5bd);
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Vertikal centrering */
+}
+.post-header .post-timestamp {
+    cursor: default; /* Tid er ikke klikbar */
+}
+.post-header .post-actions .btn {
+    /* Sikre knapperne bruger den rigtige farve */
+    color: var(--font-color-muted);
+    border-color: var(--border-color-medium);
+    padding: 0.25rem 0.5rem; /* Lidt mindre knapper */
+}
+.post-header .post-actions .btn:hover {
+    color: var(--font-color-base);
+    background-color: var(--secondary-bg-hover);
+    border-color: var(--border-color-light);
+}
+.post-header .post-actions .btn-outline-danger { /* Slet knap */
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+.post-header .post-actions .btn-outline-danger:hover {
+    color: white;
+    background-color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+.post-header .post-actions .btn-outline-primary { /* Citer knap */
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.post-header .post-actions .btn-outline-primary:hover {
+    color: var(--button-text-dark);
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+.post-header .post-actions .post-link { /* #Nr knap */
+    color: var(--font-color-muted);
+    border-color: var(--border-color-medium);
+}
+.post-header .post-actions .post-link:hover {
+    color: var(--font-color-base);
+    border-color: var(--border-color-light);
+    background-color: transparent; /* Ingen baggrund ved hover */
+}
+
+
+.post-content {
+  padding: 1.5rem 1.25rem; /* Lidt mere side padding */
+  color: var(--font-color-base, #dee2e6);
+  flex-grow: 1;
+  line-height: 1.7; /* Lidt højere linjehøjde for læsbarhed */
+}
+/* Grundlæggende styling for brugergenereret indhold */
+.user-content-styles blockquote {
+    border-left: 4px solid var(--primary-color);
+    margin-left: 0;
+    padding-left: 1rem;
+    font-style: italic;
+    color: var(--font-color-muted-lighter);
+    background-color: var(--light-bg-alpha);
+    border-radius: 0 var(--card-border-radius-sm) var(--card-border-radius-sm) 0;
+    margin-bottom: 1rem;
+}
+.user-content-styles blockquote p {
+    margin-bottom: 0.5rem;
+}
+.user-content-styles pre {
+    background-color: var(--dark-bg);
+    border: 1px solid var(--border-color-dark);
+    padding: 1rem;
+    border-radius: var(--card-border-radius-sm);
+    color: var(--font-color-muted-lighter);
+    font-family: monospace;
+    white-space: pre-wrap; /* Tillad linjeskift */
+    word-break: break-all; /* Bryd lange linjer */
+}
+.user-content-styles code {
+    /* Inline code - anderledes end <pre> */
+    background-color: var(--light-bg-alpha);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-size: 0.9em;
+    color: var(--font-color-muted-lighter);
+    font-family: monospace;
+}
+.user-content-styles pre code { /* Code inside pre should not have inline style */
+    background-color: transparent;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+}
+.user-content-styles img { /* Begræns billedstørrelse */
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--card-border-radius-sm);
+}
+
+
+.post-footer { /* "Sidst redigeret af..." */
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1));
+    /* Fjern baggrund? Gør den subtil */
+    /* background-color: rgba(0, 0, 0, 0.05); */
+    text-align: left; /* Venstrestillet for bedre flow */
+    font-size: 0.8rem;
+}
+.post-footer .link-secondary { /* Link til redaktør */
+     color: var(--font-color-muted-lighter, #cccccc) !important;
+     transition: color 0.2s ease;
+     text-decoration: none;
+}
+.post-footer .link-secondary:hover {
+    color: var(--link-hover-color, var(--primary-hover)) !important;
+    text-decoration: underline;
+}
+.post-footer span[title] { /* Tidspunkt */
+    cursor: help;
+}
+
+
+/* REPLY FORM Styling */
+.reply-section {
+    border-top: 2px solid var(--primary-color); /* Tydeligere topkant */
+}
+.reply-section .reply-card {
+     background-color: var(--secondary-bg, #1c1c1c); /* Lidt mørkere end posts? */
+     border: 1px solid var(--border-color-dark, #495057);
+}
+.reply-section .reply-card .card-body {
+     padding: 1.5rem;
+}
+.reply-section .form-control { /* Tekstområdet */
+     background-color: var(--input-bg, #0d0d0d);
+     color: var(--input-color, #dee2e6);
+     border: 1px solid var(--input-border-color, #495057);
+     min-height: 150px; /* God minimumshøjde */
+     line-height: 1.6;
+}
+.reply-section .form-control:focus {
+     background-color: var(--input-bg-focus, #2a2e31);
+     color: var(--input-color-focus, #ffffff);
+     border-color: var(--input-border-focus, var(--primary-color));
+     box-shadow: var(--input-focus-shadow);
+}
+.reply-section .form-text { /* Hjælpetekst (Markdown tip) */
+     color: var(--font-color-muted);
+     font-size: 0.85rem;
+}
+.reply-section .form-text a {
+     color: var(--primary-color);
+}
+.reply-section .btn-primary { /* Send svar knap */
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--button-text-dark); /* Mørk tekst til lys knap */
+    font-weight: 600;
+    padding: 0.5rem 1.2rem; /* Lidt større knap */
+}
+.reply-section .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: var(--button-text-dark);
+}
+
+
+
+/* ---------- FORBEDRET BREADCRUMB STYLING ---------- */
+
+/* Sikrer at links i breadcrumbs har den rigtige lyse farve */
+.breadcrumb-item a {
+    /* Brug link-light i HTML, men denne kan være en backup/global regel */
+    color: var(--font-color-muted-lighter, #cccccc); /* Brug en lys, men måske nedtonet farve? */
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--link-hover-color, var(--primary-hover)); /* Lysere hover farve */
+    text-decoration: underline;
+}
+
+/* >> DENNE REGEL RETTER PROBLEMET << */
+/* Gør det sidste/aktive breadcrumb element LÆSELIGT */
+.breadcrumb-item.active {
+    color: var(--font-color-base, #dee2e6); /* Brug din standard lyse tekstfarve */
+    font-weight: 500; /* Gør det evt. lidt mere fremtrædende end muted links? Valgfrit */
+}
+
+/* Gør divider-tegnet (>) lidt tydeligere, hvis det er svært at se */
+.breadcrumb {
+  --bs-breadcrumb-divider-color: var(--font-color-muted, #adb5bd); /* Matcher muted tekst */
+}
+
+/* ---------- EASYMDE DARK THEME OVERRIDES ---------- */
+/* Ensure these selectors are specific enough to override EasyMDE defaults */
+
+/* Editor general container */
+.EasyMDEContainer {
+   border-color: var(--border-color-dark, #495057) !important;
+   border-radius: var(--card-border-radius-sm, 0.375rem); /* Match other inputs/cards */
+}
+
+/* Toolbar */
+.EasyMDEContainer .CodeMirror-toolbar {
+   background-color: var(--secondary-bg-lighter, #2b2b2b) !important;
+   border-bottom-color: var(--border-color-dark, #495057) !important;
+   border-top-left-radius: var(--card-border-radius-sm, 0.375rem);
+   border-top-right-radius: var(--card-border-radius-sm, 0.375rem);
+}
+
+/* Toolbar buttons */
+.EasyMDEContainer .CodeMirror-toolbar button {
+   color: var(--font-color-muted, #adb5bd) !important;
+   border-color: transparent !important; /* Remove default borders */
+   border-radius: var(--button-border-radius, 0.25rem);
+   transition: background-color 0.2s ease, color 0.2s ease;
+}
+.EasyMDEContainer .CodeMirror-toolbar button:hover {
+   background-color: var(--primary-color-alpha-low, rgba(0, 204, 163, 0.2)) !important; /* Use a subtle primary hover */
+   color: var(--primary-color, #00cca3) !important;
+   border-color: transparent !important;
+}
+.EasyMDEContainer .CodeMirror-toolbar button.active {
+   background-color: var(--primary-color, #00cca3) !important;
+   color: var(--button-text-dark, #121212) !important; /* Dark text on primary bg */
+   border-color: transparent !important;
+}
+.EasyMDEContainer .CodeMirror-toolbar button.separator {
+   border-left-color: var(--border-color-dark, #495057) !important;
+   border-right-color: var(--border-color-dark, #495057) !important;
+   width: 0; /* Make it thinner if it's too thick */
+   margin: 0 4px;
+}
+
+/* Editing area (CodeMirror instance) */
+.EasyMDEContainer .CodeMirror {
+   background-color: var(--input-bg, #0d0d0d) !important;
+   color: var(--input-color, #dee2e6) !important;
+   border-color: var(--border-color-dark, #495057) !important; /* Border around text area */
+   border-bottom-left-radius: var(--card-border-radius-sm, 0.375rem);
+   border-bottom-right-radius: var(--card-border-radius-sm, 0.375rem);
+}
+.EasyMDEContainer .CodeMirror-cursor {
+   border-left-color: var(--font-color-base, #dee2e6) !important;
+}
+.EasyMDEContainer .cm-s-easymde .cm-comment { /* Markdown comments */
+   color: #6a9955 !important; /* Example: green like VSCode comments */
+}
+.EasyMDEContainer .cm-s-easymde .cm-keyword { /* Markdown bold/italic markers etc. */
+   color: var(--primary-color, #00cca3) !important;
+}
+.EasyMDEContainer .cm-s-easymde .cm-header {
+   color: var(--info-color, #17a2b8) !important; /* Example: blue for headers */
+}
+.EasyMDEContainer .cm-s-easymde .cm-quote {
+   color: #9b9b9b !important; /* Muted color for blockquotes */
+   font-style: italic;
+}
+.EasyMDEContainer .cm-s-easymde .cm-link {
+   color: var(--link-color, #569cd6) !important; /* Standard link color */
+}
+.EasyMDEContainer .cm-s-easymde .cm-url {
+   color: var(--link-color, #569cd6) !important;
+   text-decoration: underline;
+}
+
+
+/* Status bar */
+.EasyMDEContainer .editor-statusbar {
+   background-color: var(--secondary-bg-lighter, #2b2b2b) !important;
+   color: var(--font-color-muted, #adb5bd) !important;
+   border-top-color: var(--border-color-dark, #495057) !important;
+   font-size: 0.8rem;
+   padding: 0.3rem 0.6rem;
+   border-bottom-left-radius: var(--card-border-radius-sm, 0.375rem);
+   border-bottom-right-radius: var(--card-border-radius-sm, 0.375rem);
+}
+.EasyMDEContainer .editor-statusbar span {
+   margin: 0 5px;
+}
+
+/* Preview mode (if you use it) */
+.EasyMDEContainer .editor-preview,
+.EasyMDEContainer .editor-preview-side {
+   background-color: var(--input-bg, #0d0d0d) !important; /* Match editor bg */
+   color: var(--input-color, #dee2e6) !important;
+   border-left: 1px solid var(--border-color-dark, #495057); /* If side-by-side */
+}
+/* Apply user-content-styles to preview for consistency */
+.EasyMDEContainer .editor-preview .markdown {
+   /* This assumes EasyMDE wraps preview content in a .markdown div */
+   /* You might need to inspect the actual class EasyMDE uses */
+   /* These styles are copied/adapted from .user-content-styles earlier in this file */
+}
+.EasyMDEContainer .editor-preview .markdown blockquote {
+   border-left: 4px solid var(--primary-color);
+   margin-left: 0;
+   padding-left: 1rem;
+   font-style: italic;
+   color: var(--font-color-muted-lighter);
+   background-color: var(--light-bg-alpha);
+   border-radius: 0 var(--card-border-radius-sm) var(--card-border-radius-sm) 0;
+   margin-bottom: 1rem;
+}
+.EasyMDEContainer .editor-preview .markdown pre {
+   background-color: var(--dark-bg);
+   border: 1px solid var(--border-color-dark);
+   padding: 1rem;
+   border-radius: var(--card-border-radius-sm);
+   color: var(--font-color-muted-lighter);
+   font-family: monospace;
+   white-space: pre-wrap;
+   word-break: break-all;
+}
+.EasyMDEContainer .editor-preview .markdown code {
+   background-color: var(--light-bg-alpha);
+   padding: 0.2em 0.4em;
+   border-radius: 3px;
+   font-size: 0.9em;
+   color: var(--font-color-muted-lighter);
+   font-family: monospace;
+}
+.EasyMDEContainer .editor-preview .markdown pre code {
+   background-color: transparent;
+   padding: 0;
+   border-radius: 0;
+   font-size: inherit;
+}
+.EasyMDEContainer .editor-preview .markdown img {
+   max-width: 100%;
+   height: auto;
+   border-radius: var(--card-border-radius-sm);
+}
+
+/* Adjust fullscreen mode if needed */
+.EasyMDEContainer.fullscreen {
+   background-color: var(--secondary-bg, #1c1c1c) !important; /* Darker bg for fullscreen */
+   border-color: var(--border-color-dark, #495057) !important;
+   z-index: 1050; /* Ensure it's above other elements, adjust as needed */
+}
+.EasyMDEContainer.fullscreen .CodeMirror-toolbar {
+   border-radius: 0;
+}
+.EasyMDEContainer.fullscreen .CodeMirror {
+   border-radius: 0;
+}
+.EasyMDEContainer.fullscreen .editor-statusbar {
+   border-radius: 0;
+}

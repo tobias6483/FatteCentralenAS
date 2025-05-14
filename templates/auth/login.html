@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'Login' }} - FatteCentralen A/S</title>
+    {# Sørger for CSRF token er tilgængeligt for JS via meta tag #}
+    <meta name="csrf-token" content="{{ form.csrf_token.current_token if form and form.csrf_token else csrf_token() }}">
+
+    <!-- Bootstrap CSS (Lokal) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css') }}">
+
+    <!-- Bootstrap Icons (Lokal) -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/font/bootstrap-icons.min.css') }}">
+
+    <!-- Custom Login CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
+</head>
+{# Tilføjet data-attribut for at kommunikere serverens ønskede startform til login.js #}
+{# Hvis active_form ikke er sat, bruges 'login' som standard #}
+<body data-initial-form="{{ active_form if active_form else 'login' }}">
+
+    {# ----- Container for Toast Beskeder ----- #}
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
+
+    <div class="login-container">
+        {# ===== LOGO / TITEL ===== #}
+        <h2 class="login-title mb-4">
+            <i class="bi bi-buildings me-2"></i> FatteCentralen A/S
+        </h2>
+
+        {# ===== Server-side Flash Beskeder ===== #}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages mb-3">
+                  {% for category, message in messages %}
+                    {% set alert_type = category | lower | default('info') %}
+                    {% if alert_type == 'error' %}{% set alert_type = 'danger' %}{% endif %}
+                    {% if alert_type == 'message' %}{% set alert_type = 'info' %}{% endif %}
+                    <div class="alert alert-{{ alert_type }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                  {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {# ===== LOGIN FORM ===== #}
+        {# Klassen 'hidden' bruges stadig, login.js skal fjerne den hvis denne form skal vises #}
+        <form id="loginForm" method="POST" action="{{ url_for('auth.login_route') }}" class="hidden" novalidate>
+            {% if form and form.hidden_tag %}{{ form.hidden_tag() }}{% endif %} {# Inkluderer CSRF hvis WTForms bruges #}
+
+            {# --- USERNAME --- #}
+            <div class="form-floating mb-3">
+                <input type="text" class="form-control" id="username" name="username" placeholder="Brugernavn" required autocomplete="username">
+                <label for="username">Brugernavn</label>
+                <div class="invalid-feedback"></div>
+            </div>
+
+            {# --- PASSWORD --- #}
+            <div class="form-floating mb-3">
+                <input type="password" class="form-control" id="password" name="password" placeholder="Password" required autocomplete="current-password">
+                <label for="password">Adgangskode</label>
+                <div class="invalid-feedback"></div>
+            </div>
+
+            {# --- REMEMBER ME --- #}
+            {% if form and form.remember_me %}
+            <div class="form-check mb-3 ps-1">
+                 {{ form.remember_me(class="form-check-input", id="remember") }}
+                 {{ form.remember_me.label(class="form-check-label", for="remember") }}
+                 <div class="invalid-feedback remember-feedback"></div>
+            </div>
+            {% endif %} {# Ingen fallback her, da form objektet forventes hvis remember_me skal vises #}
+
+            {# --- SUBMIT KNAP --- #}
+            <div class="d-grid mb-2">
+                 <button type="submit" class="btn btn-primary w-100" id="loginButton">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                     <span class="btn-text">Log Ind</span>
+                 </button>
+            </div>
+
+            {# Feedback område til JS #}
+            <div id="loginMessage" class="feedback-area text-center small mb-3"></div>
+            <hr>
+            {# Links til andre forms #}
+            <div class="text-center small action-links">
+                <button type="button" id="showRegisterBtn" class="btn btn-link">Ny bruger? Opret her</button>
+                <span class="mx-1 text-muted">|</span>
+<span class="mx-1 text-muted">|</span>
+                <a href="{{ url_for('auth.request_password_reset') }}" class="btn btn-link">Glemt password?</a>
+                <span class="mx-1 text-muted">|</span> {# Added separator for consistency #}
+                <button type="button" id="showAdminLoginBtn" class="btn btn-link">Admin Login</button>
+            </div>
+        </form> {# === END LOGIN FORM === #}
+
+
+        {# ===== 2FA SEKTION ===== #}
+        <div id="twofaSectionContainer" class="hidden">
+             {# login.js håndterer visning af enten otp eller backup #}
+             <div id="twofaOtpSection" class="hidden"> {# Start skjult; login.js viser den hvis 2FA er aktiv #}
+                 <h3 class="h5 text-center mb-3"><i class="bi bi-shield-check me-1"></i>2FA Verifikation</h3>
+                 <p class="text-center small mb-3">Indtast koden fra din authenticator app.</p>
+                 <div class="form-floating mb-3">
+                     <input type="text" id="twofaCode" name="code" class="form-control text-center fs-5 fw-bold" placeholder="123456" required pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" maxlength="6">
+                     <label for="twofaCode">6-cifret kode</label>
+                     <div class="invalid-feedback text-center"></div>
+                 </div>
+                 <div class="d-grid mb-2">
+                     <button id="twofaVerifyBtn" type="button" class="btn btn-success w-100">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <span class="btn-text"><i class="bi bi-check-circle me-1"></i> Verificer Kode</span>
+                     </button>
+                 </div>
+                 <div id="twofaMessage" class="feedback-area text-center small mb-3"></div>
+                 <div class="text-center small mb-3">
+                     <button type="button" id="showBackupBtn" class="btn btn-link btn-sm">Problemer? Brug en backup kode</button>
+                 </div>
+                 <hr>
+                 <div class="text-center mt-3">
+                     <button type="button" id="cancelTwofaBtn" class="btn btn-sm btn-outline-secondary">Annuller & Log Ind Igen</button>
+                 </div>
+             </div>
+             <div id="backupCodeSection" class="hidden"> {# Start skjult #}
+                 <h3 class="h5 text-center mb-3"><i class="bi bi-key me-1"></i>Brug Backup Kode</h3>
+                 <p class="text-center small mb-3">Indtast en af dine 8-cifrede backup koder.</p>
+                 <div class="form-floating mb-3">
+                     <input type="text" id="twofaBackupCode" name="backup_code" class="form-control text-center fw-bold" placeholder="fx abc123xy" required pattern="\S{8,}" inputmode="text" autocomplete="off" maxlength="10">
+                     <label for="twofaBackupCode">8-cifret backup kode</label>
+                     <div class="invalid-feedback text-center"></div>
+                 </div>
+                 <div class="d-grid mb-2">
+                     <button id="twofaVerifyBackupBtn" type="button" class="btn btn-warning w-100">
+                         <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                         <span class="btn-text"><i class="bi bi-key-fill me-1"></i> Verificer Backup Kode</span>
+                     </button>
+                 </div>
+                 <div id="twofaBackupMessage" class="feedback-area text-center small mb-3"></div>
+                 <div class="text-center small mb-3">
+                     <button type="button" id="showOtpBtn" class="btn btn-link btn-sm">Brug authenticator kode i stedet</button>
+                 </div>
+                  <hr>
+                  <div class="text-center mt-3">
+                     <button type="button" id="cancelBackupBtn" class="btn btn-sm btn-outline-secondary">Annuller & Log Ind Igen</button>
+                 </div>
+             </div>
+        </div> {# === END 2FA SECTION === #}
+
+        {# ===== ADMIN LOGIN FORM ===== #}
+        <form id="adminLoginForm" method="post" action="{{ url_for('auth.admin_login') }}" class="hidden" novalidate>
+            {# CSRF token skal håndteres via JS (enten ved at indsætte det før submit, eller hvis formen submittes via fetch/ajax) #}
+            {# Alternativt, hvis serveren forventer det i POST data, kan login.js indsætte det dynamisk #}
+            {# <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> FJERNES hvis JS håndterer det #}
+            <h3 class="h5 text-center mb-3"><i class="bi bi-key-fill me-1"></i>Admin Login</h3>
+            <div class="form-floating mb-3">
+                 <input type="text" id="adminUsername" name="username" class="form-control" placeholder="Admin Brugernavn" required autocomplete="username">
+                 <label for="adminUsername">Admin Brugernavn</label>
+                 <div class="invalid-feedback"></div>
+            </div>
+            <div class="form-floating mb-3">
+                 <input type="password" id="adminPassword" name="password" class="form-control" placeholder="Admin Password" required autocomplete="current-password">
+                 <label for="adminPassword">Admin Password</label>
+                 <div class="invalid-feedback"></div>
+            </div>
+            <div class="d-grid mb-2">
+                 <button id="adminLoginButton" type="submit" class="btn btn-danger w-100">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                     <span class="btn-text"><i class="bi bi-door-open-fill me-1"></i> Admin Login</span>
+                 </button>
+            </div>
+            <div id="adminLoginMessage" class="feedback-area text-center small mb-3"></div>
+            <hr>
+            <div class="text-center small">
+                 <button type="button" id="showUserLoginBtn" class="btn btn-link">Login som almindelig bruger</button>
+            </div>
+        </form> {# === END ADMIN LOGIN FORM === #}
+
+        {# ===== REGISTER FORM ===== #}
+        <form id="registerForm" method="post" action="{{ url_for('auth.register') }}" class="hidden" novalidate>
+             {# CSRF token håndteres som ved admin form #}
+             {# <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> FJERNES hvis JS håndterer det #}
+            <h3 class="h5 text-center mb-3"><i class="bi bi-person-plus-fill me-1"></i>Opret Ny Bruger</h3>
+            <div class="form-floating mb-3">
+                <input type="text" id="regUsername" name="username" class="form-control" placeholder="Vælg Brugernavn" required pattern="[A-Za-z0-9_]+" autocomplete="username">
+                <label for="regUsername">Vælg Brugernavn (A-Z, a-z, 0-9, _)</label>
+                <div class="invalid-feedback"></div>
+            </div>
+            <div class="form-floating mb-3">
+                <input type="password" id="regPassword" name="password" class="form-control" placeholder="Vælg Password" required minlength="{{ config.MIN_PASSWORD_LENGTH or 8 }}" autocomplete="new-password">
+                <label for="regPassword">Vælg Password (min. {{ config.MIN_PASSWORD_LENGTH or 8 }} tegn)</label>
+                <div class="invalid-feedback"></div>
+            </div>
+            <div class="form-floating mb-3">
+                 <input type="text" id="regInviteCode" name="invite_code" class="form-control" placeholder="Invite Kode" required autocomplete="off">
+                 <label for="regInviteCode">Invite Kode</label>
+                <div class="invalid-feedback"></div>
+            </div>
+            <div class="d-grid mb-2">
+                 <button id="registerButton" type="submit" class="btn btn-info w-100">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                     <span class="btn-text"><i class="bi bi-check2-circle me-1"></i> Opret Bruger</span>
+                 </button>
+            </div>
+            <div id="registerMessage" class="feedback-area text-center small mb-3"></div>
+            <hr>
+            <div class="text-center small">
+                  <button type="button" id="backToLoginBtn" class="btn btn-link">Har du allerede en bruger? Login her</button>
+            </div>
+          </form> {# === END REGISTER FORM === #}
+{# ===== RESET PASSWORD FORM ===== #}
+        {# Initially hidden, shown by JS if active_form == 'reset' #}
+        {# Uses the 'form' variable passed from the reset_with_token route #}
+        <form id="resetPasswordForm" method="POST" action="{{ url_for('auth.reset_with_token', token=token) }}" class="hidden" novalidate>
+            {{ form.hidden_tag() if form and form.hidden_tag }} {# CSRF token #}
+            <h3 class="h5 text-center mb-3"><i class="bi bi-key me-1"></i>Nulstil Password</h3>
+
+            {# --- New Password --- #}
+            <div class="form-floating mb-3">
+                {# Use the form object passed from the route, check if field exists #}
+                {% if form.password is defined %}
+                    {{ form.password(class="form-control", id="resetPassword", placeholder="Ny Adgangskode", required=True, autocomplete="new-password") }}
+                    <label for="resetPassword">Ny Adgangskode</label>
+                    {% if form.password.errors %}
+                    <div class="invalid-feedback d-block"> <!-- Force display if errors exist -->
+                        {{ form.password.errors | join(' ') }}
+                    </div>
+                {% else %}
+                        <div class="invalid-feedback"></div> {# Placeholder for JS validation #}
+                    {% endif %}
+                {% else %}
+                    <p class="text-danger small">Fejl: Password felt mangler i form.</p> {# Fallback error #}
+                {% endif %}
+            </div>
+
+            {# --- Confirm New Password --- #}
+            <div class="form-floating mb-3">
+                 {# Check if confirm_password field exists on the form object #}
+                 {% if form.confirm_password is defined %}
+                    {{ form.confirm_password(class="form-control", id="resetConfirmPassword", placeholder="Bekræft Ny Adgangskode", required=True, autocomplete="new-password") }}
+                    <label for="resetConfirmPassword">Bekræft Ny Adgangskode</label>
+                    {% if form.confirm_password.errors %}
+                    <div class="invalid-feedback d-block"> <!-- Force display if errors exist -->
+                        {{ form.confirm_password.errors | join(' ') }}
+                    </div>
+                {% else %}
+                        <div class="invalid-feedback"></div> {# Placeholder for JS validation #}
+                    {% endif %}
+                {% else %}
+                     <p class="text-danger small">Fejl: Bekræft password felt mangler i form.</p> {# Fallback error #}
+                {% endif %}
+            </div>
+
+            {# --- SUBMIT KNAP --- #}
+            <div class="d-grid mb-2">
+                 <button type="submit" class="btn btn-primary w-100" id="resetPasswordButton">
+                     <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                     <span class="btn-text">Nulstil Adgangskode</span>
+                 </button>
+            </div>
+
+            {# Feedback område til JS #}
+            <div id="resetPasswordMessage" class="feedback-area text-center small mb-3"></div>
+            <hr>
+            {# Link back to login #}
+            <div class="text-center small action-links">
+                 <button type="button" id="backToLoginFromResetBtn" class="btn btn-link">Tilbage til Login</button>
+            </div>
+        </form> {# === END RESET PASSWORD FORM === #}
+
+    </div> <!-- /login-container -->
+
+    <!-- Bootstrap JS Bundle (Brug gerne lokal version hvis muligt for konsistens) -->
+    <!-- <script src="{{ url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js') }}" defer></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous" defer></script>
+
+    <!-- Dine JS Filer -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/login.js') }}" defer></script>
+
+    {# ----- Den inline <script> blok er fjernet herfra ----- #}
+
+</body>
+</html>

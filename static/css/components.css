@@ -1,0 +1,242 @@
+/* components.css */
+
+/* Overordnet styling af .card */
+.card {
+  background-color: var(--card-bg, #222);
+  color: var(--font-color, #fff);
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.7);
+}
+
+/* Eksempler på mini-profile-card */
+.mini-profile-card {
+  max-width: 600px;
+  text-align: left;
+}
+
+.mini-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--primary-color, #00cca3);
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
+}
+
+.mini-avatar:hover {
+  transform: scale(1.05);
+}
+
+/* =========== SIDEBAR AVATAR =========== */
+/* Styling for avataren specifikt i sidebaren */
+.sidebar-avatar {
+  width: 40px;    /* Juster til ønsket størrelse (f.eks. 32px, 40px, 48px) */
+  height: 40px;   /* Skal være det samme som bredden for en cirkel */
+  border-radius: 50%; /* Gør den rund */
+  object-fit: cover;  /* Sørger for at billedet dækker uden at blive forvrænget */
+  border: 1px solid var(--primary-color, #00cca3); /* Valgfri: lille kant */
+  /* vertical-align: middle; */ /* Prøv dette hvis lodret justering driller */
+}
+
+/* Login-titel */
+.login-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: var(--primary-color, #00cca3);
+}
+
+/* Login-inputs */
+.login-input {
+  width: 100%;
+  background-color: var(--input-bg, #333);
+  border: none;
+  padding: 10px;
+  margin-bottom: 10px;
+  color: var(--font-color, #fff);
+  border-radius: 4px;
+  transition: border-color 0.3s ease;
+}
+
+.login-input:focus {
+  outline: none;
+  border: 1px solid var(--primary-color, #00cca3);
+}
+
+/* Login-knapper */
+.login-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: var(--primary-color, #00cca3);
+  border: none;
+  color: #000;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.login-btn:hover {
+  background-color: var(--primary-hover, #00b38f);
+  transform: scale(1.02);
+}
+
+/* Admin & register knapper */
+.admin-btn {
+  background-color: #ff9933;
+  border: none;
+  color: #000;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.admin-btn:hover {
+  background-color: #e68a00;
+}
+
+.register-btn {
+  background-color: #333;
+  color: #fff;
+  border: none;
+  font-weight: bold;
+  padding: 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.register-btn:hover {
+  background-color: #444;
+}
+
+/* Alerts (fx success / danger) */
+.alert {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.alert-danger {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.alert-success {
+  background-color: #28a745;
+  color: #fff;
+}
+
+/* Ekstra eksempler til dashboard-kort & list-group */
+.info-card {
+  background-color: #1c1c1c;
+  padding: 15px;
+  border-radius: 6px;
+  color: #ccc;
+  margin-bottom: 20px;
+}
+
+.profile-overview-card {
+  background-color: #1c1c1c;
+  padding: 15px;
+  border-radius: 6px;
+  color: #ccc;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.list-group-item {
+  border: none;
+  transition: background-color 0.2s;
+}
+.list-group-item:hover {
+  background-color: #333;
+}
+
+/* -----------------------------------------------------
+   OVERRIDES TIL MØRKT TEMA (så “text-muted” ikke bliver for mørk)
+----------------------------------------------------- */
+.text-muted {
+  /* Gør den lidt lysere end standard-Bootstrap */
+  color: #aaa !important;
+}
+
+/* Hvis du vil sikre, at ikoner også er lysere: */
+.card i {
+  color: #ccc;
+}
+
+/* ======================================= */
+/* =========== USER-INFO-CARD =========== */
+/* ======================================= */
+.user-info-card {
+  background-color: #1c1c1c;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s;
+}
+.user-info-card:hover {
+  transform: translateY(-3px);
+}
+.user-info-card img {
+  width: 100px;   /* fx 100px bred */
+  height: 100px;  /* fx 100px høj */
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Shortcut-knapper i topbaren (Live Sports, Aktiespillet) */
+.shortcut-btn {
+  background-color: #00cca3;
+  color: #000;
+  font-weight: 600;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+  text-decoration: none;
+  padding: 0.375rem 0.75rem; /* svarende til btn btn-sm */
+  border: none;
+  border-radius: 0.25rem;
+  margin-right: 5px; /* lidt luft mellem knapper */
+}
+
+.shortcut-btn:hover {
+  background-color: #00b38f; /* lidt mørkere grøn */
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* for _macros.html -> skal i static/css/components.css eller lignende */
+.avatar {
+  object-fit: cover; /* Sørger for billedet dækker pænt */
+  vertical-align: middle; /* Juster linjering hvis nødvendigt */
+}
+
+.avatar-sm {
+  width: 32px;
+  height: 32px;
+}
+
+.avatar-md { /* Default størrelse */
+  width: 48px;
+  height: 48px;
+}
+
+.avatar-lg {
+  width: 64px;
+  height: 64px;
+}
+
+/* Gør evt. avatarer i links klikbare (fjern pointer-events på selve billedet) */
+a img.avatar {
+    pointer-events: none;
+}

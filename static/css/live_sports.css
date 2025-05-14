@@ -1,0 +1,382 @@
+/* static/css/live_sports.css */
+/* Stilarter specifikt til /live_sports siden for at matche dashboardets udseende */
+
+/* ================================================== */
+/* ========= STYLES FOR LIVE SPORTS PAGE ========== */
+/* ================================================== */
+
+/* -- Valgfrit: Styling af filter-containeren -- */
+/* BEMÆRK: Det anbefales at wrappe filter-sektionen i en div med class="card dashboard-card ..." */
+/* direkte i din live_sports.html template for den bedste struktur. */
+/* Hvis du styler containeren her, giv den et ID, f.eks. #live-sports-filters */
+/*
+#live-sports-filters {
+    background-color: var(--secondary-bg, #2c3034);
+    border: 1px solid var(--border-color-dark, #495057);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem; /* Mere luft før tabellerne */
+/* }
+*/
+/* Indre elementer i filter-sektionen (labels, selects) */
+/* #live-sports-filters .form-label {
+    color: var(--font-color-muted, #adb5bd);
+    font-size: 0.9em;
+    margin-bottom: 0.3rem;
+   }
+   #live-sports-filters .form-select,
+   #live-sports-filters .form-check-input {
+        background-color: var(--input-bg, #333);
+        border-color: var(--border-color-dark, #495057);
+        color: var(--font-color-base, #dee2e6);
+   }
+   #live-sports-filters .form-check-input:checked {
+       background-color: var(--primary-color, #00cca3);
+       border-color: var(--primary-color, #00cca3);
+   }
+   #live-sports-filters .btn { */
+       /* Match dashboard knapper */
+/* } */
+
+
+/* -- Styling for tabel-containeren (Gør den til et 'kort') -- */
+.sports-table-card {
+    background-color: var(--secondary-bg, #2c3034);
+    border: 1px solid var(--border-color-dark, #495057);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Subtil skygge */
+    border-radius: 0.75rem; /* Match .dashboard-card */
+    overflow: hidden; /* Vigtigt for indhold og border-radius */
+    margin-bottom: 2rem; /* Mere plads mellem tabeller/kort */
+}
+
+/* -- Styling for selve tabellen inde i kortet -- */
+.live-sports-data-table {
+    color: inherit; /* Arv farve fra .sports-table-card */
+    margin-bottom: 0; /* Ingen margin i bunden inde i kortet */
+    width: 100%; /* Sørg for fuld bredde */
+}
+
+/* -- Tabel Header Styling -- */
+.live-sports-data-table thead th {
+     background-color: transparent;
+     border-bottom: 2px solid var(--border-color-dark, #495057);
+     padding: 1rem 1.2rem;
+     font-size: 0.8rem;
+     font-weight: 600;
+     color: var(--font-color-muted, #adb5bd);
+     text-transform: uppercase;
+     letter-spacing: 0.8px;
+     text-align: left;
+     white-space: nowrap;
+}
+.live-sports-data-table thead th.text-center { text-align: center !important; }
+
+/* -- Tabel Række/Celle Styling -- */
+.live-sports-data-table tbody td {
+     padding: 1rem 1.2rem;
+     border-top: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.08));
+     vertical-align: middle;
+     font-size: 0.95rem;
+}
+.live-sports-data-table tbody tr:first-child td {
+     border-top: none;
+}
+.live-sports-data-table tbody tr:hover {
+     background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* -- Match-navn styling -- */
+.live-sports-data-table tbody td strong {
+    font-weight: 600;
+    color: var(--font-color-highlight, #ffffff);
+    font-size: 1em;
+}
+.live-sports-data-table tbody td small.text-muted {
+     color: var(--font-color-muted, #adb5bd) !important;
+     font-size: 0.8em;
+}
+
+/* -- Odds Styling -- */
+.odds-container {
+     display: flex;
+     flex-wrap: wrap;
+     justify-content: center;
+     align-items: center;
+     gap: 0.5rem;
+}
+.odds-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.4em 0.8em;
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color-dark, #495057);
+    border-radius: 0.35rem;
+    text-align: center;
+    min-width: 65px;
+    line-height: 1.2;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+.odds-item:hover {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-color: var(--primary-color, #00cca3);
+}
+.odds-label {
+    display: block;
+    font-size: 0.7em;
+    color: var(--font-color-muted, #adb5bd);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+.odds-price {
+    font-weight: 700;
+    color: var(--font-color-highlight, #ffffff);
+    font-size: 1em;
+}
+.odds-missing {
+    color: var(--font-color-muted, #adb5bd);
+    font-style: italic;
+    font-size: 0.9em;
+}
+
+/* -- Status/Score Kolonne Ikoner og Tekst -- */
+.live-sports-data-table .text-danger i,
+.live-sports-data-table .text-success i,
+.live-sports-data-table .text-info i,
+.live-sports-data-table .text-warning i,
+.live-sports-data-table .text-muted i,
+.live-sports-data-table .text-danger .bi, /* Bootstrap ikoner */
+.live-sports-data-table .text-success .bi,
+.live-sports-data-table .text-info .bi,
+.live-sports-data-table .text-warning .bi,
+.live-sports-data-table .text-muted .bi {
+    color: inherit;
+}
+
+.live-sports-data-table .text-danger { color: var(--danger-color, #dc3545) !important; }
+.live-sports-data-table .text-success { color: var(--success-color, #28a745) !important; }
+.live-sports-data-table .text-info { color: var(--info-color, #17a2b8) !important; }
+.live-sports-data-table .text-warning { color: var(--warning-color, #ffc107) !important; }
+.live-sports-data-table .text-muted { color: var(--font-color-muted, #adb5bd) !important; }
+
+/* Spinner farve (standard inde i tabel) */
+.live-sports-data-table .spinner-border {
+    color: var(--primary-color, #00cca3) !important;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-width: 0.15em;
+}
+
+/* -- Live dot -- */
+.live-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    background-color: var(--danger-color, #dc3545);
+    border-radius: 50%;
+    animation: blinkAnimation 1.2s infinite;
+    vertical-align: middle;
+    margin-bottom: 2px;
+}
+@keyframes blinkAnimation {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+/* ========== START: Nye og Korrekte Knapper i Tabel ============ */
+
+/* -- Grundlæggende styling af action-knapper i tabellen -- */
+/* Sørger for ALLE knapper starter med den store "pill shape" radius */
+.live-sports-data-table .sports-action-btn {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.85em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-radius: 50rem; /* En meget stor værdi tvinger fuld runding */
+}
+
+/* -- Regler for selve .btn-group containeren (omslutter knapperne) -- */
+/* Sikrer knapper er inline og der er plads til at de ikke rører hinanden */
+#sports_events_list .btn-group {
+    display: inline-flex;
+    vertical-align: middle;
+    gap: 4px; /* HER ER MELLLEMUMMET! Du kan justere "4px" */
+}
+
+/* --- Overrides for Bootstraps udfladning af kanter i .btn-group --- */
+/* Sørg for at DEN FØRSTE knap også beholder sin HØJRE runding */
+#sports_events_list .btn-group > .sports-action-btn:first-child:not(:last-child) {
+    border-top-right-radius: 50rem !important;
+    border-bottom-right-radius: 50rem !important;
+}
+
+/* Sørg for at DEN SIDSTE knap også beholder sin VENSTRE runding */
+#sports_events_list .btn-group > .sports-action-btn:last-child:not(:first-child) {
+    border-top-left-radius: 50rem !important;
+    border-bottom-left-radius: 50rem !important;
+    /* margin-left fjernes, da gap klarer det nu */
+}
+
+/* Sørg for MIDTERSTE knapper beholder BEGGE rundinger */
+#sports_events_list .btn-group > .sports-action-btn:not(:first-child):not(:last-child) {
+    border-top-left-radius: 50rem !important;
+    border-bottom-left-radius: 50rem !important;
+    border-top-right-radius: 50rem !important;
+    border-bottom-right-radius: 50rem !important;
+    /* margin-left fjernes, da gap klarer det nu */
+}
+
+/* Hvis en knap står alene i gruppen, har den allerede den globale 50rem */
+#sports_events_list .btn-group > .sports-action-btn:first-child:last-child {
+    /* Ingen specifikke overrides nødvendige, da den arver 50rem */
+}
+
+
+/* Ikoner inde i action-knapper */
+.live-sports-data-table .sports-action-btn i,
+.live-sports-data-table .sports-action-btn .bi { /* Gælder også for .bi */
+    margin-right: 5px;
+    font-size: 0.95em;
+    vertical-align: middle;
+    margin-bottom: 1px;
+    color: inherit !important;
+}
+
+/* Hvis .btn-outline-secondary bruges og mangler global definition */
+.live-sports-data-table .btn-outline-secondary {
+     color: var(--secondary-color-light, #a0a0a0);
+     border-color: var(--secondary-color-light, #a0a0a0);
+ }
+.live-sports-data-table .btn-outline-secondary:hover {
+      background-color: var(--secondary-color-light, #a0a0a0);
+      border-color: var(--secondary-color-light, #a0a0a0);
+      color: var(--dark-bg, #0d0d0d);
+ }
+
+/* Action-knapper i disabled state */
+.live-sports-data-table .btn.disabled,
+.live-sports-data-table .btn:disabled {
+   opacity: 0.45 !important;
+   background-color: var(--secondary-bg-lighter, #3a3f44);
+   border-color: var(--border-color-dark, #495057);
+   color: var(--font-color-muted, #888);
+   box-shadow: none;
+}
+/* Specifik override for disabled Opret-knap (da den har specialfarve) */
+#sports_events_list .create-session-btn:disabled,
+#sports_events_list .create-session-btn.disabled {
+   background-color: var(--primary-color, #00cca3); /* Brug samme base */
+   border-color: var(--primary-color, #00cca3);
+   opacity: 0.45 !important; /* Behold eksisterende opacity */
+   color: rgba(var(--button-text-dark-rgb, 17, 17, 17), 0.65); /* Svagere mørk tekst */
+   box-shadow: none;
+}
+
+/* =========== SLUT: Nye og Korrekte Knapper i Tabel ============ */
+
+
+/* -- Gør afsluttede kampe nedtonede -- */
+.event-ended td {
+    opacity: 0.6;
+    transition: opacity 0.3s ease;
+}
+.event-ended:hover td {
+    opacity: 0.9;
+}
+
+/* -- Justeringer for mindre skærme -- */
+@media (max-width: 768px) {
+    .live-sports-data-table thead {
+        /* display: none; */
+    }
+    .live-sports-data-table tbody td {
+        padding: 0.8rem 0.6rem;
+        font-size: 0.9rem;
+    }
+
+    .odds-container {
+        justify-content: flex-start;
+    }
+    .odds-item {
+         min-width: 55px;
+         padding: 0.3em 0.5em;
+    }
+    .odds-price {
+        font-size: 0.9em;
+    }
+
+    .live-sports-data-table .sports-action-btn {
+         padding: 0.35rem 0.6rem;
+         font-size: 0.8em;
+    }
+     #sports_events_list .btn-group {
+         /* Ingen yderligere justering nødvendig, medmindre du vil ændre 'gap' */
+     }
+}
+
+/* ========================================== */
+/* == STYLING AF SPECIFIKKE KONTROL-KNAPPER == */
+/* ========================================== */
+
+/* --- Titel over tabellen --- */
+.sports-group-title {
+    text-align: center;
+    color: var(--font-color-header, #f1f3f5);
+}
+
+/* "Anvend Filter" knap */
+#apply_filter_btn {
+    background-color: var(--success-color, #00cc66);
+    border-color: var(--success-color, #00cc66);
+    color: var(--button-text-dark, #111111);
+}
+#apply_filter_btn .bi { color: inherit !important; }
+#apply_filter_btn:hover,
+#apply_filter_btn:focus {
+    background-color: #00b359;
+    border-color: #00a350;
+    color: var(--button-text-dark, #111111);
+    box-shadow: 0 0 0 0.2rem rgba(var(--success-color-rgb, 0, 204, 102), 0.5);
+}
+
+/* "Opdater Nu" knap */
+#refresh_sports_btn {
+    background-color: var(--warning-color, #ffc107);
+    border-color: var(--warning-color, #ffc107);
+    color: var(--button-text-dark, #111111);
+}
+#refresh_sports_btn .bi { color: inherit !important; }
+#refresh_sports_btn:hover,
+#refresh_sports_btn:focus {
+    background-color: #e0a800;
+    border-color: #d39e00;
+    color: var(--button-text-dark, #111111);
+    box-shadow: 0 0 0 0.2rem rgba(var(--warning-color-rgb, 255, 193, 7), 0.5);
+}
+
+/* --- Specifikke KNAPFARVER I LISTEN/TABELLEN --- */
+#sports_events_list .create-session-btn {
+    background-color: var(--primary-color, #00cca3);
+    border-color: var(--primary-color, #00cca3);
+    color: var(--button-text-dark, #111111);
+    /* Ingen margin-left her, håndteres af gap på .btn-group */
+}
+#sports_events_list .create-session-btn:hover,
+#sports_events_list .create-session-btn:focus {
+    background-color: var(--primary-hover, #00b38f);
+    border-color: var(--primary-hover, #00b38f);
+    color: var(--button-text-dark, #111111);
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb, 0, 204, 163), 0.5);
+}
+
+/* --- SPINNER FARVER --- */
+/* Disse skal matche tekstfarven for bedste kontrast */
+#apply_filter_btn .spinner-border,
+#refresh_sports_btn .spinner-border,
+#sports_events_list .create-session-btn .spinner-border {
+    color: var(--button-text-dark, #111111);
+}
+.live-sports-data-table .btn-outline-secondary .spinner-border {
+     color: var(--secondary-color-light, #a0a0a0);
+}

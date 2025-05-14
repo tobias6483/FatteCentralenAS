@@ -1,0 +1,92 @@
+{# templates/forum/create_thread.html - Side til Oprettelse af Ny Forum Tråd - OPDATERET #}
+{% extends "base.html" %}
+{# Importer makroer til form-gengivelse #}
+{% from "_macros.html" import render_field_with_errors, render_form_errors %}
+
+{# Sørg for 'category' objekt sendes fra viewet #}
+{% set category_name = category.name | default('Ukendt Kategori') %} {# Sikker adgang med default filter #}
+{% block title %}Opret Ny Tråd i {{ category_name }} - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4 forum-container">
+
+    {# ----- Breadcrumbs ----- #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="--bs-breadcrumb-divider: '>'; background-color: transparent; padding: 0;">
+            {# !!! ÆNDRING: Tilføjet link-light og text-decoration-none !!! #}
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}" class="link-light text-decoration-none">Forum Oversigt</a></li>
+            {% if category and category.slug %} {# Sikkerhedstjek #}
+             {# !!! ÆNDRING: Tilføjet link-light og text-decoration-none !!! #}
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.view_category', slug=category.slug) }}" class="link-light text-decoration-none">{{ category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">Opret Ny Tråd</li>
+        </ol>
+    </nav>
+
+    {# ----- Side Titel ----- #}
+    <h1 class="h2 page-title mb-4">
+        <i class="bi bi-plus-circle-dotted me-2"></i>
+        Opret ny tråd i: <span class="text-primary fw-medium">{{ category_name }}</span>
+    </h1>
+
+    {# Samme kort-styling som andre steder #}
+    <div class="card dashboard-card shadow-sm create-thread-card">
+         {# !!! ÆNDRING: fjernet 'bg-light', tilføjet mørkere baggrund ligesom category listen !!! #}
+        <div class="card-header py-2" style="background-color: rgba(var(--bs-secondary-rgb), 0.05); border-bottom: 1px solid var(--border-color-dark);">
+             {# text-muted bør rendere lyst pga. globale overrides/variabler #}
+            <h5 class="mb-0 small text-muted fw-normal">Udfyld detaljer for den nye tråd</h5>
+        </div>
+        <div class="card-body p-4"> {# Lidt mere padding i body #}
+            {# ----> Selve Formular <---- #}
+            {{ render_form_errors(form) }} {# Vises øverst #}
+
+            <form method="POST" action="{{ url_for('forum.create_thread', category_slug=category.slug) }}" id="createThreadForm" novalidate>
+                {{ form.hidden_tag() }} {# CSRF token #}
+
+                {# --- Titel Felt --- #}
+                 {# render_field_with_errors antages at rendere <label> og <input>, som arver styling #}
+                {{ render_field_with_errors(form.title,
+                                            placeholder='Skriv en klar og beskrivende titel...',
+                                            help_text='Gør det nemt for andre at se, hvad din tråd handler om.',
+                                            required=True)
+                }}
+
+                {# --- Body Felt --- #}
+                 {# render_field_with_errors antages at rendere <label> og <textarea> #}
+                 {# Den bruger også 'safe' filter, så linket i help_text er klikbart #}
+                {{ render_field_with_errors(form.body,
+                                            placeholder='Skriv det første indlæg i din nye tråd...',
+                                            help_text='Tip: Brug <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" class="link-info">Markdown</a> til formatering.' | safe,
+                                            required=True,
+                                            rows=10) {# Specificer antal rækker hvis ønsket #}
+                }}
+
+                {# --- Knapper --- #}
+                 {# Grå border-top for adskillelse #}
+                <div class="d-flex justify-content-end align-items-center gap-2 pt-3 mt-3 border-top" style="border-color: var(--border-color-light-alpha) !important;">
+                     {# !!! ÆNDRING: Ændret til btn-secondary for bedre kontrast !!! #}
+                     <a href="{{ url_for('forum.view_category', slug=category.slug) }}"
+                        class="btn btn-secondary" {# Solid grå knap #}
+                        title="Gå tilbage til {{ category_name }} uden at oprette">Annuller</a>
+
+                     {# Opret knap (btn-success ser normalt ok ud på mørk) #}
+                     <button type="submit" class="btn btn-success" name="submit">
+                         <i class="bi bi-check-circle me-1"></i> Opret Tråd
+                     </button>
+                 </div>
+             </form>
+         </div> {# End card-body #}
+     </div> {# End card #}
+ </div> {# End container-fluid #}
+ {% endblock %}
+
+ {% block scripts_extra %} {# Ændret bloknavn til 'scripts_extra' for at matche base.html #}
+ {{ super() }} {# Sørger for at base.html's scripts loades først #}
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script src="{{ url_for('static', filename='js/forum_forms.js') }}"></script>
+ {% endblock %}

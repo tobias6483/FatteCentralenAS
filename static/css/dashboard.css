@@ -1,0 +1,604 @@
+/* ==========================================================
+   CUSTOM DARK DASHBOARD STYLES - V2 (Variable Focused)
+   ========================================================== */
+
+/* ----- Grundlæggende Dashboard Kort ----- */
+.dashboard-card {
+    /* Brug variabel til baggrund, f.eks. lidt lysere end standard kort */
+    background-color: var(--secondary-bg, #2c3034);
+    /* Brug en defineret border farve eller en standard grå */
+    border: 1px solid var(--border-color-dark, #495057); /* Definer --border-color-dark i variables.css eller behold grå */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-radius: 0.75rem;
+    color: var(--font-color-base, #dee2e6); /* Base tekst farve for kort */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard-card .card-body {
+    padding: 1.5rem;
+    flex-grow: 1;
+    display: flex; /* Added for flex children */
+    flex-direction: column; /* Added for flex children */
+}
+
+.list-card .card-body.list-card-body { /* Specific for list cards */
+    padding: 0; /* Remove padding as ul will handle it */
+}
+
+
+/* ----- Stats Kort Styling ----- */
+.dashboard-card .stat-title {
+    font-size: 0.8rem;
+    /* Brug en muted variabel eller behold standard lys grå */
+    color: var(--font-color-muted, #adb5bd);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.dashboard-card .stat-value {
+    font-size: 1.9rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    /* Hovedværdi i hvid for kontrast */
+    color: var(--font-color-highlight, #ffffff);
+    line-height: 1.2;
+}
+
+.dashboard-card .stat-value i.fa-fw {
+    font-size: 1.6rem;
+    /* Konsekvent primærfarve for ikoner */
+    color: var(--primary-color, #00cca3);
+    width: 35px;
+    text-align: center;
+}
+
+.dashboard-card .stat-value .win-loss-value {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+/* Farver styres via text-success / text-danger i HTML,
+   som bør respektere dine globale .text-success/.text-danger stile */
+/* F.eks. i variables.css eller components.css:
+   .text-success { color: var(--success-color, #28a745) !important; }
+   .text-danger { color: var(--danger-color, #dc3545) !important; }
+*/
+
+
+/* ----- Profil Kort Styling ----- */
+.profile-card .card-body {
+    padding: 0.75rem; /* Reduced padding */
+    display: flex; /* Ensure this is the primary layout for the card's direct children */
+    align-items: center; /* Vertically center the avatar and the text info block */
+    /* flex-wrap: wrap; /* This is in HTML, allow wrapping for smaller screens if necessary */
+}
+
+.profile-card {
+    background: linear-gradient(145deg, var(--secondary-bg, #2c3034), var(--card-bg-darker, #1a1d20));
+    min-height: 0; /* Ensure it can shrink to content */
+    height: auto; /* Override fixed height if any was set by .dashboard-card */
+}
+
+.profile-card .avatar-circle {
+    width: 70px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--primary-color);
+    margin-right: 0.75rem; /* Reduced margin */
+    flex-shrink: 0; /* Prevent avatar from shrinking */
+}
+
+.profile-card .flex-grow-1 { /* This is the div for text details */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* This will center the text block if the card-body has extra vertical space */
+    min-width: 0; /* Important for flex items that might overflow */
+}
+
+.profile-card h5 { /* Brugernavn */
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+    color: var(--font-color-highlight);
+    font-size: 1.2rem;
+    line-height: 1.2;
+}
+
+.profile-card p { /* Profil detaljer */
+    font-size: 0.85rem;
+    margin-bottom: 0.25rem;
+    color: var(--font-color-muted);
+    display: flex;
+    align-items: center;
+    line-height: 1.3;
+}
+.profile-card p:last-child {
+    margin-bottom: 0;
+}
+.profile-card p i.fa-fw { /* Ensure icons in profile details have consistent size and margin */
+    width: 16px; /* Adjust if needed */
+    margin-right: 0.5rem;
+}
+
+.profile-card p i.fa-fw { /* Ikoner i profil info */
+    margin-right: 0.6rem;
+    /* Specifik lys grå eller en dedikeret variabel */
+    color: var(--icon-color-muted, #8699ae);
+    width: 18px;
+    text-align: center;
+}
+
+.profile-card .rank-badge { /* Rank badge */
+    font-size: 0.8rem;
+    padding: 0.35em 0.8em;
+    vertical-align: middle;
+    margin-left: 6px;
+    /* Antager at baggrundsfarve sættes af f.eks. bg-primary klassen */
+}
+
+/* Tilføj mellemrum før 'Sidst set' datoen */
+#dashboardProfileLastLogin {
+    margin-left: 0.4em; /* Tilføjer en lille margen til venstre */
+                     /* Juster evt. værdien (0.3em, 0.5em, 4px etc.) */
+}
+
+
+/* ----- Liste Kort (Aktiviteter, Forum, Invites) ----- */
+.list-card .card-header {
+    /* Meget let mørkere tone end kortets krop */
+    background-color: rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid var(--border-color-dark, #495057);
+    padding: 1rem 1.5rem;
+}
+
+.list-card .card-header h5 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    /* Lidt lysere end base font, men ikke helt hvid? */
+    color: var(--font-color-header, #f1f3f5);
+    display: flex;
+    align-items: center;
+    margin-bottom: 0;
+}
+
+.list-card .card-header h5 i {
+    margin-right: 0.8rem;
+    color: var(--primary-color, #00cca3);
+    font-size: 1.2rem;
+}
+
+.list-card .card-body {
+    /* padding-top: 1rem; */ /* Removed, handled by list-card-body or activity-list */
+    /* padding-bottom: 1rem; */ /* Removed */
+}
+
+.activity-list {
+    padding: 0.75rem; /* Add some padding inside the scrollable area */
+    flex-grow: 1; /* Allow list to take available space */
+    /* max-height and overflow-y are set inline in HTML */
+}
+
+
+/* ----- Liste Elementer ----- */
+.activity-list .list-group-item {
+    /* Lidt lysere end kort baggrund for kontrast */
+    background-color: rgba(255, 255, 255, 0.05);
+    /* Brug en lysere alpha border eller en variabel */
+    border: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1));
+    margin-bottom: 10px;
+    border-radius: 0.4rem;
+    padding: 0.9rem 1.2rem;
+    font-size: 0.9rem;
+    color: var(--font-color-base, #dee2e6);
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.activity-list .list-group-item:last-child {
+    margin-bottom: 0;
+}
+
+.activity-list .list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: var(--border-color-lighter-alpha, rgba(255, 255, 255, 0.15));
+}
+
+.activity-list .list-group-item i.item-icon {
+    width: 24px;
+    margin-right: 12px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+/* Ikon farver i lister (Bruger variabler eller definerede farver) */
+/* Det anbefales at definere disse farver i variables.css hvis muligt */
+/* :root {
+     --info-color: #17a2b8;
+     --warning-color: #ffc107;
+     --secondary-color: #6c757d;
+     --secondary-color-hover: #5a6268;
+   }
+*/
+
+
+/*
+.activity-list .item-icon.text-success { color: var(--success-color, #28a745) !important; }
+.activity-list .item-icon.text-danger  { color: var(--danger-color, #dc3545) !important; }
+.activity-list .item-icon.text-info    { color: var(--info-color, #17a2b8) !important; }
+.activity-list .item-icon.text-warning { color: var(--warning-color, #ffc107) !important; }
+.activity-list .item-icon.text-primary { color: var(--primary-color, #00cca3) !important; }
+.activity-list .item-icon.text-secondary{ color: var(--secondary-color, #6c757d) !important; } Tilføjet secondary
+.activity-list .item-icon.text-muted   { color: var(--font-color-muted, #adb5bd) !important; } /* Hvis du bruger muted ikoner */
+
+
+.activity-list .list-group-item strong {
+    font-weight: 600;
+    color: var(--font-color-highlight, #ffffff);
+}
+.activity-list .list-group-item .text-muted {
+    font-size: 0.8em;
+    margin-left: 5px;
+    color: var(--font-color-muted, #adb5bd) !important; /* Sørg for muted også følger variabel */
+}
+
+/* Badges/Knapper i lister */
+.activity-list .badge {
+    margin-left: auto;
+    cursor: pointer;
+    padding: 0.45em 0.9em;
+    font-weight: 500;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    border: none; /* Sørg for at badges ikke har standard kant */
+}
+.activity-list .badge:hover {
+    transform: scale(1.05);
+}
+
+/* Specifikke badge stile */
+.activity-list .badge.bg-success {
+    background-color: var(--primary-color, #00cca3) !important; /* Match primary icon color */
+    color: var(--button-text-dark, #000000) !important; /* Mørk tekst på lys primærfarve */
+}
+.activity-list .badge.bg-success:hover {
+    background-color: var(--primary-hover, #00b38f) !important;
+}
+.activity-list .badge.bg-secondary {
+    background-color: var(--secondary-color-hover, #5a6268) !important; /* Brug mørkere grå */
+    color: var(--font-color-highlight, #ffffff) !important;
+}
+.activity-list .badge.bg-secondary:hover {
+    background-color: var(--secondary-color, #6c757d) !important; /* Lysere grå ved hover */
+}
+
+
+/* ----- Nulstil List Group standard stile ----- */
+.list-group-flush {
+    border-radius: 0;
+}
+.list-group-flush > .list-group-item {
+    border-width: 0; /* Vores item styling tager over */
+}
+
+/* ----- AJAX Loading Placeholder ----- */
+.loading-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    color: var(--font-color-muted, #adb5bd);
+    gap: 0.7rem;
+    font-style: italic;
+    min-height: 100px; /* Forhindrer kollaps */
+    border-radius: inherit; /* Arv border-radius fra parent card */
+}
+.loading-placeholder .spinner-border {
+    color: var(--primary-color, #00cca3);
+}
+
+/* Custom Scrollbar for Webkit browsers */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px; /* Thinner scrollbar */
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05); /* More subtle track */
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--font-color-muted, #adb5bd); /* Muted color for thumb */
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-color, #00cca3);
+}
+
+
+/* ----- Velkomst Sektion ----- */
+.welcome-header {
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 0rem; /* Removed bottom margin */
+    padding: 0; /* Removed padding */
+}
+.welcome-header .display-5 {
+    color: var(--primary-color);
+    font-weight: 500;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+    font-size: 1.4rem; /* Reduced font size */
+    margin-bottom: 0.1rem !important; /* Reduced bottom margin */
+}
+.welcome-header .intro-text {
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+    color: var(--font-color-muted);
+    font-size: 0.8rem; /* Reduced font size */
+    line-height: 1.3;
+    margin-top: 0.05rem; /* Reduced top margin */
+}
+.welcome-header .intro-text i.fas { /* Ikoner i intro teksten */
+     color: var(--primary-color, #00cca3);
+     margin: 0 4px;
+     vertical-align: baseline;
+}
+
+
+/* ----- Hurtige Handlinger Kort (Eksempel) ----- */
+.quick-actions-card .btn { /* Styling for knapper specifikt i dette kort */
+    margin: 0.3rem; /* Lidt luft mellem knapperne */
+}
+.quick-actions-card .btn i {
+    margin-right: 0.5rem; /* Plads mellem ikon og tekst i knap */
+}
+
+/* ----- Diagram Kort (Eksempel) ----- */
+.chart-card .card-body {
+    position: relative; /* Nødvendig for at positionere canvas/placeholder korrekt */
+    min-height: 250px; /* Sørg for minimumshøjde til diagram */
+}
+#balanceChart { /* Styling for selve canvas */
+   display: block; /* Standard, men sikrer det fylder */
+   width: 100% !important; /* Tving bredde (Chart.js håndterer responsivitet) */
+   height: auto !important;
+   max-height: 300px; /* Sæt evt. max højde */
+}
+#chartPlaceholder.loading-placeholder { /* Hvis du bruger en placeholder specifikt til diagram */
+   position: absolute;
+   top: 0;
+   left: 0;
+   right: 0;
+   bottom: 0;
+   background-color: var(--secondary-bg, rgba(44, 48, 52, 0.9)); /* Semi-transparent overlay? */
+   border-radius: inherit;
+   z-index: 10; /* Sørg for den er ovenpå canvas */
+}
+
+
+/* ----- Diverse Justeringer ----- */
+/* Gør links generelt lidt lysere? */
+/* a { color: var(--link-color, var(--primary-color)); text-decoration: none; } */
+/* a:hover { color: var(--link-hover-color, var(--primary-hover)); } */
+
+
+
+.list-group-item i[class^="bi-"],
+.list-group-item i[class*=" bi-"] {
+   /* color: inherit; /* Arv fra inline style - INGEN !important */
+}
+
+.list-group-item a i[class^="bi-"],
+.list-group-item a i[class*=" bi-"] {
+   /* color: inherit; /* Arv fra inline style - INGEN !important */
+}
+
+/* Styling for Seneste Aktivitet items - Adjusted for renderActivityItem structure */
+#recentActivityList .list-group-item {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-color-dark-alpha, rgba(73, 80, 87, 0.5));
+    margin-bottom: 8px;
+    padding: 0.6rem 0.8rem; /* Slightly reduced padding */
+    display: flex; /* Keep flex for icon and content-div alignment */
+    align-items: flex-start; /* Align icon to the top of the content */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Icon in Recent Activity */
+#recentActivityList .list-group-item > i[class^="bi-"],
+#recentActivityList .list-group-item > i[class*=" bi-"] {
+    font-size: 1.2rem; /* Match fs-4 from JS if that's intended, or adjust */
+    width: 1.8em; /* Give icon a bit more space */
+    text-align: center;
+    flex-shrink: 0;
+    margin-right: 0.6rem; /* Space between icon and text block */
+    margin-top: 0.1rem; /* Fine-tune vertical alignment */
+    /* color is set inline via style in JS */
+}
+
+/* Text content wrapper in Recent Activity */
+#recentActivityList .list-group-item .flex-grow-1 {
+    display: flex;
+    flex-direction: column; /* Stack description and timestamp */
+}
+
+#recentActivityList .activity-description {
+    font-weight: 500;
+    color: var(--font-color-base, #dee2e6);
+    line-height: 1.3;
+    font-size: 0.85rem;
+    margin-bottom: 0.1rem; /* Small space before timestamp */
+}
+#recentActivityList .activity-amount {
+    font-size: 0.9em; /* Make amount part of description size */
+}
+
+#recentActivityList .list-group-item small.text-muted { /* Timestamp block */
+    font-size: 0.75em; /* Slightly larger for better readability */
+    color: var(--font-color-muted, #adb5bd);
+    opacity: 0.9;
+}
+#recentActivityList .list-group-item small.text-muted i.bi-clock {
+    margin-right: 0.2rem;
+    vertical-align: text-bottom;
+}
+
+
+#recentActivityPlaceholder.placeholder-container {
+    min-height: 150px; /* Keep placeholder height */
+}
+
+
+/* Styling specifikt for forum listen på dashboardet */
+#latestForumPostsList .list-group-item {
+    transition: background-color 0.2s ease-in-out;
+    padding: 0.75rem 1rem; /* Consistent padding */
+    border-bottom: 1px solid var(--border-color-dark-alpha, rgba(73, 80, 87, 0.3)); /* More subtle border */
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+#latestForumPostsList .list-group-item:last-child {
+    border-bottom: none; /* Fjern linje under sidste element */
+}
+
+/* Forbedret hover effekt */
+#latestForumPostsList .list-group-item:hover {
+    background-color: rgba(255, 255, 255, 0.08); /* Lidt lysere hover i mørkt tema */
+    cursor: pointer; /* Vis at det er klikbart */
+}
+
+/* Avatar i forum listen */
+#latestForumPostsList .list-group-item img.rounded-circle {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    margin-top: 0; /* Reset margin */
+}
+/* Fallback icon for forum list if avatar is missing */
+#latestForumPostsList .list-group-item > i.bi.item-icon {
+    font-size: 1.8rem;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--font-color-muted);
+    background-color: rgba(255,255,255,0.05);
+    border-radius: 50%;
+}
+
+#latestForumPostsList .forum-item-content {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0; /* For text overflow */
+}
+
+/* Trådtitel */
+#latestForumPostsList .forum-item-content a.link-body-emphasis { /* Target the link directly */
+    font-weight: 500;
+    font-size: 0.9rem; /* Adjusted font size */
+    color: var(--bs-light) !important; /* Ensure it's light */
+    margin-bottom: 0.15rem;
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+#latestForumPostsList .forum-item-content a.link-body-emphasis:hover {
+    color: var(--primary-color, #00cca3) !important;
+    text-decoration: none;
+}
+
+
+/* Forfatter og tid */
+#latestForumPostsList .forum-item-meta {
+    font-size: 0.75em;
+    color: var(--font-color-muted, #adb5bd);
+    opacity: 0.9;
+}
+#latestForumPostsList .forum-item-meta i {
+   margin-right: 0.2rem;
+   vertical-align: text-bottom; /* Better alignment for icons like clock/user */
+}
+
+/* Styling for Sessions & Invites items */
+#sessionsInvitesList .list-group-item {
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid var(--border-color-dark-alpha, rgba(73, 80, 87, 0.3));
+}
+#sessionsInvitesList .list-group-item:last-child {
+    border-bottom: none;
+}
+
+
+#sessionsInvitesList .session-invite-details {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 0; /* For text overflow */
+}
+
+#sessionsInvitesList .session-invite-title {
+    font-weight: 500;
+    font-size: 0.9rem; /* Adjusted font size */
+    color: var(--font-color-base, #dee2e6);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.1rem;
+}
+
+#sessionsInvitesList .session-invite-meta {
+    font-size: 0.75em;
+    color: var(--font-color-muted, #adb5bd);
+    opacity: 0.9;
+}
+
+#sessionsInvitesList .btn { /* For 'Vis' or status buttons */
+    padding: 0.25rem 0.6rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* Placeholder styling consistency for list cards */
+.list-card .placeholder-container.list-placeholder { /* More specific selector */
+    min-height: 120px;
+    padding: 1rem;
+    border-radius: 0; /* Remove individual radius if card-body has padding:0 */
+}
+
+
+
+/* Fil: dashboard.css (eller tilsvarende) */
+
+/* Gør forum-post titler på dashboard lyse */
+#latestForumPostsList .list-group-item a.link-body-emphasis {
+    color: var(--bs-light) !important; /* Brug Bootstrap 'light' variabel for konsistens */
+    /* Eller brug ren hvid: */
+    /* color: #ffffff !important; */
+}
+
+/* (Valgfrit) Sikr at linket forbliver lyst, når man hover over det */
+#latestForumPostsList .list-group-item a.link-body-emphasis:hover {
+    color: var(--bs-white) !important; /* Kan bruge ren hvid her for lille kontrast */
+    text-decoration: none; /* Fjern evt. standard underline på hover hvis den kommer */
+}

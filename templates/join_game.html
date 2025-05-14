@@ -1,0 +1,86 @@
+{# templates/join_game_page.html - OPDATERET #}
+{% extends "base.html" %}
+
+{% block title %}Deltag i Spil - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    {# Link til den nye CSS fil #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/join_game.css') }}">
+    {# Inline style fjernet #}
+{% endblock %}
+
+{% block content %}
+<div class="container"> {# Standard container er fin her #}
+    <div class="join-game-container">
+
+        {# Brug mere struktureret header #}
+        <header class="text-center join-game-header">
+             <div class="icon-header"><i class="bi bi-controller"></i></div>
+             <h1 class="h2 page-title">Deltag i et Spil</h1> {# Brugt h2 som andre undersider #}
+             <p class="text-muted">Indtast ID'et på den spil session, du vil deltage i.</p>
+         </header>
+
+        {# Brug standard dashboard-card #}
+        <div class="card dashboard-card shadow-sm join-game-card">
+             <div class="card-header">
+                 <i class="bi bi-keyboard me-1"></i> Indtast Session ID {# Ændret ikon #}
+             </div>
+             <div class="card-body">
+                 <form id="joinGameForm" novalidate>
+                      {# Forbedret semantik og validering feedback #}
+                     <div class="mb-3">
+                          <label for="joinSessionIdInput" class="visually-hidden">Session ID</label> {# Skjult label for screen readers #}
+                          <input type="text" id="joinSessionIdInput" class="form-control form-control-lg text-center" {# Centreret tekst #}
+                                 placeholder="Session ID (f.eks. abc-123-def)"
+                                 required
+                                 autofocus
+                                 aria-label="Session ID"
+                                 aria-describedby="sessionIdHelp feedbackInvalidSessionId">
+                          <div id="sessionIdHelp" class="form-text text-muted small text-center mt-2">
+                              Indtast det 6-cifrede ID du har modtaget.
+                          </div>
+                          <div id="feedbackInvalidSessionId" class="invalid-feedback text-center">
+                              Ugyldigt eller manglende Session ID.
+                          </div>
+                      </div>
+{# Password Field (Optional) #}
+                      <div class="mb-3">
+                          <label for="joinSessionPasswordInput" class="visually-hidden">Session Kodeord (hvis påkrævet)</label>
+                          <input type="password" id="joinSessionPasswordInput" class="form-control form-control-lg text-center"
+                                 placeholder="Kodeord (hvis påkrævet)"
+                                 aria-label="Session Kodeord">
+                          {# No specific validation feedback needed here, backend handles it #}
+                      </div>
+
+                     <div class="d-grid gap-2"> {# gap-2 giver luft hvis flere knapper #}
+                         <button id="joinSessionBtn" type="submit" class="btn btn-success btn-lg"> {# Standard success, large knap #}
+                            {# Loading state struktur #}
+                            <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                            <i class="bi bi-check-lg btn-icon me-1"></i> {# Vist normalt #}
+                            <span class="btn-text">Deltag nu</span> {# Vist normalt #}
+                         </button>
+                     </div>
+
+                     {# Feedback område #}
+                     <div id="joinSessionFeedback" class="feedback-area mt-3">
+                         {# Meddelelser indsættes her af JS #}
+                     </div>
+                 </form>
+             </div>
+         </div>
+
+         <div class="text-center mt-4">
+            <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-secondary back-btn-join-game"> {# Samme stil som andre tilbage-knapper #}
+                 <i class="bi bi-arrow-left me-1"></i> Tilbage til Dashboard
+             </a>
+         </div>
+
+    </div> {# /join-game-container #}
+</div> {# /container #}
+{% endblock %}
+
+{% block scripts_extra %}
+    {{ super() }}
+    {# join_game.js skal loades - afhængigheder bør loades i base.html #}
+    <script src="{{ url_for('static', filename='js/join_game.js') }}" defer></script>
+{% endblock %}

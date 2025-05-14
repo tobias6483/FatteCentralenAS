@@ -1,0 +1,94 @@
+/* static/css/join_game.css */
+
+/* Container der centrerer og begrænser bredden */
+.join-game-container {
+  max-width: 550px; /* Lidt bredere end før? Juster efter behov */
+  margin: 3rem auto 2rem auto; /* Mere luft top/bund */
+}
+
+/* Styling for header sektionen */
+.join-game-header {
+    margin-bottom: 2rem; /* Lidt mere plads ned til kortet */
+}
+.join-game-header .icon-header {
+    font-size: 3rem; /* Større ikon */
+    color: var(--primary-color); /* Brug tema farve */
+    margin-bottom: 0.5rem; /* Lidt luft under ikonet */
+}
+.join-game-header .page-title {
+     color: var(--font-color-header);
+     font-weight: 600; /* Lidt mindre fed end display-6 default? */
+}
+.join-game-header .text-muted { /* Teksten under titlen */
+    font-size: 1.05rem; /* Lidt større end default muted */
+    color: var(--font-color-muted-lighter) !important; /* Lysere muted */
+}
+
+/* Selve kortet */
+.join-game-card {
+    /* Bruger .dashboard-card fra components.css */
+}
+.join-game-card .card-header {
+    /* Matcher andre headers */
+    background-color: var(--card-header-bg, rgba(0, 0, 0, 0.1));
+    border-bottom: 1px solid var(--border-color-dark, #495057);
+    font-weight: 600;
+    color: var(--font-color-muted-lighter, #ccc);
+}
+.join-game-card .card-header i {
+    color: var(--primary-color);
+    opacity: 0.9;
+    margin-right: 0.5rem;
+}
+.join-game-card .card-body {
+    padding: 1.75rem; /* God padding i body */
+}
+
+/* Input felt */
+/* Skal arve global/komponent styling for .form-control og .form-floating */
+/* Følgende er KUN backup, hvis de globale ikke virker 100% her */
+/*
+.join-game-card .form-control {
+     background-color: var(--input-bg);
+     color: var(--input-color);
+     border-color: var(--input-border-color);
+     padding: 1.25rem 1rem; /* Lidt højere pga. lg ? */
+/*}
+.join-game-card .form-control:focus {
+    background-color: var(--input-bg-focus);
+    color: var(--input-color-focus);
+    border-color: var(--input-border-focus);
+    box-shadow: var(--input-focus-shadow);
+}
+.join-game-card .form-floating > label {
+     color: var(--input-placeholder-color);
+}
+*/
+
+
+/* Knap styling */
+/* Bruger primært .btn-success .btn-lg fra Bootstrap, som bør arve farver */
+.join-game-card .btn-success {
+    /* Overskriv evt. hvis global success er anderledes */
+}
+.join-game-card .btn .spinner-border { display: none; }
+.join-game-card .btn.is-loading .spinner-border { display: inline-block; }
+.join-game-card .btn.is-loading .btn-text { opacity: 0; }
+.join-game-card .btn.is-loading i { opacity: 0; } /* Skjul ikoner også */
+
+/* Feedback område */
+#joinSessionFeedback {
+    /* Bruger .feedback-area fra profile.css? Ellers definer her */
+    min-height: 30px; /* Plads til besked */
+    text-align: center;
+    margin-top: 1rem !important;
+    font-weight: 500;
+}
+/* Styling til succes/fejl kan tilføjes af JS (f.eks. via .text-danger/.text-success) */
+
+
+/* Tilbage knap */
+/* Bruger standard .btn-outline-secondary */
+.back-btn-join-game {
+    /* Ingen ekstra styling nødvendig som udgangspunkt */
+}

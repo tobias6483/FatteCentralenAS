@@ -1,0 +1,480 @@
+{# templates/profile.html #}
+{% extends "base.html" %}
+
+{# Bruger APP_NAME og nu profile_user.username #}
+{% block title %}Brugerprofil - {{ profile_user.username|title }} - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/variables.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    {# ----- SIDE HOVED ----- #}
+    <header class="profile-header d-flex flex-column flex-md-row justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+         <h2 class="h3 mb-2 mb-md-0">
+             <i class="fas fa-id-card me-2"></i>
+             {# Brug profile_user objektets username property #}
+             {% if is_own_profile %}Din Profil{% else %}{{ profile_user.username|title }}'s Profil{% endif %}
+         </h2>
+        <div>
+             <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-secondary back-btn-profile">
+                 <i class="fas fa-arrow-left me-1"></i> Forside
+            </a>
+            {% if is_own_profile %}
+                 <a href="{{ url_for('main.settings') }}" class="btn btn-sm btn-outline-primary ms-2">
+                     <i class="fas fa-cog me-1"></i> Indstillinger
+                </a>
+             {% elif current_user.is_authenticated %} {# Show 'Send Message' if not own profile and logged in #}
+                <a href="{{ url_for('messages.compose_message', recipient_username=profile_user.username) }}" class="btn btn-sm btn-outline-info ms-2">
+                    <i class="bi bi-envelope-plus me-1"></i> Send Besked
+                </a>
+             {% endif %}
+        </div>
+    </header>
+
+    {# ----- PROFIL KORT (HOVEDINFO) ----- #}
+     <div class="card profile-card-main shadow-sm mb-4 fade-in-up"
+          id="profileInfoCard"
+          {# Brug profile_user properties til data attributter #}
+          data-profile-username="{{ profile_user.username | e }}"
+          data-is-own-profile="{{ is_own_profile | tojson }}"
+          data-max-avatar-mb="{{ MAX_AVATAR_SIZE_MB | default(2) }}">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+             <span><i class="fas fa-user-circle me-2"></i> Brugeroplysninger</span>
+             {% if is_own_profile %}
+                 <button type="button" id="editProfileBtn" class="btn btn-sm btn-outline-primary py-1 px-2" data-bs-toggle="modal" data-bs-target="#editProfileModal" title="Rediger profil oplysninger">
+                    <i class="fas fa-edit"></i><span class="d-none d-sm-inline ms-1">Rediger</span>
+                </button>
+             {% endif %}
+         </div>
+        <div class="card-body">
+            <div class="row align-items-center gy-3">
+                {# Avatar Sektion - Brug profile_user.avatar_url property #}
+                 <div class="col-lg-3 col-md-4 text-center">
+                     <img src="{{ profile_user.avatar_url | default(url_for('static', filename=DEFAULT_AVATAR)) }}"
+                          alt="Brugeravatar for {{ profile_user.username|title }}"
+                          class="profile-avatar img-thumbnail mb-2" id="profileAvatarImage">
+                     {% if is_own_profile %}
+                         <div id="avatarActions" class="mt-2">
+                             <form id="avatarUploadForm" class="d-inline-block">
+                                 <label for="avatarFile" class="btn btn-sm btn-outline-secondary w-100 mb-2" title="Vælg billede (max {{ MAX_AVATAR_SIZE_MB | default(2) }}MB)">
+                                     <i class="fas fa-camera me-1"></i><span class="d-none d-sm-inline">Skift avatar...</span>
+                                </label>
+                                <input type="file" name="avatarFile" id="avatarFile" accept="image/jpeg, image/png, image/gif, image/webp" class="d-none">
+                                <button type="button" id="submitAvatarBtn" class="btn btn-sm btn-primary w-100" style="display: none;" title="Upload valgt billede">
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                                    <i class="fas fa-upload btn-icon"></i>
+                                    <span class="btn-text">Upload</span>
+                                </button>
+                            </form>
+                            <div id="avatarFeedback" class="form-text text-muted small mt-1"></div>
+                        </div>
+                    {% endif %}
+                </div>
+                {# Brugerdetaljer Sektion - Brug profile_user properties #}
+                 <div class="col-lg-9 col-md-8">
+                     <h3 class="h4 mb-3"><span id="displayUsername">{{ profile_user.username|title }}</span></h3> {# KORREKT #}
+                     <ul class="list-unstyled mb-0 profile-details-list">
+                         <li class="mb-2"><i class="fas fa-calendar-check fa-fw me-2"></i><strong>Oprettet:</strong> <span id="displayRegDate">{{ profile_user.registration_date | default('N/A') | dt }}</span></li> {# KORREKT #}
+                         <li class="mb-2"><i class="fas fa-envelope fa-fw me-2"></i><strong>Email:</strong> <span id="displayEmail">{% if is_own_profile %}{{ profile_user.email | default('<span class="text-muted fst-italic">Ikke angivet</span>') | safe }}{% else %}<span class="text-muted fst-italic">Skjult</span>{% endif %}</span></li> {# KORREKT #}
+                         {# Update Last Seen to use JS for local time conversion #}
+                         <li class="mb-2"><i class="far fa-clock fa-fw me-2"></i><strong>Sidst set:</strong>
+                             <span id="displayLastLogin" class="local-datetime" data-utc-datetime="{{ profile_user.last_login.isoformat() if profile_user.last_login else '' }}" title="{{ profile_user.last_login | dt if profile_user.last_login else 'Ukendt' }}">
+                                 {{ profile_user.last_login | default('Ukendt') | dt(relative=True) }} {# Show relative time as fallback #}
+                             </span>
+                         </li>
+                         <li class="mb-2"><i class="fas fa-fingerprint fa-fw me-2"></i><strong>UID:</strong> <small class="font-monospace text-info">{{ profile_user.uid | default('N/A') }}</small></li> {# KORREKT #}
+                         {% set inviter = profile_user.invited_by %} {# KORREKT #}
+                         {% if inviter and inviter|lower != 'system' %}
+                             <li class="mb-0"><i class="fas fa-user-plus fa-fw me-2"></i><strong>Inviteret af:</strong> <a href="{{ url_for('main.profile', username=inviter) }}" class="link-light fw-bold">{{ inviter|title }}</a></li>
+                         {% endif %}
+                    </ul>
+                </div>
+             </div>
+        </div>
+    </div> {# Slut profileInfoCard #}
+
+     {# ----- EKSTRA PROFILINFO: "OM MIG" OG BADGES ----- #}
+     <div class="row g-4 mb-4" id="profile-extras">
+         {# Om Mig Sektion #}
+         <div class="col-lg-6 d-flex">
+             <div class="card profile-extra-card w-100 fade-in-up" style="animation-delay: 0.2s;">
+                 <div class="card-header d-flex justify-content-between align-items-center">
+                     <span><i class="fas fa-info-circle me-2"></i> Om Mig</span>
+                     {% if is_own_profile %}
+                     <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2" data-bs-toggle="modal" data-bs-target="#editAboutModal" id="editAboutBtn" title="Rediger Om Mig">
+                         <i class="fas fa-edit"></i><span class="d-none d-sm-inline ms-1">Rediger</span>
+                    </button>
+                     {% endif %}
+                 </div>
+                 <div class="card-body">
+                      <p id="aboutMeText" class="text-muted mb-0">
+                           {% set about_text = profile_user.about_me %}
+                           {% if about_text %}
+                               {{ about_text | replace('\n', '<br>') | safe }}
+                           {% else %}
+                               <span class="fst-italic">Brugeren har ikke tilføjet en beskrivelse.</span>
+                           {% endif %}
+                      </p>
+                 </div>
+             </div>
+         </div>
+
+         {# Badges Sektion #}
+         <div class="col-lg-6 d-flex">
+            <div class="card profile-extra-card w-100 fade-in-up" style="animation-delay: 0.3s;">
+                 <div class="card-header"><i class="fas fa-medal me-2"></i> Badges & Achievements</div>
+                <div class="card-body text-center">
+                    <div id="badgesContainer" class="d-flex flex-wrap gap-2 justify-content-center align-items-center">
+                          {% set badges_list = profile_user.badges.all() %}
+                          {% if badges_list and badges_list|length > 0 %}
+                            {% for badge in badges_list %}
+                                 <span class="badge rounded-pill profile-badge
+                                     {% if badge.color == 'primary' %}bg-primary{%
+                                     elif badge.color == 'success' %}bg-success{%
+                                     elif badge.color == 'danger' %}bg-danger{%
+                                     elif badge.color == 'warning' %}bg-warning{%
+                                     elif badge.color == 'info' %}bg-info{%
+                                     else %}bg-secondary{% endif %}"
+                                     data-bs-toggle="tooltip"
+                                     data-bs-placement="top"
+                                     title="{{ badge.description | default(badge.name | default('Badge')) | escape }}">
+                                 <i class="{{ badge.icon | default('fas fa-star') }}"></i>
+                                </span>
+                            {% endfor %}
+                          {% else %}
+                            <p class="text-muted mb-0 fst-italic" id="noBadgesText">Ingen badges optjent endnu.</p>
+                          {% endif %}
+                    </div>
+                 </div>
+             </div>
+         </div>
+    </div> {# Slut row profile-extras #}
+
+     {# ----- FREMGANG/NIVEAU KORT ----- #}
+     {% if is_own_profile %}
+     {% set current_level = profile_user.level | default(1) | int %}
+     {% set xp_current = profile_user.xp | default(0) | int %}
+     {% set xp_needed = profile_user.xp_next_level | default(1) | int %}
+     {% set xp_percentage = (xp_current / xp_needed * 100) if xp_needed > 0 else 0 %}
+
+     <div class="card progress-card shadow-sm mb-4 fade-in-up" style="animation-delay: 0.4s;" id="progressCard">
+         <div class="card-header"><i class="fas fa-chart-line me-2"></i>Din Fremgang</div>
+         <div class="card-body">
+            <div class="mb-2">
+                <div class="d-flex justify-content-between">
+                    <label for="levelProgressBar" class="form-label fw-bold mb-1">Niveau {{ current_level }}</label>
+                    <small class="text-muted">{{ xp_current }} / {{ xp_needed }} XP</small>
+                </div>
+                <div class="progress" role="progressbar" aria-label="Niveau fremgang" aria-valuenow="{{ xp_percentage }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar" id="levelProgressBar" data-xp-percentage="{{ xp_percentage }}">
+                         {{ xp_percentage | round }}%
+                    </div>
+                 </div>
+             </div>
+         </div>
+     </div>
+     {% endif %} {# Slut is_own_profile check #}
+
+     {# ----- NY SEKTION: SENESTE BETS ----- #}
+     <div class="card shadow-sm mb-4 fade-in-up" style="animation-delay: 0.5s;">
+         <div class="card-header">
+             <i class="bi bi-clock-history me-2"></i>Seneste Bets ({{ recent_bet_history | length }})
+         </div>
+         <div class="card-body p-0">
+             {% if recent_bet_history %}
+             <div class="table-responsive">
+                 <table class="table table-dark table-striped table-hover table-sm mb-0">
+                     <thead>
+                         <tr>
+                             <th>Tidspunkt</th>
+                             <th>Kamp/Session</th>
+                             <th>Valg</th>
+                             <th class="text-end">Indsats</th>
+                             <th>Resultat</th>
+                             <th class="text-end">Gevinst/Tab</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                         {% for bet in recent_bet_history %}
+                         <tr>
+                             <td>
+                                 <span class="local-datetime" data-utc-datetime="{{ bet.timestamp.isoformat() if bet.timestamp else '' }}" title="{{ bet.timestamp | dt }}">
+                                     {{ bet.timestamp | dt(relative=True) }} {# Show relative time initially #}
+                                 </span>
+                             </td>
+                             <td>{{ bet.match_name | default('N/A') | e }}</td>
+                             <td>{{ bet.outcome_name | default('N/A') | e }}</td>
+                             <td class="text-end">{{ bet.stake | currency }}</td>
+                             <td>
+                                 {% if bet.status == 'open' or bet.status == 'pending' %}
+                                     <span class="badge bg-warning text-dark">Afventer</span>
+                                 {% elif bet.result == 'won' %}
+                                     <span class="badge bg-success">Vundet</span>
+                                 {% elif bet.result == 'lost' %}
+                                     <span class="badge bg-danger">Tabt</span>
+                                 {% elif bet.result == 'push' or bet.result == 'void' %}
+                                     <span class="badge bg-secondary">{{ bet.result | title }}</span>
+                                 {% else %}
+                                     <span class="badge bg-secondary">Afgjort</span>
+                                 {% endif %}
+                             </td>
+                             <td class="text-end {% if bet.result == 'won' %}text-success{% elif bet.result == 'lost' %}text-danger{% endif %}">
+                                 {% if bet.result == 'won' %}
+                                     +{{ (bet.payout - bet.stake) | currency }}
+                                 {% elif bet.result == 'lost' %}
+                                     -{{ bet.stake | currency }}
+                                 {% elif bet.result == 'push' or bet.result == 'void' %}
+                                     {{ 0 | currency }}
+                                 {% else %}
+                                     - {# Pending or unknown #}
+                                 {% endif %}
+                             </td>
+                         </tr>
+                         {% endfor %}
+                     </tbody>
+                 </table>
+             </div>
+             {% else %}
+             <p class="text-center text-muted p-3 mb-0">Ingen betting historik fundet.</p>
+             {% endif %}
+         </div>
+         {# Optional: Add link to full history page if one exists #}
+         {# <div class="card-footer text-center">
+             <a href="{{ url_for('main.history') }}?user={{ profile_username_display }}" class="btn btn-sm btn-outline-secondary">Se Fuld Historik</a>
+         </div> #}
+     </div>
+
+    {# ----- STATISTIK, (BET HISTORIK), AKTIVITET TABS ----- #}
+     <div class="fade-in-up" style="animation-delay: 0.6s;"> {# Adjusted delay #}
+        <nav class="profile-tabs mb-3">
+             <div class="nav nav-tabs" id="profileTab" role="tablist">
+                 <button class="nav-link active" id="stats-tab" data-bs-toggle="tab" data-bs-target="#statsPane" type="button" role="tab" aria-controls="statsPane" aria-selected="true">
+                     <i class="fas fa-chart-pie me-1"></i> Statistik
+                </button>
+                 <button class="nav-link" id="bets-tab" data-bs-toggle="tab" data-bs-target="#betsPane" type="button" role="tab" aria-controls="betsPane" aria-selected="false">
+                    <i class="fas fa-receipt me-1"></i> Fuld Bets Historik (Filtrerbar)
+                </button>
+                 <button class="nav-link" id="recent-tab" data-bs-toggle="tab" data-bs-target="#recentPane" type="button" role="tab" aria-controls="recentPane" aria-selected="false">
+                     <i class="fas fa-history me-1"></i> Seneste Aktivitet
+                </button>
+             </div>
+         </nav>
+         <div class="tab-content profile-tab-content" id="profileTabContent">
+
+            {# -- Statistik Tab - Updated with new stats -- #}
+             <section class="tab-pane fade show active" id="statsPane" role="tabpanel" aria-labelledby="stats-tab" tabindex="0">
+                  <div class="card profile-tab-card">
+                      <div class="card-header d-flex justify-content-between align-items-center">
+                           <span><i class="fas fa-chart-bar me-2"></i> Nøgletal</span>
+                           <button class="btn btn-sm btn-outline-secondary py-1 px-2" id="refreshStatsBtn" title="Opdater statistik">
+                               <span class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+                               <i class="fas fa-sync-alt btn-icon"></i>
+                           </button>
+                       </div>
+                      <div class="card-body p-0">
+                          <div class="table-responsive">
+                             <table class="table table-striped table-hover mb-0 stats-table align-middle">
+                                <tbody>
+                                     <tr><th><i class="fas fa-wallet fa-fw me-2"></i> Saldo</th><td id="stat-balance">{{ profile_user.balance | currency }}</td></tr>
+                                     <tr><th><i class="fas fa-coins fa-fw me-2"></i> Total Indsats</th><td id="stat-staked">{{ profile_total_staked | currency }}</td></tr> {# Use variable from context #}
+                                     <tr><th><i class="fas fa-hand-holding-usd fa-fw me-2"></i> Total Gevinst</th><td id="stat-won">{{ profile_total_won | currency }}</td></tr> {# Use variable from context #}
+                                     <tr><th><i class="fas fa-arrow-down fa-fw me-2"></i> Total Tab</th><td id="stat-lost">{{ profile_total_lost | currency }}</td></tr> {# Use variable from context #}
+                                     <tr><th><i class="fas fa-trophy fa-fw me-2"></i> Wins / Losses</th><td id="stat-winslosses">{{ profile_wins }} / {{ profile_losses }}</td></tr> {# Use variables from context #}
+
+                                     {# --- Additional Stats --- #}
+                                     <tr><th><i class="fas fa-hashtag fa-fw me-2"></i> Antal Bets</th><td id="stat-total-bets">{{ total_bets_placed | default(0) }}</td></tr> {# Use variable from context #}
+
+                                     <tr><th><i class="fas fa-percentage fa-fw me-2"></i> Win Rate</th>
+                                         {% set total_bets_calc = profile_wins + profile_losses %}
+                                         <td id="stat-winrate">{% if total_bets_calc > 0 %}{{ "%.1f"|format((profile_wins / total_bets_calc) * 100) }}%{% else %}N/A{% endif %}</td>
+                                     </tr>
+
+                                     <tr><th><i class="fas fa-calculator fa-fw me-2"></i> Netto Resultat</th>
+                                         <td id="stat-net" class="{% if profile_net >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">{{ profile_net | currency }}</td> {# Use variable from context #}
+                                     </tr>
+
+                                     <tr><th><i class="fas fa-arrow-up fa-fw me-2"></i> Største Gevinst (Netto)</th>
+                                         <td id="stat-largest-win">{% if profile_largest_win > 0 %}{{ profile_largest_win | currency }}{% else %}<span class="text-muted">-</span>{% endif %}</td> {# Use variable from context #}
+                                     </tr>
+                                     <tr><th><i class="fas fa-skull-crossbones fa-fw me-2"></i> Største Tab (Indsats)</th>
+                                         <td id="stat-largest-loss">{% if profile_largest_loss > 0 %}{{ profile_largest_loss | currency }}{% else %}<span class="text-muted">-</span>{% endif %}</td> {# Use variable from context #}
+
+                                 </tbody>
+                             </table>
+                          </div>
+                      </div>
+                      <div id="statsFeedback" class="card-footer feedback-area small p-2" style="min-height: 30px;"></div>
+                  </div>
+             </section>
+
+             {# -- Bets Historik Tab (Keeps dynamic loading via JS) -- #}
+             <section class="tab-pane fade" id="betsPane" role="tabpanel" aria-labelledby="bets-tab" tabindex="0">
+                 <div class="card profile-tab-card">
+                     <div class="card-header d-flex justify-content-between align-items-center">
+                         <span><i class="fas fa-receipt me-2"></i>Fuld Bets Historik (Filtrerbar)</span>
+                     </div>
+                     <div class="card-body">
+                         <form id="betHistoryFilterForm" class="row g-2 align-items-end mb-3">
+                              <div class="col-md-5 col-lg-4">
+                                  <div class="form-floating">
+                                      <input type="date" id="bet_start_date" name="start_date" class="form-control form-control-sm">
+                                      <label for="bet_start_date">Fra dato</label>
+                                  </div>
+                              </div>
+                             <div class="col-md-5 col-lg-4">
+                                 <div class="form-floating">
+                                     <input type="date" id="bet_end_date" name="end_date" class="form-control form-control-sm">
+                                      <label for="bet_end_date">Til dato</label>
+                                  </div>
+                              </div>
+                             <div class="col-md-2 col-lg-4">
+                                 <button type="button" id="filterBetsBtn" class="btn btn-primary btn-sm w-100">
+                                     <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                                     <i class="fas fa-filter btn-icon"></i>
+                                     <span class="btn-text">Filtrer</span>
+                                 </button>
+                              </div>
+                         </form>
+                         <div class="table-responsive">
+                            <table class="table table-striped table-hover table-sm bets-table mb-0 align-middle">
+                                <thead>
+                                     <tr><th>Kamp/Event</th><th>Valg</th><th class="text-end">Indsats</th><th>Tidspunkt</th><th class="text-center">Status</th><th class="text-end">Gevinst/Tab</th></tr>
+                                </thead>
+                                 <tbody id="betsTableBody">
+                                      {# Content is loaded dynamically by profile.js #}
+                                      <tr class="table-loading-row" style="display: none;">
+                                          <td colspan="6" class="text-center p-4 text-muted">
+                                               <div class="spinner-border spinner-border-sm me-2" role="status"></div> Indlæser bets...
+                                           </td>
+                                      </tr>
+                                     <tr class="table-no-data-row" style="display: none;">
+                                          <td colspan="6" class="text-center p-4 text-muted fst-italic">
+                                               Ingen bets fundet for de valgte kriterier.
+                                          </td>
+                                      </tr>
+                                  </tbody>
+                             </table>
+                         </div>
+                         <div class="d-flex justify-content-center mt-3">
+                             <button class="btn btn-sm btn-outline-secondary" id="loadMoreBetsBtn" style="display: none;">
+                                  <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                                 <i class="fas fa-arrow-down btn-icon"></i>
+                                 <span class="btn-text">Indlæs Flere Bets</span>
+                             </button>
+                         </div>
+                          <div id="betsFeedback" class="feedback-area small text-center mt-2"></div>
+                     </div>
+                 </div>
+             </section>
+
+             {# -- Seneste Aktivitet Tab -- #}
+             <section class="tab-pane fade" id="recentPane" role="tabpanel" aria-labelledby="recent-tab" tabindex="0">
+                 <div class="card profile-tab-card">
+                     <div class="card-header d-flex justify-content-between align-items-center">
+                          <span><i class="fas fa-history me-2"></i> Seneste Aktivitet</span>
+                         <button class="btn btn-sm btn-outline-secondary py-1 px-2" id="refreshRecentBtn" title="Opdater liste">
+                              <span class="spinner-border spinner-border-sm" role="status" style="display: none;"></span>
+                              <i class="fas fa-sync-alt btn-icon"></i>
+                      </button>
+                  </div>
+                  <div class="card-body p-2">
+                      <ul id="recentActivityList" class="list-group list-group-flush recent-activity-list">
+                          {# Content loaded dynamically by profile.js #}
+                          <div class="list-group-item text-center p-4 loading-indicator" style="display: none;">
+                               <div class="spinner-border spinner-border-sm me-2"></div> Indlæser aktivitet...
+                          </div>
+                              <div class="list-group-item text-center text-muted p-4 no-data-indicator fst-italic" style="display: none;">
+                                  Ingen aktivitet fundet.
+                              </div>
+                           </ul>
+                           <div id="recentFeedback" class="feedback-area small mt-2 text-center"></div>
+                      </div>
+                  </div>
+             </section>
+
+         </div> <!-- /#profileTabContent -->
+     </div>{# /fade-in wrapper for tabs #}
+
+
+     {# ----- MODALS ----- #}
+     {# Edit Profile Modal #}
+     <div class="modal fade modal-custom" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+         <div class="modal-dialog modal-dialog-centered">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="editProfileModalLabel"><i class="fas fa-user-edit me-2"></i>Rediger Profil</h5>
+                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Luk"></button>
+                 </div>
+                 <div class="modal-body">
+                      <form id="editProfileForm" novalidate>
+                         {# Viser profile_user.username #}
+                         <div class="mb-3">
+                              <label for="profileUsernameDisplay" class="form-label">Brugernavn</label>
+                             <input type="text" id="profileUsernameDisplay" class="form-control" value="{{ profile_user.username|title }}" disabled readonly>
+                          </div>
+                         <div class="mb-3 form-floating">
+                             <input type="email" class="form-control" id="profileEmailInput" name="email" placeholder="." required>
+                              <label for="profileEmailInput">Email</label>
+                          </div>
+                         <div id="editProfileFeedback" class="feedback-area small text-danger mt-2"></div>
+                      </form>
+                 </div>
+                 <div class="modal-footer">
+                     <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuller</button>
+                      <button type="button" class="btn btn-primary" id="saveProfileBtn">
+                          <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                          <i class="fas fa-save btn-icon"></i>
+                          <span class="btn-text">Gem</span>
+                      </button>
+                 </div>
+              </div>
+         </div>
+     </div>
+
+     {# Edit About Me Modal #}
+     <div class="modal fade modal-custom" id="editAboutModal" tabindex="-1" aria-labelledby="editAboutModalLabel" aria-hidden="true">
+         <div class="modal-dialog modal-dialog-centered">
+             <div class="modal-content">
+                 <div class="modal-header">
+                      <h5 class="modal-title" id="editAboutModalLabel"><i class="fas fa-info-circle me-2"></i>Rediger "Om Mig"</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Luk"></button>
+                  </div>
+                  <div class="modal-body">
+                      <form id="editAboutForm">
+                          <div class="form-floating">
+                              <textarea class="form-control" id="aboutMeTextareaInput" name="about_me_text" placeholder="."></textarea>
+                              <label for="aboutMeTextareaInput">Din Beskrivelse (max {{ MAX_ABOUT_ME_LENGTH | default(500) }} tegn)</label>
+                          </div>
+                           <div id="editAboutFeedback" class="feedback-area small text-danger mt-2"></div>
+                      </form>
+                  </div>
+                 <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuller</button>
+                      <button type="button" class="btn btn-primary" id="saveAboutBtn">
+                           <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                           <i class="fas fa-save btn-icon"></i>
+                           <span class="btn-text">Gem</span>
+                       </button>
+                  </div>
+              </div>
+         </div>
+     </div>
+
+     {# TOAST Container #}
+     <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;"></div>
+
+</div> {# /container #}
+{% endblock %}
+
+
+{% block scripts_extra %}
+     {{ super() }}
+    <script src="{{ url_for('static', filename='js/profile.js') }}" defer></script>
+{% endblock %}

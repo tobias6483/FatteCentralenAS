@@ -1,0 +1,150 @@
+{# templates/forum/index.html - Forum Oversigt - OPDATERET #}
+{% extends "base.html" %}
+{% from "_macros.html" import user_avatar, render_pagination %}
+
+{% block title %}Forum Oversigt - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4 forum-container">
+
+    {# --- Side Header --- #}
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2 page-title"><i class="bi bi-chat-square-dots-fill me-2"></i> Forum Oversigt</h1>
+        {# Knap til admin kan komme her senere #}
+        {% if current_user.is_authenticated and current_user.is_admin %}
+            {# <a href="{{ url_for('forum.create_category') }}" class="btn btn-sm btn-outline-secondary">Opret Kategori</a> #}
+        {% endif %}
+    </div>
+
+   {# --- Search Form --- #}
+   <div class="mb-4">
+       <form action="{{ url_for('forum.search') }}" method="get" class="row g-2">
+           <div class="col">
+               <input type="search" name="q" class="form-control form-control-sm" placeholder="Søg i forum..." value="{{ request.args.get('q', '') }}" aria-label="Søg i forum">
+           </div>
+           <div class="col-auto">
+               <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i> Søg</button>
+           </div>
+       </form>
+   </div>
+   {# --- End Search Form --- #}
+
+   {# Tjek om listen categories_data eksisterer og har indhold #}
+   {% if categories_data %}
+
+        {# --- Liste af Kategorier --- #}
+        {% for category_info in categories_data %}
+            {# Anvend card styling #}
+            <div class="card dashboard-card list-card mb-4 fade-in-up category-item" id="category-{{ category_info.id }}" data-animation-delay="{{ loop.index0 * 0.05 }}s" style="animation-delay: var(--animation-delay, 0s);"> {# Let forsinkelse per kort #}
+                <div class="card-header pb-2 pt-3"> {# Matcher CSS: Lidt mere padding i toppen #}
+                    <div class="d-flex justify-content-between align-items-start">
+                        {# Link til kategorien med ikon og navn #}
+                        <a href="{{ url_for('forum.view_category', slug=category_info.slug) }}"
+                           class="text-decoration-none mb-1 category-link"
+                           aria-label="Gå til kategori {{ category_info.name }}">
+                            <h5 class="mb-0 card-title d-inline-flex align-items-center"> {# d-inline-flex for bedre badge alignment #}
+                                <i class="bi {{ category_info.icon | default('bi-folder') }} me-2"></i>
+                                {{ category_info.name }}
+                                {# Viser antal tråde - default er vigtig #}
+                                <span class="badge bg-dark text-light rounded-pill ms-2 fw-normal small" {# Ændret badge farve for bedre kontrast #}
+                                      title="Antal tråde i {{ category_info.name }}"
+                                      aria-label="{{ category_info.thread_count | default('0') }} tråde">
+                                      {{ category_info.thread_count | default('0') }} Tråde {# Tilføjet "Tråde" for klarhed #}
+                                </span>
+                                {# --- Mulighed for at vise Antal Indlæg --- #}
+                                {# {% set post_count = category_info.post_count | default(0) %} #}
+                                {# {% if post_count > 0 %} #}
+                                {#     <span class="badge bg-light text-dark rounded-pill ms-1 fw-normal small" title="Antal indlæg i {{ category_info.name }}"> #}
+                                {#         <i class="bi bi-chat-left-dots me-1"></i>{{ post_count }} Indlæg #}
+                                {#     </span> #}
+                                {# {% endif %} #}
+                                {# --- Slut: Antal Indlæg --- #}
+                            </h5>
+                        </a>
+                         {# Evt. rediger/slet knapper for Admin #}
+                         {% if current_user.is_authenticated and current_user.is_admin %}
+                           {# <div class="ms-auto"> #}
+                           {#    <a href="#" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a> #}
+                           {# </div> #}
+                        {% endif %}
+                    </div>
+                    {# Beskrivelse (hvis den findes) #}
+                    {% if category_info.description %}
+                        <p class="card-subtitle text-muted mt-1 mb-0 small">{{ category_info.description }}</p> {# Brug small for mindre skrift #}
+                    {% endif %}
+                </div> {# End card-header #}
+
+                {# --- Card Footer - Seneste Aktivitet --- #}
+                {% set has_latest = category_info.last_thread_id and category_info.last_post_author_username and category_info.last_post_created_at %}
+                {# Fjernet card-footer klasse, integreres direkte hvis 'has_latest' for renere look? Nej, behold for padding etc. #}
+                <div class="card-footer bg-transparent py-2 px-3 border-top-0"> {# border-top-0 hvis header har border #}
+                     {# Justeret border farve her (fra CSS: --border-color-light-alpha) #}
+                    <div style="border-top: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1)); padding-top: 0.5rem;">
+                         {% if has_latest %}
+                             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                                 {# --- Seneste Tråd Titel --- #}
+                                 <div class="d-flex align-items-center gap-2 flex-grow-1 text-break" style="min-width: 50%;">
+                                     <i class="bi bi-arrow-return-right text-muted small"></i>
+                                     <span class="fw-semibold text-truncate">
+                                         {# !!! ÆNDRING: 'link-light' klasse tilføjet !!! #}
+                                         <a href="{{ url_for('forum.view_thread', thread_id=category_info.last_thread_id) }}"
+                                            class="link-light text-decoration-none" {# Bedre kontrast end link-dark #}
+                                            title="Seneste tråd: {{ category_info.last_thread_title }}">
+                                            {{ category_info.last_thread_title | default('Ukendt Tråd') }}
+                                         </a>
+                                     </span>
+                                 </div>
+
+                                 {# --- Seneste Post Info --- #}
+                                 <div class="forum-item-latest text-muted text-nowrap d-flex align-items-center small"> {# small klasse her #}
+                                     {{ user_avatar(user_data={
+                                            'username': category_info.last_post_author_username,
+                                            'avatar_url': category_info.last_post_author_avatar_url,
+                                            'display_name': category_info.last_post_author_username,
+                                        }, size='sm', img_class='me-1 flex-shrink-0') }}
+
+                                     <div class="ms-1 text-truncate">
+                                         <span class="d-none d-sm-inline">Seneste af </span>
+                                         {# !!! ÆNDRING: 'link-light text-opacity-75' tilføjet !!! #}
+                                         <a href="{{ url_for('main.profile', username=category_info.last_post_author_username) }}"
+                                            class="link-light text-opacity-75 fw-medium text-decoration-none"> {# Lys, let nedtonet link #}
+                                            {{ category_info.last_post_author_username }}
+                                         </a>
+                                         {# Tidspunkt #}
+                                         <span class="latest-time" title="{{ category_info.last_post_created_at | dt(format='long') }}" aria-label="Seneste indlæg tidspunkt">
+                                              - {{ category_info.last_post_created_at | dt(relative=True) }} {# Kun relativ tid for korthed #}
+                                         </span>
+                                     </div>
+                                 </div> {# End latest post info div #}
+                             </div> {# End d-flex #}
+                         {% else %}
+                             <small class="text-muted fst-italic">Ingen aktivitet i denne kategori endnu.</small>
+                         {% endif %}
+                    </div>
+                </div> {# End card-footer #}
+            </div> {# End card #}
+        {% endfor %} {# Slut på category loop #}
+
+    {% else %}
+        {# Vises hvis ingen kategorier er defineret overhovedet #}
+        <div class="alert alert-info" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i>Der er ingen forumkategorier oprettet endnu. Kontakt en administrator.
+        </div>
+    {% endif %}
+
+</div> {# End container-fluid #}
+{% endblock %} {# Slut på content block #}
+
+
+{# === TILFØJET SCRIPTS BLOK HER === #}
+{% block scripts_extra %}
+    {{ super() }} {# Sørger for at base.html's scripts loades først #}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('[data-animation-delay]').forEach(function (element) {
+                element.style.setProperty('--animation-delay', element.dataset.animationDelay);
+            });
+        });
+    </script>
+{% endblock %}

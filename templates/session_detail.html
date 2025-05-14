@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block title %}Session Detaljer - {{ session_data.session_name | default('Ukendt Session') }}{% endblock %}
+
+{# Tilføj specifik CSS hvis nødvendigt #}
+{% block head_extra %}
+    {{ super() }}
+    {# <link rel="stylesheet" href="{{ url_for('static', filename='css/session_details.css') }}"> #}
+    <style>
+        /* Lidt styling for player avatar og feedback */
+        .player-avatar {
+            width: 28px; /* Lidt mindre for tabel */
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-right: 8px;
+            vertical-align: middle; /* Hjælper alignment med tekst */
+        }
+        .table-container {
+             max-height: 400px; /* Gør tabeller scrollable ved behov */
+             overflow-y: auto;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+{# Sæt overordnet container med ID og data attribut for JS #}
+<div class="container py-4" id="sessionDetailsContainer" data-session-id="{{ session_id }}">
+
+    <!-- Session Title -->
+    {# Brug escape (e) for data der kommer fra brugerinput/eksterne kilder for XSS sikkerhed #}
+    <h2 class="mb-4 text-center text-primary"><i class="bi bi-dice-3 me-2"></i>Session: {{ session_data.session_name | e }}</h2>
+
+    {# Område til generel feedback (fra JS) #}
+    <div id="sessionDetailFeedback" class="mb-3"></div>
+
+    <div class="row g-4"> {# Brug Grid for bedre layout #}
+
+        {# Session Information Card #}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                     <span><i class="bi bi-info-circle me-2"></i>Information</span>
+                     {# <button class="btn btn-sm btn-outline-secondary" disabled title="Opdater info (TODO)"> <i class="bi bi-arrow-repeat"></i> </button> #}
+                 </div>
+                 <div class="card-body">
+                      <dl class="row mb-0"> {# Description list for pænere layout #}
+                         <dt class="col-sm-5">Session ID:</dt>
+                        <dd class="col-sm-7"><code class="user-select-all small">{{ session_id }}</code></dd>
+
+                         <dt class="col-sm-5">Navn:</dt>
+                        <dd class="col-sm-7">{{ session_data.session_name | e }}</dd>
+
+                         <dt class="col-sm-5">Spiltype:</dt>
+                         <dd class="col-sm-7">{{ session_data.game_mode | title }}</dd>
+
+                         <dt class="col-sm-5">Admin Kode:</dt>
+                         <dd class="col-sm-7"><code>{{ session_data.admin_code | default('N/A') }}</code></dd>
+ 
+                         {# Display Invite Code if available #}
+                         {% if session_data.invite_code %}
+                         <dt class="col-sm-5">Invite Kode:</dt>
+                         <dd class="col-sm-7">
+                             <code id="inviteCodeDisplay" class="user-select-all">{{ session_data.invite_code }}</code>
+                             <button id="copyInviteLinkBtn" class="btn btn-sm btn-outline-secondary ms-2 py-0 px-1"
+                                     data-invite-code="{{ session_data.invite_code }}"
+                                     data-bs-toggle="tooltip" title="Kopier Invite Link">
+                                 <i class="bi bi-clipboard"></i>
+                             </button>
+                         </dd>
+                         {% endif %}
+
+                         <dt class="col-sm-5">Oprettet:</dt>
+                         {# Brug format_datetime filter (antaget at det findes, ellers tilføj det) #}
+                         <dd class="col-sm-7">{{ session_data.created_at | dt(locale_str='da-DK', format='medium') | default('Ukendt tid') }}</dd>
+
+                         <dt class="col-sm-5">Status:</dt>
+                         <dd class="col-sm-7">{# TODO: Tilføj Session Status her (Active, Finished) #} <span class="badge bg-success">Aktiv</span></dd>
+                      </dl>
+                </div>
+            </div>
+        </div>
+
+        {# Outcomes / Coupon Selections Card #}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm">
+                {# --- Card Header --- #}
+                {% if not is_coupon %}
+                <div class="card-header"><i class="bi bi-bullseye me-2"></i>Mulige Udfald</div>
+                {% else %}
+                <div class="card-header"><i class="bi bi-ticket-detailed me-2"></i>Kupon Valg</div>
+                {% endif %}
+
+                {# --- Card Body --- #}
+                {% if not is_coupon %}
+                    {# Display table for single event outcomes #}
+                    <div class="card-body p-0 table-container">
+                        <table class="table table-striped table-dark table-hover mb-0 table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Navn</th>
+                                    <th class="text-end">Odds</th>
+                                    <th class="text-end">Samlet Pot</th>
+                                </tr>
+                            </thead>
+                            <tbody id="outcomes_tbody">
+                                {% if session_data.outcomes and session_data.outcomes|length > 0 %}
+                                    {% for outcome in session_data.outcomes %}
+                                    <tr>
+                                        <td>{{ outcome.name | e }}</td>
+                                        <td class="text-end">{% if outcome.odds is not none %}{{ "%.2f"|format(outcome.odds) }}{% else %}N/A{% endif %}</td>
+                                        <td class="text-end">{{ "%.2f"|format(outcome.pot|default(0.0)) }} DKK</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr><td colspan="3" class="text-center text-muted small fst-italic">Ingen udfald defineret for sessionen.</td></tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    {# Display list for coupon selections #}
+                    <div class="card-body p-3">
+                        {% if session_data.outcomes and session_data.outcomes|length > 0 %}
+                            <ul class="list-group list-group-flush" id="coupon_selections_list">
+                                {% for selection in session_data.outcomes %}
+                                <li class="list-group-item bg-transparent text-light d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="d-flex w-100 justify-content-between">
+                                            <h6 class="mb-1">{{ selection.outcomeName | e }}</h6>
+                                            {# Display Status Badge #}
+                                            {% set status = selection.status | default('pending') %}
+                                            {% if status == 'pending' %}
+                                                <span class="badge bg-warning text-dark ms-2">Afventer</span>
+                                            {% elif status == 'won' %}
+                                                <span class="badge bg-success ms-2">Vundet</span>
+                                            {% elif status == 'lost' %}
+                                                <span class="badge bg-danger ms-2">Tabt</span>
+                                            {% else %}
+                                                 <span class="badge bg-secondary ms-2">{{ status | title }}</span>
+                                            {% endif %}
+                                        </div>
+                                        <p class="mb-1 small text-muted">{{ selection.matchName | e }}</p>
+                                        <small>Odds: {{ "%.2f"|format(selection.odds) }}</small>
+                                    </div>
+                                    {# Settlement Controls - Show only if pending and user is creator/admin #}
+                                    {% if status == 'pending' and (is_creator or current_user.is_admin) %}
+                                    <div class="btn-group ms-2" role="group" aria-label="Settle leg">
+                                        <button type="button" class="btn btn-sm btn-outline-success settle-leg-btn"
+                                                data-session-id="{{ session_id }}"
+                                                data-event-id="{{ selection.eventId }}"
+                                                data-winning-outcome="{{ selection.outcomeName | e }}"
+                                                title="Marker dette valg som VUNDET">
+                                            <i class="bi bi-check-lg"></i> Won
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger settle-leg-btn"
+                                                data-session-id="{{ session_id }}"
+                                                data-event-id="{{ selection.eventId }}"
+                                                data-winning-outcome="--LOST--" {# Special value to indicate loss #}
+                                                title="Marker dette valg som TABT">
+                                            <i class="bi bi-x-lg"></i> Lost
+                                        </button>
+                                        {# Add a 'Void' button if needed #}
+                                    </div>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-center text-muted small fst-italic">Ingen valg fundet for denne kupon.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Place Bet Card - Only show for non-coupon sessions #}
+        {% if not is_coupon %}
+        <div class="col-lg-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header"><i class="bi bi-cash-coin me-2"></i>Placér Bet</div>
+                <div class="card-body">
+                     {# Brug action="#" og method="post" for semantik, men submit forhindres af JS #}
+                     <form id="placeBetForm" action="#" method="post">
+                        <div class="mb-3">
+                             <label for="betOutcomeSelect" class="form-label">Vælg udfald</label>
+                             <select id="betOutcomeSelect" class="form-select form-select-sm" required>
+                                <option value="" selected disabled>-- Vælg et udfald --</option> {# Default disabled option #}
+                                {% if session_data.outcomes %}
+                                     {% for outcome in session_data.outcomes %}
+                                     {# Værdien skal være noget JS kan sende (f.eks. index eller navn) - Match med JS logik #}
+                                     {# JS sender outcomeValue, som er `value` herfra. `outcomeIdentifier = outcomeValue;` #}
+                                     <option value="{{ outcome.name | e }}"> {# Send outcome name direkte? Check backend #}
+                                         {{ outcome.name | e }} (Odds: {% if outcome.odds is not none %}{{ "%.2f"|format(outcome.odds) }}{% else %}N/A{% endif %})
+                                     </option>
+                                     {% endfor %}
+                                 {% endif %}
+                                 {# Håndter "Draw" hvis relevant - Bør det være et outcome fra server? #}
+                                 {# Hvis draw altid er muligt: <option value="draw">Draw</option> #}
+                             </select>
+                         </div>
+                         <div class="mb-3">
+                            <label for="betStake" class="form-label">Indsats (DKK)</label>
+                            <input type="number" id="betStake" class="form-control form-control-sm"
+                                placeholder="Angiv indsats" required min="0.01" step="0.01"> {# Lidt validering #}
+                         </div>
+                         <button type="submit" class="btn btn-primary w-100">
+                             <span class="spinner-border spinner-border-sm me-1" style="display: none;" role="status" aria-hidden="true"></span>
+                            <span class="btn-text">Placér Bet</span>
+                        </button>
+                        <div id="placeBetFeedback" class="mt-2"></div> {# Område til feedback for denne form #}
+                     </form>
+                 </div>
+             </div>
+         </div>
+         {% else %}
+         {# Place Coupon Bet Card - Show only for coupon sessions #}
+         <div class="col-lg-4">
+             <div class="card h-100 shadow-sm">
+                 <div class="card-header"><i class="bi bi-cash-coin me-2"></i>Placér Kupon Bet</div>
+                 <div class="card-body">
+                     <form id="placeCouponBetForm" action="#" method="post">
+                         {# Selections are already defined by the coupon itself #}
+                         <div class="mb-3">
+                             <label for="couponBetStake" class="form-label">Indsats (DKK)</label>
+                             <input type="number" id="couponBetStake" class="form-control form-control-sm"
+                                 placeholder="Angiv indsats for hele kuponen" required min="0.01" step="0.01">
+                         </div>
+                         <button type="submit" class="btn btn-success w-100"> {# Changed color to success #}
+                             <span class="spinner-border spinner-border-sm me-1" style="display: none;" role="status" aria-hidden="true"></span>
+                             <span class="btn-text">Placér Kupon Bet</span>
+                         </button>
+                         <div id="placeCouponBetFeedback" class="mt-2"></div> {# Separate feedback area #}
+                     </form>
+                 </div>
+             </div>
+         </div>
+         {% endif %} {# End of Place Bet / Place Coupon Bet Card conditional #}
+
+    </div> {# Slut på row for kort #}
+
+    <hr class="my-4"> {# Skillelinje #}
+
+    <div class="row g-4">
+        {# Players Card #}
+        <div class="col-lg-6">
+            <div class="card mb-4 shadow-sm"> {# Tillad mb her #}
+                <div class="card-header"><i class="bi bi-people-fill me-2"></i>Tilmeldte Spillere</div>
+                 <div class="card-body p-0 table-container"> {# Fjern padding, gør tabel scrollable #}
+                    <table class="table table-striped table-dark table-hover mb-0 table-sm">
+                         <thead>
+                           <tr class="text-center">
+                             <th>Brugernavn</th>
+                            <th>Saldo</th>
+                            <th>Samlet Indsats</th> {# Vis "Total Placed" her? #}
+                          </tr>
+                         </thead>
+                         {# Dette tbody opdateres af JS #}
+                         <tbody id="players_tbody">
+                           {% if session_data.players and session_data.players|length > 0 %}
+                                {# Jinja logik til at beregne sum af bets er fjernet - bør komme fra JS/API #}
+                               {% for player_name, info in session_data.players.items() %}
+                               <tr class="text-center align-middle">
+                                   <td>
+                                     <a href="{{ url_for('main.profile', username=player_name) }}" class="d-inline-flex align-items-center text-decoration-none link-light">
+                                        {# Server skal sende avatar_url (ikke kun filnavn) - antager `info.avatar_url` #}
+                                         <img src="{{ info.avatar_url | default(url_for('static', filename='avatars/default_avatar.png')) }}"
+                                              alt="Avatar" class="player-avatar me-2" onerror="this.src='{{ url_for('static', filename='avatars/default_avatar.png') }}'; this.onerror=null;">
+                                        {{ player_name|title }}
+                                     </a>
+                                   </td>
+                                     <td>{{ info.balance | format_currency | default('N/A') }}</td> {# Brug currency format filter #}
+                                   <td>{{ info.total_staked | format_currency | default('0.00 DKK') }}</td> {# Få total staked fra data #}
+                                </tr>
+                                {% endfor %}
+                           {% else %}
+                               <tr><td colspan="3" class="text-center text-muted small fst-italic">Ingen spillere i sessionen endnu.</td></tr>
+                            {% endif %}
+                        </tbody>
+                     </table>
+                 </div>
+             </div>
+        </div>
+
+         {# Bets Card #}
+         <div class="col-lg-6">
+            <div class="card mb-4 shadow-sm"> {# Tillad mb her #}
+                 <div class="card-header"><i class="bi bi-receipt-cutoff me-2"></i>Placerede Bets</div>
+                 <div class="card-body p-0 table-container" id="bets_container"> {# Fjern padding, scroll #}
+                     <table class="table table-striped table-dark table-hover mb-0 table-sm"> {# Tilføjet table-sm #}
+                         <thead>
+                           <tr class="text-center">
+                             <th>Bruger</th>
+                            <th>Valg</th>
+                            <th>Indsats</th>
+                            <th>Tidspunkt</th>
+                          </tr>
+                        </thead>
+                        {# Dette tbody opdateres af JS #}
+                        <tbody id="bets_tbody">
+                            {% if session_data.bets and session_data.bets|length > 0 %}
+                               {% for bet in session_data.bets %}
+                               <tr class="text-center">
+                                   <td>{{ bet.user|title }}</td>
+                                     <td>{{ bet.outcome_name | e }}</td>
+                                   <td>{{ bet.stake | format_currency | default('0.00 DKK') }}</td>
+                                    {# Format timestamp #}
+                                    <td>{{ bet.timestamp | format_datetime(locale_str='da-DK', format='short') | default('Ukendt tid') }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                               {# Vis denne via JS baseret på opdateret data, men behold ID #}
+                                <tr><td colspan="4" class="text-center text-muted small fst-italic" id="no_bets_msg">Ingen bets placeret endnu...</td></tr>
+                             {% endif %}
+                        </tbody>
+                     </table>
+                 </div>
+             </div>
+         </div>
+
+     </div> {# Slut på row for player/bets #}
+
+     {# Row for Chat Interface #}
+     <div class="row mt-4">
+         <div class="col-md-12"> {# Full width for chat on medium and up, could be col-lg-8 or similar #}
+             <div class="card shadow-sm">
+                 <div class="card-header"><i class="bi bi-chat-dots-fill me-2"></i>Session Chat</div>
+                 <div class="card-body">
+                     <div id="chatMessagesArea" class="mb-3" style="height: 250px; overflow-y: auto; border: 1px solid #444; padding: 10px; border-radius: var(--bs-border-radius);">
+                         {# Chat messages will be appended here by JavaScript #}
+                         <p class="text-muted small text-center fst-italic">Velkommen til chatten!</p>
+                     </div>
+                     <div class="input-group">
+                         <input type="text" id="chatMessageInput" class="form-control form-control-sm" placeholder="Skriv en besked...">
+                         <button id="sendChatMessageBtn" class="btn btn-sm btn-primary">
+                             <i class="bi bi-send"></i> Send
+                         </button>
+                     </div>
+                 </div>
+             </div>
+         </div>
+     </div> {# End of Chat row #}
+ 
+    <!-- Tilbage-knapper -->
+     <div class="text-center mt-4">
+         {# Brug outline knapper for mindre vægt? #}
+        <a href="{{ url_for('sessions.active_sessions_route') }}" class="btn btn-outline-secondary btn-sm me-2">
+             <i class="bi bi-arrow-left-circle me-1"></i> Tilbage til Aktive Sessions
+        </a>
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-house-door me-1"></i> Forside
+         </a>
+     </div>
+
+ </div> {# Slut på container & sessionDetailsContainer #}
+
+{% endblock %} {# Slut på content block #}
+
+
+{% block scripts_extra %}
+    {{ super() }} {# Hvis relevant #}
+    {# Sørg for Socket.IO library er loaded FØR i base.html #}
+     {# Sørg for utils.js er loaded FØR i base.html (hvis det bruges af session_details.js) #}
+    <script src="{{ url_for('static', filename='js/session_details.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,237 @@
+/* ==========================================================
+   HISTORY PAGE STYLES - OPGRADERET & KORRIGERET
+   static/css/history.css
+   ========================================================== */
+
+/* ----- GENEREL SIDE & HEADER ----- */
+.page-title {
+    color: var(--font-color-header, #f1f3f5);
+}
+.page-title i {
+    color: var(--primary-color);
+    font-size: 0.9em;
+    vertical-align: baseline;
+}
+/* Sørg for mørk body baggrund (arves normalt fra layout.css) */
+body {
+    background-color: var(--dark-bg, #0d0d0d) !important;
+    color: var(--font-color-base, #dee2e6) !important;
+}
+
+/* ----- FILTER KORT & INPUTS - KORRIGERET ----- */
+.filter-card {
+    /* Bruger .dashboard-card styling - bør arve mørk bg */
+    background-color: var(--secondary-bg-lighter, #2b2b2b) !important; /* Tving mørk baggrund */
+    border-color: var(--border-color-dark, #495057) !important;
+    color: var(--font-color-base, #dee2e6) !important;
+}
+.filter-card .card-header {
+    /* Matcher header i andre list-cards */
+    background-color: var(--secondary-bg-hover, #343a40) !important;
+    border-bottom: 1px solid var(--border-color-dark, #495057) !important;
+    font-weight: 600;
+    color: var(--font-color-header, #f1f3f5) !important; /* Lys header tekst */
+}
+.filter-card .card-header i {
+    color: var(--primary-color) !important; /* Ikon farve */
+}
+
+/* == VIGTIGT: Tving mørkt tema for dato input felter == */
+.filter-card .form-control,
+.filter-card input[type="date"] { /* Vær specifik for dato */
+    color: var(--input-color, var(--font-color-base, #e1e1e1)) !important; /* LYST TEKST */
+    background-color: var(--input-bg, #2b2b2b) !important; /* MØRK BAGGRUND - Juster evt var(--input-bg) */
+    border: 1px solid var(--input-border-color, var(--border-color-dark, #555)) !important;
+    border-radius: var(--bs-border-radius-sm, 0.25rem) !important;
+    /* Fix for browser/OS styling af datovælger */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* Farve på pilen i datovælger (kan være tricky at style cross-browser) */
+.filter-card input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(0.8); /* Gør browserens ikon lyst */
+    cursor: pointer;
+}
+
+/* Floating labels - Sørg for de også virker her */
+.filter-card .form-floating > label {
+    color: var(--input-placeholder-color, var(--font-color-muted, #888)) !important;
+    /* Arver z-index, opacity osv fra global admin-panel form reglen */
+}
+/* Når label er flyttet op */
+.filter-card .form-floating > .form-control:focus ~ label,
+.filter-card .form-floating > .form-control:not(:placeholder-shown) ~ label {
+    opacity: 1 !important;
+    transform: scale(0.80) translateY(-0.7rem) translateX(0.15rem); /* Finjuster transform efter behov */
+    color: var(--font-color-muted-lighter, #bdc6cf) !important;
+    background-color: var(--input-bg, #2b2b2b) !important; /* Match feltets baggrund */
+    padding: 0.1rem 0.35rem !important;
+    height: auto;
+    width: auto;
+    border-radius: 0.2rem;
+    z-index: 3;
+}
+
+/* Fokus på filter inputs */
+.filter-card .form-control:focus {
+    color: var(--input-color-focus, var(--font-color-highlight, #fff)) !important;
+    background-color: var(--input-bg-focus, #343a40) !important;
+    border-color: var(--input-border-focus, var(--primary-color)) !important;
+    box-shadow: 0 0 0 0.2rem rgba(var(--primary-color-rgb, 0, 204, 163), 0.35) !important;
+}
+
+
+/* ----- TAB INTERFACE ----- */
+/* Styling kommer fra .profile-tabs i profile.css */
+/* Override hvis nødvendigt for mørk baggrund på nav/links */
+.profile-tabs .nav-tabs {
+    border-bottom-color: var(--border-color-dark, #495057) !important;
+}
+.profile-tabs .nav-link {
+     background-color: var(--secondary-bg-lighter, #2b2b2b); /* Genbekræft baggrund */
+     color: var(--font-color-muted, #adb5bd);
+}
+.profile-tabs .nav-link:hover:not(.active) {
+     background-color: var(--secondary-bg-hover, #343a40);
+     color: var(--font-color-base, #dee2e6);
+}
+.profile-tabs .nav-link.active {
+    background-color: var(--primary-color, #00cca3) !important;
+    color: var(--button-text-dark, #111) !important;
+    border-color: var(--primary-hover, #00b38f) var(--primary-hover, #00b38f) var(--primary-color, #00cca3) !important;
+}
+
+
+/* ----- KORT INDE I TABS ----- */
+/* Styling kommer fra .profile-tab-card i profile.css */
+.profile-tab-card {
+    background-color: var(--secondary-bg, #1c1c1c) !important; /* Tving mørk kortbaggrund */
+    border-color: var(--border-color-dark, #495057) !important;
+    color: var(--font-color-base, #dee2e6) !important; /* Lys standard tekst */
+}
+.profile-tab-card .card-header {
+    background-color: var(--secondary-bg-hover, #343a40) !important; /* Mørkere header */
+    color: var(--font-color-header, #f1f3f5) !important; /* Lys header tekst */
+    border-bottom-color: var(--border-color-dark, #495057) !important;
+}
+/* Nulstil evt. padding på card-body, hvis tabellen skal fylde helt */
+/* .profile-tab-card .card-body.p-0 { padding: 0 !important; } */
+
+
+/* ----- TABEL STYLING - KORRIGERET ----- */
+.history-stats-table,
+.history-detailed-table {
+    /* == VIGTIGT: Generel tabel tekst farve == */
+    color: var(--font-color-base, #dee2e6) !important; /* LYST TEKST i tabeller */
+}
+
+/* Bootstrap 5 .table-striped mørk tema tilpasning */
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+    /* Default mørk stribe */
+    --bs-table-accent-bg: var(--bs-table-striped-bg, rgba(255, 255, 255, 0.04)); /* Gør striben subtil */
+    color: var(--font-color-base, #dee2e6); /* Bevar lys tekst */
+}
+.table-striped > tbody > tr:nth-of-type(even) > * {
+    /* Baggrund er transparent (kortets bg skinner igennem) */
+    color: var(--font-color-base, #dee2e6); /* Bevar lys tekst */
+}
+/* Hover effekt */
+.table-hover > tbody > tr:hover > * {
+    --bs-table-accent-bg: var(--bs-table-hover-bg, rgba(255, 255, 255, 0.07)); /* Let lysere ved hover */
+    color: var(--font-color-highlight, #fff); /* Fremhævet tekst ved hover */
+}
+
+/* Specifik tekstfarve for celler for at være sikker */
+.history-stats-table td,
+.history-detailed-table td {
+    color: inherit; /* Arv fra tbody/tr */
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+    vertical-align: middle;
+    border-top-color: var(--border-color-dark, #495057) !important; /* Mørk border */
+}
+
+/* Tabel header */
+.history-stats-table thead th,
+.history-detailed-table thead th {
+    color: var(--font-color-muted, #adb5bd);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color-medium, #6c757d) !important;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 0.75rem 0.8rem;
+    background-color: var(--secondary-bg-hover, #343a40); /* Match card header bg */
+}
+.history-stats-table thead th i:not(.sort-icon),
+.history-detailed-table thead th i:not(.sort-icon) {
+    margin-right: 0.4rem; opacity: 0.7; font-size: 0.9em; vertical-align: baseline;
+}
+.history-stats-table thead th .sort-icon,
+.history-detailed-table thead th .sort-icon {
+    opacity: 0.5; margin-left: 0.3rem;
+}
+
+/* Specifikke celler (Avatar, Links, Badges - Bør arve farve korrekt nu) */
+.history-stats-table .user-cell a { color: var(--bs-link-color, #7fc4b7) !important; } /* Lysere link farve? */
+.history-stats-table .user-cell a:hover { color: var(--bs-link-hover-color, #a4ded3) !important; }
+.history-stats-table .user-cell .avatar { width: 28px; height: 28px; border: 1px solid var(--border-color-light-alpha); }
+.history-detailed-table .badge { font-size: 0.75rem; padding: 0.35em 0.7em; /* Sørg for kontrast via bg-* klasser */ }
+.text-success { color: var(--bs-success) !important; } /* Brug Bootstrap variabler hvis muligt */
+.text-danger { color: var(--bs-danger) !important; }
+
+/* 'Ingen data' række */
+tr.no-data-row td {
+    background-color: transparent !important; /* Ingen stribe */
+    color: var(--font-color-muted, #adb5bd) !important; /* Muted tekst */
+    font-style: italic;
+}
+
+
+/* ----- LOADING OVERLAY (Genbrugt - bør være ok) ----- */
+.loading-overlay {
+    position: absolute; inset: 0;
+    /* == Juster baggrundsfarve for bedre synlighed == */
+    background-color: rgba(var(--dark-bg-rgb, 13, 13, 13), 0.85) !important; /* Mere dækkende overlay */
+    display: none; justify-content: center; align-items: center;
+    z-index: 10; border-radius: inherit; min-height: 100px;
+}
+/* Loading spinner farve */
+.loading-overlay .spinner-border {
+    color: var(--primary-color, #00cca3) !important; /* Brug primær farve */
+}
+.history-card.is-loading .loading-overlay { display: flex; }
+.history-card.is-loading .table-responsive { opacity: 0.15; pointer-events: none; /* Gør tabel endnu mere usynlig */ }
+
+
+/* ----- KNAPPER (Filter & Tilbage) ----- */
+/* Bør arve global .btn styling. Tving hvis nødvendigt */
+.filter-card .btn-primary {
+    background-color: var(--bs-primary) !important;
+    border-color: var(--bs-primary) !important;
+    color: #fff !important; /* Hvid tekst på standard blå */
+}
+.filter-card .btn-outline-secondary {
+    color: var(--font-color-muted, #adb5bd) !important;
+    border-color: var(--font-color-muted, #adb5bd) !important;
+}
+.filter-card .btn-outline-secondary:hover {
+    background-color: var(--secondary-bg-hover, #343a40) !important;
+    border-color: var(--secondary-bg-hover, #343a40) !important;
+    color: var(--font-color-base, #dee2e6) !important;
+}
+
+/* Tilbage knap */
+.text-center .btn-outline-secondary {
+     color: var(--font-color-muted, #adb5bd) !important;
+     border-color: var(--font-color-muted, #adb5bd) !important;
+}
+.text-center .btn-outline-secondary:hover {
+     background-color: var(--secondary-bg-hover, #343a40) !important;
+     border-color: var(--secondary-bg-hover, #343a40) !important;
+     color: var(--font-color-base, #dee2e6) !important;
+}

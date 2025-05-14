@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Badges - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    {# Add specific CSS if needed, or reuse existing styles #}
+    <style>
+        .badge-card {
+            border: 1px solid var(--border-color-light);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            height: 100%; /* Ensure cards have same height in a row */
+        }
+        .badge-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 123, 255, 0.15); /* Subtle glow */
+        }
+        .badge-icon-large {
+            font-size: 2.5rem; /* Larger icon */
+            display: block;
+            margin-bottom: 0.75rem;
+            color: var(--primary-color); /* Default color */
+        }
+        .badge-card.earned .badge-icon-large {
+            color: var(--success-color); /* Green for earned */
+        }
+        .badge-card.earned {
+            border-left: 4px solid var(--success-color);
+        }
+        .badge-card .card-body {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .badge-name {
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        .badge-description {
+            font-size: 0.9em;
+            color: var(--text-color-muted);
+            flex-grow: 1; /* Push timestamp down */
+            margin-bottom: 0.5rem;
+        }
+         .badge-timestamp {
+             font-size: 0.75em;
+             color: var(--text-color-muted-darker);
+             margin-top: auto; /* Push to bottom */
+         }
+         .badge-card.not-earned {
+             opacity: 0.65; /* Dim unearned badges */
+             border-left: 4px solid var(--border-color-medium);
+         }
+         .badge-card.not-earned .badge-icon-large {
+             color: var(--text-color-muted);
+         }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <h1 class="h2 page-title mb-0"><i class="bi bi-award-fill me-2"></i>Badges</h1>
+        {# Optional: Link back or other actions #}
+    </header>
+
+    <p class="lead mb-4 text-center">Her kan du se alle tilgængelige badges og dem, du har optjent.</p>
+
+    {% if all_badges %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+            {% for badge in all_badges %}
+                {% set earned = badge.id in earned_badge_ids %}
+                <div class="col d-flex align-items-stretch">
+                    <div class="card badge-card shadow-sm {% if earned %}earned{% else %}not-earned{% endif %}"
+                         title="{{ badge.description if not earned else 'Optjent!' }}">
+                        <div class="card-body text-center">
+                            <div>
+                                <span class="badge-icon-large">
+                                    <i class="{{ badge.icon | default('bi-question-circle-fill') }}"></i>
+                                </span>
+                                <h5 class="card-title badge-name">{{ badge.name }}</h5>
+                                <p class="card-text badge-description">{{ badge.description }}</p>
+                            </div>
+                            {# Optionally show awarded date if available and earned #}
+                            {# <small class="badge-timestamp">Optjent: {{ badge.awarded_at | dt }}</small> #}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i> Der er ingen badges defineret i systemet endnu.
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

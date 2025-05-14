@@ -1,0 +1,197 @@
+{# templates/history.html - OPGRADERET #}
+{% extends "base.html" %}
+{% from "_macros.html" import user_avatar %} {# Fjernet ubrugte makroer #}
+
+{% block title %}Bruger Historik - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    {# Grundlæggende variabler + Komponenter + Animationer er i base.html #}
+    {# History-specifikke stile #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/history.css') }}">
+    {# Inline <style> er fjernet herfra #}
+{% endblock %}
+
+{% block content %}
+{# Brug container-fluid for fuld bredde med padding (som andre sider) #}
+<div class="container-fluid px-md-4 py-4">
+
+    <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--border-color-medium) !important;">
+        <h1 class="h2 page-title mb-0"><i class="bi bi-clock-history me-2"></i> Bruger Historik</h1>
+    </header>
+
+    <!-- Filterformular -->
+    {# Brug dashboard-card styling #}
+    <div class="card dashboard-card filter-card mb-4 fade-in-up">
+        <div class="card-header">
+           <i class="bi bi-funnel-fill me-2"></i> Filtrer Historik
+        </div>
+        <div class="card-body">
+             <form id="historyFilterForm" method="GET" action="{{ url_for('main.history') }}">
+                 <div class="row g-3 align-items-end">
+                      <div class="col-md-5 col-lg-4">
+                         {# Brug form-floating for pænere labels #}
+                          <div class="form-floating">
+                             {# Sørg for input felter styler korrekt i mørkt tema (via global/components CSS) #}
+                             <input type="date" id="start_date" name="start_date" class="form-control form-control-sm" placeholder=" " value="{{ request.args.get('start_date', '') }}">
+                              <label for="start_date">Startdato</label>
+                         </div>
+                      </div>
+                     <div class="col-md-5 col-lg-4">
+                        <div class="form-floating">
+                             <input type="date" id="end_date" name="end_date" class="form-control form-control-sm" placeholder=" " value="{{ request.args.get('end_date', '') }}">
+                             <label for="end_date">Slutdato</label>
+                        </div>
+                      </div>
+                       <div class="col-md col-lg-2 mt-3 mt-md-0"> {# Sørg for knapper fylder/stacker pænt #}
+                         <button type="submit" class="btn btn-primary btn-sm w-100"> {# Standard BS klasser #}
+                             <i class="bi bi-filter me-1"></i> Anvend Filter
+                         </button>
+                       </div>
+                      <div class="col-md col-lg-2 mt-2 mt-md-0">
+                          <a href="{{ url_for('main.history') }}" class="btn btn-outline-secondary btn-sm w-100"> {# Standard BS klasser #}
+                             <i class="bi bi-x-lg me-1"></i> Nulstil
+                          </a>
+                      </div>
+                 </div>
+            </form>
+         </div>
+     </div>
+
+
+    <!-- Tab-interface (Bruger profilens tab-styling) -->
+     <div class="fade-in-up" style="animation-delay: 0.1s;">
+        <nav class="profile-tabs mb-3"> {# Genbrug fra profile.css #}
+            <div class="nav nav-tabs" id="historyTab" role="tablist">
+                 {# Navn og ID'er ændret for klarhed #}
+                 <button class="nav-link active" id="stats-overview-tab" data-bs-toggle="tab" data-bs-target="#statsOverviewPane" type="button" role="tab" aria-controls="statsOverviewPane" aria-selected="true">
+                     <i class="bi bi-table me-1"></i> Statistik Oversigt
+                 </button>
+                <button class="nav-link" id="detailed-log-tab" data-bs-toggle="tab" data-bs-target="#detailedLogPane" type="button" role="tab" aria-controls="detailedLogPane" aria-selected="false">
+                     <i class="bi bi-list-check me-1"></i> Detaljeret Transaktioner
+                 </button>
+             </div>
+         </nav>
+        <div class="tab-content profile-tab-content" id="historyTabContent"> {# Genbrug fra profile.css #}
+
+             <!-- Statistik Oversigts-tab -->
+              <section class="tab-pane fade show active" id="statsOverviewPane" role="tabpanel" aria-labelledby="stats-overview-tab" tabindex="0">
+                  <div class="card profile-tab-card history-card" id="aggregatedCard"> {# Genbrug profile-tab-card #}
+                      <div class="card-header">
+                         {# Viser datointervallet, hvis et filter er aktivt #}
+                         Brugerstatistik {% if request.args.get('start_date') or request.args.get('end_date') %} for periode: {{ request.args.get('start_date', 'Start') }} -> {{ request.args.get('end_date', 'Nu') }}{% endif %}
+                     </div>
+                      <div class="card-body p-0"> {# p-0 fordi tabellen selv skal have padding #}
+                          {# -- Tilføj loading overlay (kan styles i history.css) -- #}
+                         <div class="loading-overlay" id="aggregatedLoading">
+                             <div class="spinner-border text-light spinner-border-sm" role="status"></div>
+                          </div>
+                          <div class="table-responsive position-relative"> {# Position relative for overlay #}
+                              {# Anvend den opgraderede table-styling #}
+                              <table class="table table-striped table-hover align-middle mb-0 history-stats-table">
+                                 <thead> {# Brug <thead> for semantik og styling #}
+                                     <tr>
+                                        {# Bedre ikoner og sorteringsindikation #}
+                                         <th scope="col"><i class="bi bi-person-circle"></i> Bruger</th>
+                                        <th scope="col" class="text-end"><i class="bi bi-wallet2"></i> Balance <i class="sort-icon bi bi-arrow-down-up small"></i></th>
+                                         <th scope="col" class="text-center text-success"><i class="bi bi-trophy"></i> Wins <i class="sort-icon bi bi-arrow-down-up small"></i></th>
+                                         <th scope="col" class="text-center text-danger"><i class="bi bi-emoji-frown"></i> Losses <i class="sort-icon bi bi-arrow-down-up small"></i></th>
+                                         <th scope="col" class="text-end"><i class="bi bi-cash-stack"></i> Total Vundet</th>
+                                         <th scope="col" class="text-end"><i class="bi bi-cart-x"></i> Total Tabt</th>
+                                         <th scope="col" class="text-end"><i class="bi bi-calculator"></i> Netto +/-</th>
+                                        <th scope="col" class="text-end"><i class="bi bi-graph-up-arrow"></i> Max Gevinst</th>
+                                        <th scope="col" class="text-end"><i class="bi bi-graph-down-arrow"></i> Max Tab</th>
+                                        <th scope="col" class="text-center"><i class="bi bi-clock"></i> Sidste Aktivitet</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody id="aggregatedTableBody">
+                                      {# Data indsættes af JS ELLER renderes som før, men brug standard BS klasser #}
+                                     {% for user, data in players %}
+                                     <tr>
+                                          <td class="user-cell"> {# Tilføjet klasse for evt avatar #}
+                                             <a href="{{ url_for('main.profile', username=user) }}" class="link-light text-decoration-none fw-bold d-flex align-items-center gap-2" target="_blank" rel="noopener noreferrer">
+                                                 {{ user_avatar(user_data={'username': user, 'avatar_url': data.avatar_url}, size='sm', img_class='flex-shrink-0') }} {# Eksempel med Avatar #}
+                                                 <span>{{ user }}</span>
+                                              </a>
+                                          </td>
+                                          <td class="text-end">{{ data.balance|default(0.0) | currency }}</td>
+                                          <td class="text-center text-success">{{ data.wins|default(0) }}</td>
+                                          <td class="text-center text-danger">{{ data.losses|default(0) }}</td>
+                                          <td class="text-end">{{ data.total_won|default(0.0) | currency }}</td>
+                                          <td class="text-end">{{ data.total_lost|default(0.0) | currency }}</td> {# Ændret feltnavn? #}
+                                         {% set net = data.total_won|default(0.0) - data.total_lost|default(0.0) %}
+                                         {# Standard BS text-success/text-danger klasser #}
+                                          <td class="text-end fw-bold {% if net >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                              {{ net | currency }}
+                                          </td>
+                                          <td class="text-end">{{ (data.largest_win | currency) if data.largest_win else '-' }}</td>
+                                          <td class="text-end">{{ (data.largest_loss | currency) if data.largest_loss else '-' }}</td>
+                                         <td class="text-center small text-nowrap">{{ data.last_activity|default('<span class="text-muted">Ukendt</span>')|safe }}</td>
+                                      </tr>
+                                     {% else %}
+                                         <tr class="no-data-row">
+                                             <td colspan="10" class="text-center text-muted py-4">Ingen aggregeret historik fundet for den valgte periode.</td>
+                                         </tr>
+                                     {% endfor %}
+                                  </tbody>
+                             </table>
+                          </div>
+                      </div>
+                  </div>
+             </section>
+
+              <!-- Detaljeret Transaktionslog-tab -->
+             <section class="tab-pane fade" id="detailedLogPane" role="tabpanel" aria-labelledby="detailed-log-tab" tabindex="0">
+                  <div class="card profile-tab-card history-card" id="detailedCard"> {# Genbrug profile-tab-card #}
+                      <div class="card-header">
+                           Detaljeret Transaktionslog {% if request.args.get('start_date') or request.args.get('end_date') %} for periode: {{ request.args.get('start_date', 'Start') }} -> {{ request.args.get('end_date', 'Nu') }}{% endif %}
+                      </div>
+                      <div class="card-body p-0"> {# p-0 fordi tabellen selv skal have padding #}
+                          <div class="loading-overlay" id="detailedLoading">
+                             <div class="spinner-border text-light spinner-border-sm" role="status"></div>
+                         </div>
+                         <div class="table-responsive position-relative"> {# Position relative for overlay #}
+                             <table class="table table-striped table-hover table-sm align-middle mb-0 history-detailed-table"> {# table-sm #}
+                                  <thead>
+                                      <tr>
+                                          <th scope="col"><i class="bi bi-calendar3"></i> Dato & Tid <i class="sort-icon bi bi-arrow-down-up small"></i></th>
+                                          <th scope="col"><i class="bi bi-person"></i> Bruger</th>
+                                          <th scope="col"><i class="bi bi-info-circle"></i> Beskrivelse / Detalje</th>
+                                          <th scope="col" class="text-center"><i class="bi bi-tags"></i> Type / Udfald</th>
+                                         <th scope="col" class="text-end"><i class="bi bi-currency-dollar"></i> Beløb</th>
+                                         <th scope="col" class="text-end"><i class="bi bi-receipt"></i> Resultat +/-</th>
+                                      </tr>
+                                  </thead>
+                                 <tbody id="detailedTableBody">
+                                     {# Indhold indsættes typisk via JS/AJAX her #}
+                                      <tr class="no-data-row">
+                                         <td colspan="6" class="text-center text-muted py-4">Ingen detaljeret historik fundet for den valgte periode.</td>
+                                      </tr>
+                                  </tbody>
+                             </table>
+                         </div>
+                      </div>
+                      {# Paginering for detaljeret log kan indsættes her, hvis nødvendigt #}
+                      {# <div class="card-footer d-flex justify-content-center" id="detailedPagination"> ... </div> #}
+                  </div>
+             </section>
+          </div> {# /tab-content #}
+     </div>{# /fade-in wrapper for tabs #}
+
+
+    <!-- Tilbage-knap -->
+    <div class="text-center mt-4 mb-4">
+         {# Standard BS outline knap #}
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+           <i class="bi bi-arrow-left-circle me-1"></i> Tilbage til Dashboard
+         </a>
+    </div>
+
+</div> {# /container-fluid #}
+{% endblock %}
+
+{% block scripts_extra %}
+    {{ super() }} {# Sørger for globale scripts loades #}
+    {# Brug defer for at vente på DOM #}
+    <script src="{{ url_for('static', filename='js/history.js') }}" defer></script>
+{% endblock %}
+

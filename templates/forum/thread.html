@@ -1,0 +1,258 @@
+{# templates/forum/thread.html - Viser indlæg i en specifik tråd - OPDATERET v2 #}
+{% extends "base.html" %}
+{# Import nødvendige makroer #}
+{% from "_macros.html" import render_pagination, user_avatar, render_field_with_errors, render_form_errors %}
+
+{# Dynamisk titel #}
+{% set thread_title = thread.title | default('Forum Tråd') if thread else 'Forum Tråd' %}
+{% block title %}{{ thread_title | truncate(60) }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4 forum-container">
+
+    {# ----- Breadcrumbs ----- #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="--bs-breadcrumb-divider: '>'; background-color: transparent; padding: 0;">
+             {# !!! link-light + text-decoration-none tilføjet !!! #}
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}" class="link-light text-decoration-none">Forum Oversigt</a></li>
+            {% if thread and thread.category %}
+                {# !!! link-light + text-decoration-none tilføjet !!! #}
+                <li class="breadcrumb-item"><a href="{{ url_for('forum.view_category', slug=thread.category.slug) }}" class="link-light text-decoration-none">{{ thread.category.name }}</a></li>
+            {% endif %}
+            <li class="breadcrumb-item active" aria-current="page">{{ thread_title | truncate(50) }}</li>
+        </ol>
+    </nav>
+
+    {# ----- Tråd Titel og Svar/Låst Knap ----- #}
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 page-header">
+        <h1 class="h2 page-title mb-0 text-break">{{ thread_title }}</h1>
+        <div class="d-flex gap-2 flex-shrink-0">
+            {% if thread %}
+                {% if current_user.is_authenticated and not thread.is_locked %}
+                    <a href="#reply-form" class="btn btn-primary btn-sm scroll-to-reply"> {# btn-primary er ok her #}
+                        <i class="bi bi-reply-fill me-1"></i> Svar på Tråd
+                    </a>
+                {% elif thread.is_locked %}
+                    <button class="btn btn-secondary btn-sm" disabled> {# Standard secondary er fin #}
+                        <i class="bi bi-lock-fill me-1"></i> Tråd Låst
+                    </button>
+                {# Udkommenteret login-knap her #}
+                {% endif %}
+            {% endif %}
+        </div>
+    </div>
+
+    {# ----- Top Pagination ----- #}
+    {% if pagination and pagination.pages > 1 %}
+      <div class="d-flex justify-content-end mb-3">
+        {{ render_pagination(pagination, 'forum.view_thread', view_args={'thread_id': thread.id if thread else 0}) }}
+      </div>
+    {% endif %}
+
+    {# ----- Loop gennem Indlæg ----- #}
+    {% set posts_on_page = pagination.items if pagination else [] %}
+    {% set authors_data = authors_data or {} %}
+
+    {% if posts_on_page %}
+        {% set post_start_num = (pagination.page - 1) * pagination.per_page + 1 if pagination else 1 %}
+        {% for post in posts_on_page %}
+            {# Data Forberedelse (Uændret) #}
+            {% set author_details = authors_data.get(post.author_username, {}) %}
+            {% set author_username = author_details.get('username', post.author_username) %}
+            {% set author_exists = author_username is not none and author_details %}
+            {% set author_rank = author_details.get('rank', '') if author_exists else '' %}
+
+            <div class="forum-post card list-card dashboard-card d-flex flex-row flex-wrap flex-md-nowrap gap-0 mb-3 rounded shadow-sm fade-in-up"
+                 id="post-{{ post.id }}"
+                 aria-labelledby="post-header-{{ post.id }}"
+                 style="--post-animation-delay: {{ loop.index0 * 0.05 }}s;">
+
+                {# ----- Forfatter Info Kolonne ----- #}
+                <div class="post-author-info text-center p-3 border-end-md order-1" style="flex-basis: 180px; flex-shrink: 0;"> {# Gjort bredden konsistent her #}
+                    {% if author_exists %}
+                        <a href="{{ url_for('main.profile', username=author_username) }}"
+                           class="author-link d-block mb-2" title="Se profil: {{ author_username }}">
+                            {{ user_avatar(user_data=author_details, size='md', img_class='author-avatar') }} {# Fjernet ekstra klasser - makro + CSS styrer #}
+                        </a>
+                        <a href="{{ url_for('main.profile', username=author_username) }}"
+                           class="author-name text-decoration-none d-block fw-bold"> {# Styling fra CSS #}
+                           {{ author_username | title }}
+                           {# Online Status Indicator #}
+                           {% if author_details.get('is_online') %}
+                               <span class="online-indicator" title="Online" style="display: inline-block; width: 8px; height: 8px; background-color: #28a745; border-radius: 50%; margin-left: 5px; vertical-align: middle;"></span>
+                           {% endif %}
+                        </a>
+                    {% else %}
+                         {{ user_avatar(user_data=None, size='md', img_class='author-avatar opacity-50') }} {# opacity tilføjet #}
+                         <span class="author-name text-decoration-none d-block fw-bold text-muted fst-italic mt-2">
+                             [Slettet Bruger]
+                         </span>
+                    {% endif %}
+
+                     {# -- Rang -- #}
+                    {% if author_exists and author_rank %}
+                        {% set post_rank_bg_class = 'bg-secondary' %}
+                        {% if author_rank == 'System Admin' %}{% set post_rank_bg_class = 'bg-danger' %}
+                        {% elif author_rank == 'Grundlægger' %}{% set post_rank_bg_class = 'bg-primary' %}
+                        {% endif %}
+                        <span class="author-rank d-block small mt-1">
+                             <span class="badge {{ post_rank_bg_class }}">{{ author_rank }}</span>
+                        </span>
+                    {% endif %}
+
+                    {# -- Ekstra Detaljer -- #}
+                    {% if author_exists %}
+                        <div class="author-details small text-muted mt-2 lh-sm">
+                            {% if author_details.get('post_count') is number and author_details.get('post_count') >= 0 %}
+                                {# !!! fjernet text-body !!! #}
+                                <div>Indlæg: <strong>{{ author_details.post_count }}</strong></div>
+                            {% endif %}
+                            {% if author_details.get('join_date') %}
+                                <div title="Medlem siden: {{ author_details.join_date | dt(format='long') }}">Medlem: {{ author_details.join_date | dt(format='shortdate') }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {# ----- Indlægs Indhold & Hoved ----- #}
+                 {# Fjernet p-3 for at lade post-header/content/footer styre padding #}
+                <div class="post-main flex-grow-1 order-2">
+                    {# -- Post Header -- #}
+                    {# CSS (.post-header) styrer styling #}
+                    <div class="post-header d-flex justify-content-between align-items-center border-bottom pb-2 mb-3"
+                         id="post-header-{{ post.id }}" >
+                         {# border style fjernet, bruger klassen #}
+                         {# Use local-datetime class and data attribute #}
+                         <span class="post-timestamp small text-muted local-datetime" data-utc-datetime="{{ post.created_at.isoformat() if post.created_at else '' }}" title="{{ post.created_at | dt if post.created_at else 'Ukendt' }}">
+                            <i class="bi bi-calendar3 me-1"></i> {{ post.created_at | dt(relative=True) }} {# Fallback relative time #}
+                         </span>
+                         {# Knapper (ser OK ud, styles via CSS) #}
+                         <div class="post-actions d-flex gap-1">
+                             {% if thread %}
+                                 {% set is_current_user_author = current_user.is_authenticated and author_exists and author_username == current_user.username %}
+                                 {% set can_edit_delete = is_current_user_author or (current_user.is_authenticated and current_user.is_admin) %}
+                                 {% if can_edit_delete %}
+                                    <a href="{{ url_for('forum.edit_post', post_id=post.id) }}" class="btn btn-sm btn-outline-secondary" title="Rediger indlæg"><i class="bi bi-pencil"></i></a>
+                                 {% endif %}
+                                 {% if can_edit_delete and post.id != thread.first_post_id %}
+                                    <form action="{{ url_for('forum.delete_post', post_id=post.id) }}" method="POST" class="d-inline needs-confirmation" data-confirm-message="Er du sikker på, du vil slette dette indlæg? Det kan ikke fortrydes.">
+                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Slet indlæg"><i class="bi bi-trash"></i></button>
+                                    </form>
+                                 {% endif %}
+                                 {% if current_user.is_authenticated and not thread.is_locked and author_exists %}
+                                    <button type="button" class="btn btn-sm btn-outline-primary quote-btn" data-post-id="{{ post.id }}" data-username="{{ author_username }}" title="Citer dette indlæg"><i class="bi bi-quote"></i></button>
+                                 {% endif %}
+                             {% endif %}
+                             <a href="#post-{{ post.id }}" class="btn btn-sm btn-outline-light post-link" title="Permanent link til indlæg #{{ post_start_num + loop.index0 }}">#{{ post_start_num + loop.index0 }}</a>
+                         </div>
+                    </div>
+
+                    {# -- Post Indhold -- #}
+                    <div class="post-content user-content-styles"> {# CSS (.post-content) styrer padding #}
+                         {{ post.body_html | safe if post.body_html else post.body | nl2br }}
+                    </div>
+
+                     {# -- Post Footer (Sidst redigeret) -- #}
+                     {% if post.last_edited_by %}
+                         <div class="post-footer small text-muted fst-italic mt-3 pt-2 border-top"> {# CSS styrer styling, inline style fjernet #}
+                              <i class="bi bi-info-circle me-1"></i>
+                              Sidst redigeret af
+                              {% set editor_data = authors_data.get(post.last_edited_by, {}) %}
+                              {% if editor_data %}
+                                 {# !!! class="link-light text-opacity-75" tilføjet !!! #}
+                                <a href="{{ url_for('main.profile', username=post.last_edited_by) }}" class="link-light text-opacity-75 text-decoration-none">{{ editor_data.get('display_name', post.last_edited_by) }}</a>
+                              {% else %}
+                                 {# !!! class="link-light text-opacity-75" tilføjet - ingen grund til link hvis bruger ikke findes? Måske bare span #}
+                                 <span class="text-light text-opacity-75">{{ post.last_edited_by }}</span> {# Ingen link her #}
+                              {% endif %}
+                              {% if post.last_edited_at %}
+                                   {# Use local-datetime class and data attribute for edited time #}
+                                   - <span class="local-datetime" data-utc-datetime="{{ post.last_edited_at.isoformat() if post.last_edited_at else '' }}" title="{{ post.last_edited_at | dt if post.last_edited_at else 'Ukendt' }}">{{ post.last_edited_at | dt(relative=True) }}</span> {# Fallback relative time #}
+                              {% endif %}
+                         </div>
+                     {% endif %}
+                </div> {# ----- Slut Indlægs Indhold ----- #}
+            </div> {# End .forum-post card #}
+        {% endfor %}
+    {% else %}
+         <div class="alert alert-secondary text-center mt-4"> {# Brug BS standard secondary #}
+              Ingen indlæg at vise på denne side.
+         </div>
+    {% endif %}
+
+    {# ----- Bund Pagination ----- #}
+    {% if pagination and pagination.pages > 1 %}
+      <div class="d-flex justify-content-end mt-4">
+        {{ render_pagination(pagination, 'forum.view_thread', view_args={'thread_id': thread.id if thread else 0}) }}
+      </div>
+    {% endif %}
+
+    {# ----- Svar Formular ----- #}
+    {% if thread %}
+        <div class="reply-section mt-5 pt-4 border-top" id="reply-form"> {# CSS styrer border-top farve #}
+            {% if current_user.is_authenticated and not thread.is_locked %}
+                 <h3 class="h4 mb-3 text-light"><i class="bi bi-reply-fill me-2"></i> Skriv et Svar</h3> {# Sikret lys tekst #}
+                 <div class="card dashboard-card shadow-sm reply-card"> {# Samme kort stil #}
+                    <div class="card-body p-4"> {# Lidt mere padding #}
+                         {{ render_form_errors(form) }}
+                         {% if form %}
+                             <form method="POST" action="{{ url_for('forum.view_thread', thread_id=thread.id, page=request.args.get('page', 'last')) }}" id="replyPostForm" novalidate> {# Default til sidste side #}
+                                  {{ form.hidden_tag() }}
+                                  {# !!! Tilføjet link-info klasse til Markdown linket !!! #}
+                                  {% set markdown_help %}Tip: Brug <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" class="link-info">Markdown</a> til formatering.{% endset %}
+                                  {# Tilføjet rows=8 #}
+                                  {{ render_field_with_errors(form.body, placeholder="Skriv dit svar her...", help_text=(markdown_help | safe), required=True, label_class="visually-hidden") }}
+                                  {# Submit Knap - btn-primary er OK her for hovedaktion #}
+                                  <div class="d-flex justify-content-end mt-3">
+                                      <button type="submit" class="btn btn-primary" name="submit">
+                                           <i class="bi bi-send me-1"></i> Send Svar
+                                      </button>
+                                  </div>
+                             </form>
+                         {% else %}
+                              <div class="alert alert-warning">Svar formularen kunne ikke indlæses.</div>
+                         {% endif %}
+                     </div>
+                 </div>
+             {# Beskeder for ikke-logged-in / låst tråd #}
+             {% elif not current_user.is_authenticated %}
+                  <div class="alert alert-warning text-center">
+                       Du skal være
+                       {# !!! tilføjet link-light !!! #}
+                       <a href="{{ url_for('auth.login_route', next=request.url) }}" class="alert-link link-light">logget ind</a>
+                       for at kunne svare på tråden.
+                  </div>
+             {% elif thread.is_locked %}
+                  <div class="alert alert-secondary text-center"> {# BS standard secondary #}
+                      <i class="bi bi-lock-fill me-1" aria-hidden="true"></i> Tråden er låst og kan ikke modtage nye svar.
+                  </div>
+             {% endif %}
+         </div>
+     {% endif %}
+
+</div> {# End container-fluid #}
+{% endblock %}
+
+{# ----- JS Block ----- #}
+{% block scripts_extra %}
+{# Behold din eksisterende JS her, ingen ændringer nødvendige for styling #}
+{{ super() }} {# Sørg for at evt. scripts fra base indlæses #}
+<script src="{{ url_for('static', filename='js/forum_thread.js') }}"></script>
+{% endblock %}
+
+
+     
+     /*
+// Initialiser Bootstrap Tooltips (hvis du bruger Bootstrap JS)
+     try {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"], [title]:not([title=""]):not(iframe)'); // Vær mere specifik
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+           const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+           console.log(`DEBUG: Initialized ${tooltipList.length} Bootstrap tooltips.`);
+        } else {
+           if(tooltipTriggerList.length > 0) console.log("DEBUG: Found elements needing tooltips, but Bootstrap Tooltip class not found.");
+        }
+     } catch (e) { console.error("Error initializing tooltips:", e); }
+     */
+

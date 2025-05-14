@@ -1,0 +1,91 @@
+/* static/css/game_area.css */
+
+/* ----- GENEREL SIDE & HEADER ----- */
+.page-title {
+    color: var(--font-color-header, #f1f3f5);
+}
+.page-title i {
+    color: var(--primary-color);
+    font-size: 0.9em;
+}
+
+/* ----- KORT TIL OPRETTELSE ----- */
+.create-game-card {
+    /* Bruger .dashboard-card */
+}
+.create-game-card .card-header {
+    background-color: var(--card-header-bg, rgba(0, 0, 0, 0.1));
+    border-bottom: 1px solid var(--border-color-dark, #495057);
+    font-weight: 600;
+    color: var(--font-color-muted-lighter, #ccc);
+}
+.create-game-card .card-header i {
+    color: var(--primary-color);
+    opacity: 0.9;
+    margin-right: 0.5rem;
+}
+.create-game-card .card-body {
+    padding: 1.5rem 1.75rem; /* Lidt mere sidepadding */
+}
+
+
+/* ----- FORMULAR ELEMENTER ----- */
+/* Inputs, selects, floating labels skal arve global styling */
+
+/* Specifikt for outcome sektioner */
+.outcome-section {
+    display: none; /* Skjult som standard */
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--border-color-dark, #495057);
+    animation: fadeIn 0.4s ease-in-out; /* Brug fadeIn animation ved visning */
+}
+.outcome-section.active {
+    display: block;
+}
+
+.outcome-section h5 { /* Overskrift for sektion (Ja/Nej, Fiktiv Sport) */
+     color: var(--font-color-header);
+     font-weight: 600;
+     margin-bottom: 1.25rem;
+     border-left: 3px solid var(--primary-color); /* Markering til venstre */
+     padding-left: 0.75rem;
+}
+.outcome-section h6 { /* Underoverskrifter (Hold 1, Hold 2 etc.) */
+     color: var(--primary-color); /* Brug temaets primære farve */
+     font-weight: 600;
+     font-size: 0.95rem;
+     margin-bottom: 0.5rem;
+     margin-top: 1rem; /* Lidt luft over underoverskrifter */
+}
+.outcome-section h6:first-of-type {
+    margin-top: 0; /* Ingen ekstra top margin for den første H6 */
+}
+
+/* ----- KNAP & FEEDBACK ----- */
+hr { /* Horisontal linje før knap */
+    border-color: var(--border-color-dark, #495057);
+    margin-top: 1.75rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Opret spil-knap */
+#createGameBtn {
+     /* Bruger .btn-success .btn-lg */
+}
+#createGameBtn .spinner-border { display: none; }
+#createGameBtn.is-loading .spinner-border { display: inline-block; }
+#createGameBtn.is-loading .btn-text { opacity: 0; } /* Skjul tekst ved load */
+
+/* Feedback område */
+#createGameFeedback {
+     /* Bruger .feedback-area ? Eller simpel styling her */
+     min-height: 30px;
+     font-weight: 500;
+}
+
+/* Tilbage knap */
+/* Bruger standard .btn-outline-secondary */
+.back-to-dashboard-btn {
+    /* Ingen ekstra styling nødvendig */
+}

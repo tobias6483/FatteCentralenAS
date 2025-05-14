@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination, user_avatar %}
+
+{% block title %}{{ title }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4 messages-container">
+    <div class="d-flex justify-content-between align-items-center mb-4 page-header">
+        <h1 class="h2 page-title"><i class="bi bi-send-fill me-2"></i> {{ title }}</h1>
+        <a href="{{ url_for('messages.compose_message') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i> Skriv Ny Besked
+        </a>
+    </div>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('messages.inbox') }}">Indbakke</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{{ url_for('messages.sent_items') }}">Udbakke</a>
+        </li>
+    </ul>
+
+    {# --- User Search Section --- #}
+    <div class="mb-4 user-search-section">
+        <form action="#" method="GET" onsubmit="return false;"> {# Prevent actual form submission #}
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" class="form-control" id="messagesViewUserSearchInput" placeholder="Søg efter brugere at sende besked til...">
+            </div>
+        </form>
+        <div id="messagesViewUserSearchResults" class="list-group mt-1 position-absolute w-100" style="z-index: 1000; display: none;">
+            {# Search results will be populated by JavaScript #}
+        </div>
+    </div>
+    {# ------------------------- #}
+
+    {# --- Avatar Header Section --- #}
+    <div class="mb-4 contacts-header-section">
+        <h6 class="text-muted small mb-2"><i class="bi bi-people-fill me-1"></i> Aktive Brugere</h6>
+        <div id="contactsHeaderContainer" class="d-flex align-items-center gap-2 overflow-auto pb-2">
+            {# Placeholder / Loading state #}
+            <div class="text-muted small fst-italic">Indlæser aktive brugere...</div>
+            {# Avatars will be populated by JavaScript #}
+        </div>
+    </div>
+    {# --------------------------- #}
+
+    {# Use 'conversations' variable passed from the route #}
+    {% if conversations %}
+        <div class="list-group message-list shadow-sm">
+            {# Loop through the latest message of each conversation #}
+            {% for latest_message in conversations %}
+                {# Link to the conversation view using the effective_thread_id #}
+                <a href="{{ url_for('messages.view_message', message_id=latest_message.effective_thread_id) }}"
+                   class="list-group-item list-group-item-action d-flex gap-3 py-3"> {# No unread highlighting needed for sent #}
+
+                    {# Show avatar of the RECIPIENT of the LATEST message #}
+                    {{ user_avatar(user_data=latest_message.recipient, size='sm', img_class='flex-shrink-0') }}
+
+                    <div class="d-flex gap-2 w-100 justify-content-between">
+                        <div>
+                            {# Show recipient of the LATEST message #}
+                            <h6 class="mb-0">Til: {{ latest_message.recipient.username | title }}</h6>
+                            {# Show subject of the LATEST message #}
+                            <p class="mb-0 opacity-75 text-truncate" style="max-width: 300px;">{{ latest_message.subject }}</p>
+                            {# Optional: Add a snippet of the latest message body here if desired #}
+                            {# <p class="mb-0 opacity-50 text-truncate small" style="max-width: 300px;">{{ latest_message.body | truncate(50) }}</p> #}
+                        </div>
+                        {# Show timestamp of the LATEST message #}
+                        <small class="opacity-50 text-nowrap local-datetime" data-utc-datetime="{{ latest_message.timestamp.isoformat() if latest_message.timestamp else '' }}" title="{{ latest_message.timestamp | dt if latest_message.timestamp else 'Ukendt' }}">{{ latest_message.timestamp | dt(relative=True) }}</small>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+        {% if pagination and pagination.pages > 1 %}
+            <div class="mt-4 d-flex justify-content-center">
+                {{ render_pagination(pagination, 'messages.sent_items') }} {# Pagination endpoint remains the same #}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-info-circle-fill me-2"></i> Du har ingen sendte beskeder.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block scripts_extra %}
+    {{ super() }} {# Include scripts from base.html if any #}
+    <script src="{{ url_for('static', filename='js/messages.js') }}" defer></script>
+{% endblock %}

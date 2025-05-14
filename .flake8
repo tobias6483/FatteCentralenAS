@@ -1,0 +1,18 @@
+[flake8]
+ignore =
+    E501,  # line too long, handled by black
+    W503,  # line break before binary operator, handled by black
+    F401,  # module imported but unused (can be noisy, review manually)
+    F841   # local variable assigned but never used (can be noisy, review manually)
+max-line-length = 88
+exclude =
+    .git,
+    __pycache__,
+    .tox,
+    .venv,
+    build,
+    dist,
+    migrations/versions/
+# Add specific error codes to ignore if needed after initial runs
+# e.g., E203 (whitespace before ':') if black formats differently
+# select = E,W,F  # Optionally, be very specific about which checks to run

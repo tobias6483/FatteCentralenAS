@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}For Mange Anmodninger - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card text-white bg-warning shadow-lg"> {# Brug 'warning' for denne type fejl #}
+                <div class="card-header text-center">
+                    <h2 class="card-title mb-0">
+                        <i class="bi bi-hourglass-split me-2"></i> Rate Limit Overskredet
+                    </h2>
+                </div>
+                <div class="card-body text-center">
+                    <p class="lead">Hovsa! Du har sendt lidt for mange anmodninger for hurtigt.</p>
+                    <p>For at sikre stabilitet for alle brugere, har vi en grænse for, hvor ofte visse handlinger kan udføres.</p>
+
+                    {# Vis info om specifik grænse, HVIS den sendes med #}
+                    {# Variablen 'limit_info' ser ud til at blive sendt fra din error handler #}
+                    {% if limit_info %}
+                    <hr class="border-light">
+                    <p class="mb-1"><small><strong>Detaljer om grænse:</strong></small></p>
+                    <p><small><code>{{ limit_info.limit }}</code></small></p>
+                    {% endif %}
+
+                    {# Prøv at give info om hvornår det evt. kan prøves igen #}
+                    {# Flask-Limiter kan give 'error.limit.reset_at' i nyere versioner - tjek din version #}
+                    {# Eller lav en generel besked #}
+                     <p class="mt-3">Vent venligst et øjeblik, og prøv så igen.</p>
+
+                </div>
+                <div class="card-footer text-center bg-transparent border-top-0">
+                    <a href="{{ url_for('main.index') }}" class="btn btn-outline-light">
+                        <i class="bi bi-house-door-fill me-1"></i> Gå til Forsiden
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{# Ingen specifikke scripts er nødvendige for denne simple fejlside #}
+{% block scripts_extra %}
+{{ super() }}
+{% endblock %}

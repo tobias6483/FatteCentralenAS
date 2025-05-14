@@ -1,0 +1,59 @@
+{% extends "base.html" %} {# <<< TILFØJET: Arver fra base.html #}
+
+{# <<< TILFØJET: Definerer sidens titel #}
+{% block title %}Siden blev ikke fundet - {{ super() }}{% endblock %}
+
+{# <<< TILFØJET: Placerer specifik CSS/stil i head_extra #}
+{% block head_extra %}
+    {{ super() }} {# Arv fra base #}
+    <style>
+        /* Specifik styling for 404 siden */
+        .error-container {
+            max-width: 600px;
+            padding: 2rem;
+            margin-top: 5vh; /* Lidt afstand fra toppen */
+            text-align: center;
+        }
+        .error-container h1 {
+            font-size: 6rem;
+            font-weight: bold;
+            color: var(--bs-danger, #dc3545); /* Brug BS variabel hvis muligt */
+        }
+        .error-container h2 {
+             margin-top: -1rem;
+             margin-bottom: 1.5rem;
+             color: var(--bs-secondary-color, #adb5bd); /* Brug BS variabel */
+        }
+         /* Knappen arver sandsynligvis farve fra base/components, men kan overskrives her */
+         /* .error-container .btn-primary { */
+             /* background-color: #00cca3; */
+             /* border-color: #00cca3; */
+         /* } */
+         /* .error-container .btn-primary:hover { */
+              /* background-color: #00a886; */
+              /* border-color: #00a886; */
+         /* } */
+    </style>
+{% endblock %}
+
+{# <<< TILFØJET: Indhold placeres i content-blokken #}
+{% block content %}
+<div class="container"> {# Brug standard container #}
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="error-container">
+                <h1 class="display-1">404</h1>
+                <h2>Siden blev ikke fundet</h2>
+                <p class="lead">Beklager, den side du ledte efter, findes ikke eller er blevet flyttet.</p>
+                <p>Tjek om adressen er stavet korrekt.</p>
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary mt-3">Tilbage til forsiden</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} {# Slut på content-blokken #}
+
+{# <<< TILFØJET: Tom scripts_extra blok med super() #}
+{% block scripts_extra %}
+    {{ super() }} {# Arv fra base #}
+{% endblock %}

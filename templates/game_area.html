@@ -1,0 +1,220 @@
+{# templates/game_area_page.html - OPDATERET #}
+{% extends "base.html" %}
+
+{% block title %}Opret Spil - Game Area - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    {# Link til den nye CSS fil #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/game_area.css') }}">
+    {# Inline style fjernet #}
+{% endblock %}
+
+{% block content %}
+{# Brug container-fluid for konsistens #}
+<div class="container-fluid px-md-4 py-4">
+
+    {# Standardiseret side header #}
+    <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--border-color-medium) !important;">
+        <h1 class="h2 page-title mb-0"><i class="bi bi-plus-circle-fill me-2"></i> Opret Nyt Spil / Event</h1>
+         <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-secondary"> {# Standard outline knap #}
+            <i class="bi bi-arrow-left me-1"></i> Tilbage til Dashboard
+         </a>
+     </header>
+
+    {# Brug standard dashboard-card #}
+    <div class="card dashboard-card shadow-sm create-game-card">
+        <div class="card-header">
+            <i class="bi bi-list-check me-1"></i> Spil Detaljer
+        </div>
+        <div class="card-body">
+             {# Givet form ID til JS targeting #}
+             <form id="createGameForm" novalidate>
+
+                 {# --- Vælg Spil Type --- #}
+                 <div class="row mb-4"> {# Mere bundmargin #}
+                     <div class="col-md-8 col-lg-6"> {# Gør den lidt smallere #}
+                         <label for="gameModeSelect" class="form-label fw-bold">Vælg Spil Type:</label>
+                          <select id="gameModeSelect" class="form-select" required aria-label="Vælg spil type">
+                             <option value="" disabled selected hidden>-- Vælg type --</option> {# Bedre placeholder #}
+                             <option value="yesno">Simpel Ja/Nej</option>
+                             <option value="fictional_sport">Fiktiv Sportsbegivenhed</option>
+                          </select>
+                          {# Ingen floating label her, standard label over #}
+                     </div>
+                 </div>
+
+                {# --- Dynamiske Input Sektioner --- #}
+
+                 {# --- Ja/Nej Udfald Sektion --- #}
+                 {# 'data-game-mode' bruges af JS til at vise/skjule #}
+                 <section id="yesNoInputs" class="outcome-section" data-game-mode="yesno">
+                      <h5 class="section-title">Ja/Nej Udfald</h5> {# Tilføjet klasse for evt styling #}
+                      <div class="row g-3 mb-3">
+                         <div class="col-md-6">
+                            <div class="form-floating">
+                                <input type="text" id="yesno_outcome1_name" name="yesno_outcome1_name" class="form-control" value="Ja" placeholder="." required>
+                                <label for="yesno_outcome1_name">Udfald 1 Navn</label>
+                             </div>
+                         </div>
+                         <div class="col-md-6">
+                             <div class="form-floating">
+                                <input type="number" step="0.01" min="1.01" id="yesno_outcome1_odds" name="yesno_outcome1_odds" class="form-control" placeholder="." value="2.0" required>
+                                 <label for="yesno_outcome1_odds">Udfald 1 Odds (>1)</label>
+                             </div>
+                         </div>
+                     </div>
+                     <div class="row g-3">
+                          <div class="col-md-6">
+                             <div class="form-floating">
+                                  <input type="text" id="yesno_outcome2_name" name="yesno_outcome2_name" class="form-control" value="Nej" placeholder="." required>
+                                  <label for="yesno_outcome2_name">Udfald 2 Navn</label>
+                             </div>
+                         </div>
+                          <div class="col-md-6">
+                            <div class="form-floating">
+                                 <input type="number" step="0.01" min="1.01" id="yesno_outcome2_odds" name="yesno_outcome2_odds" class="form-control" placeholder="." value="1.8" required>
+                                <label for="yesno_outcome2_odds">Udfald 2 Odds (>1)</label>
+                            </div>
+                         </div>
+                      </div>
+                  </section>
+
+                  {# --- Fiktiv Sport Udfald Sektion --- #}
+                 <section id="fictionalSportInputs" class="outcome-section" data-game-mode="fictional_sport">
+                     <h5 class="section-title">Fiktiv Sportsbegivenhed</h5>
+                     <div class="row g-3 mb-3">
+                         <div class="col-12">
+                            <div class="form-floating">
+                               <input type="text" id="fictive_event_name" name="fictive_event_name" class="form-control" placeholder="." required>
+                               <label for="fictive_event_name">Event Navn (f.eks. Team A vs Team B)</label>
+                           </div>
+                         </div>
+                     </div>
+                      {# Hold 1 #}
+                     <h6>Hold 1 / Udfald 1</h6>
+                      <div class="row g-3 mb-3">
+                          <div class="col-md-6">
+                              <div class="form-floating">
+                                  <input type="text" id="fictive_team1_name" name="fictive_team1_name" class="form-control" value="Team A" placeholder="." required>
+                                  <label for="fictive_team1_name">Navn</label>
+                              </div>
+                           </div>
+                          <div class="col-md-6">
+                             <div class="form-floating">
+                                <input type="number" step="0.01" min="1.01" id="fictive_team1_odds" name="fictive_team1_odds" class="form-control" placeholder="." value="2.5" required>
+                                  <label for="fictive_team1_odds">Odds (>1)</label>
+                              </div>
+                         </div>
+                     </div>
+                      {# Hold 2 #}
+                     <h6>Hold 2 / Udfald 2</h6>
+                     <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                               <input type="text" id="fictive_team2_name" name="fictive_team2_name" class="form-control" value="Team B" placeholder="." required>
+                               <label for="fictive_team2_name">Navn</label>
+                             </div>
+                          </div>
+                         <div class="col-md-6">
+                             <div class="form-floating">
+                                <input type="number" step="0.01" min="1.01" id="fictive_team2_odds" name="fictive_team2_odds" class="form-control" placeholder="." value="2.0" required>
+                                 <label for="fictive_team2_odds">Odds (>1)</label>
+                             </div>
+                          </div>
+                      </div>
+                     {# Uafgjort (Valgfri) #}
+                     <h6>Uafgjort / Udfald 3 (Valgfri)</h6>
+                      <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-floating">
+                               <input type="text" id="fictive_draw_name" name="fictive_draw_name" class="form-control" placeholder=".">
+                               <label for="fictive_draw_name">Navn (f.eks. X, Draw)</label>
+                            </div>
+                          </div>
+                          <div class="col-md-6">
+                              <div class="form-floating">
+                                  <input type="number" step="0.01" min="1.01" id="fictive_draw_odds" name="fictive_draw_odds" class="form-control" placeholder=".">
+                                  <label for="fictive_draw_odds">Odds (hvis navn er angivet)</label>
+                              </div>
+                          </div>
+                       </div>
+                 </section>
+
+                  {# Knap og Feedback Område #}
+                 <hr> {# Visuel separator før submit #}
+                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2"> {# Tillad wrap #}
+                      {# Feedback (venstre side) #}
+                      <div id="createGameFeedback" class="feedback-area order-2 order-md-1 flex-grow-1 text-center text-md-start">
+                          {# Meddelelser her #}
+                      </div>
+                      {# Opret knap (højre side) #}
+                      <div class="order-1 order-md-2 ms-md-auto"> {# Skub til højre på desktop #}
+                         <button id="createGameBtn" type="submit" class="btn btn-success btn-lg"> {# Stor grøn knap #}
+                              {# Loading state struktur #}
+                             <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                              <i class="bi bi-check-circle btn-icon me-1"></i> {# Bedre ikon #}
+                              <span class="btn-text">Opret Spil Nu</span>
+                          </button>
+                      </div>
+                  </div>
+             </form>
+         </div> {# /card-body #}
+    </div> {# /card #}
+{# ----- Session Settings Modal ----- #}
+    <div class="modal fade modal-custom" id="sessionSettingsModal" tabindex="-1" aria-labelledby="sessionSettingsModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sessionSettingsModalLabel"><i class="bi bi-gear-wide-connected me-2"></i>Session Indstillinger</h5>
+                    {# No close button in header to force using Cancel/Create #}
+                </div>
+                <div class="modal-body">
+                    <form id="sessionSettingsForm">
+                        {# Session Name (Can be pre-filled by JS) #}
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="modalSessionName" name="session_name" placeholder="." required>
+                            <label for="modalSessionName">Session Navn</label>
+                        </div>
+
+                        {# Max Players #}
+                        <div class="form-floating mb-3">
+                            <input type="number" class="form-control" id="modalMaxPlayers" name="max_players" placeholder="." min="0" value="0">
+                            <label for="modalMaxPlayers">Max Antal Spillere (0 = Ubegrænset)</label>
+                        </div>
+
+                        {# Private Session Checkbox #}
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="modalIsPrivate" name="is_private">
+                            <label class="form-check-label" for="modalIsPrivate">Privat Session (Kræver Kodeord)</label>
+                        </div>
+
+                        {# Session Password (Shown only if Private is checked) #}
+                        <div class="form-floating mb-3" id="modalPasswordGroup" style="display: none;">
+                            <input type="password" class="form-control" id="modalSessionPassword" name="session_password" placeholder=".">
+                            <label for="modalSessionPassword">Session Kodeord</label>
+                        </div>
+
+                        {# Feedback Area #}
+                        <div id="modalSettingsFeedback" class="feedback-area small text-danger mt-2"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" id="modalCancelBtn">Annuller</button>
+                    <button type="button" class="btn btn-success" id="modalCreateBtn">
+                        <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+                        <i class="bi bi-check-lg btn-icon"></i>
+                        <span class="btn-text">Opret Session</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# ----- End Session Settings Modal ----- #}
+</div> {# /container-fluid #}
+{% endblock %}
+
+{% block scripts_extra %}
+    {{ super() }}
+    {# Sørg for game_area.js loades korrekt #}
+    <script src="{{ url_for('static', filename='js/game_area.js') }}" defer></script>
+{% endblock %}

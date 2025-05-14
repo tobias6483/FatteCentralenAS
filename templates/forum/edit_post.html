@@ -1,0 +1,105 @@
+{# templates/forum/edit_post.html - Redigeringsside for Forum Post - OPDATERET #}
+{% extends "base.html" %}
+{# Importer makroer til form-gengivelse #}
+{% from "_macros.html" import render_field_with_errors, render_form_errors %}
+
+{# ----- Titel ----- #}
+{% set post_thread_title = post.thread.title | default('Ukendt Tråd') if post and post.thread else 'Ukendt Tråd' %}
+{% set post_id = post.id | default('Ukendt ID') if post else 'Ukendt ID' %}
+{% block title %}Rediger Indlæg #{{ post_id }} ({{ post_thread_title | truncate(30) }}) - {{ super() }}{% endblock %}
+
+{% block head_extra %}
+    {{ super() }}
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4 forum-container">
+
+    {# ----- Breadcrumbs ----- #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="--bs-breadcrumb-divider: '>'; background-color: transparent; padding: 0;">
+             {# !!! ÆNDRING: Tilføjet link-light og text-decoration-none !!! #}
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}" class="link-light text-decoration-none">Forum Oversigt</a></li>
+            {% if post and post.thread and post.thread.category %}
+                {% set category = post.thread.category %}
+                {% set thread = post.thread %}
+                {# !!! ÆNDRING: Tilføjet link-light og text-decoration-none !!! #}
+                <li class="breadcrumb-item"><a href="{{ url_for('forum.view_category', slug=category.slug) }}" class="link-light text-decoration-none">{{ category.name }}</a></li>
+                 {# !!! ÆNDRING: Tilføjet link-light og text-decoration-none !!! #}
+                <li class="breadcrumb-item"><a href="{{ url_for('forum.view_thread', thread_id=thread.id) }}" class="link-light text-decoration-none" title="Gå til tråd: {{ thread.title }}">{{ thread.title | truncate(40) }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Rediger Indlæg (#{{ post.id }})</li>
+            {% else %}
+                 <li class="breadcrumb-item active" aria-current="page">Rediger Indlæg</li>
+            {% endif %}
+        </ol>
+    </nav>
+
+    {# ----- Side Titel ----- #}
+    <h1 class="h2 page-title mb-4"><i class="bi bi-pencil-square me-2"></i>Rediger Indlæg</h1>
+
+    {% if post %}
+        <div class="card dashboard-card shadow-sm edit-post-card">
+             {# !!! ÆNDRING: fjernet 'bg-light', tilføjet mørkere baggrund, sikret text-muted er lys !!! #}
+            <div class="card-header py-2" style="background-color: rgba(var(--bs-secondary-rgb), 0.05); border-bottom: 1px solid var(--border-color-dark);">
+                <h5 class="mb-0 small text-muted fw-normal">
+                    Redigerer indlæg #{{ post.id }} i tråden:
+                    {# !!! ÆNDRING: fjernet text-dark - CSS skal style strong !!! #}
+                    <strong class="fw-semibold" style="color: var(--font-color-base);">{{ post.thread.title | default('Ukendt Tråd') }}</strong>
+                </h5>
+            </div>
+             <div class="card-body p-4">
+
+                {{ render_form_errors(form) }} {# Form fejl først #}
+
+                {# ----> Selve Formular <---- #}
+                <form method="POST" action="{{ url_for('forum.edit_post', post_id=post.id) }}" id="editPostForm" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    {# --- Body Feltet --- #}
+                     {# Linket i help_text får klasse for styling #}
+                     {# Tilføjet rows=12 for lidt mere højde som standard #}
+                     {{ render_field_with_errors(form.body,
+                                                placeholder='Opdater dit indlæg her...',
+                                                help_text='Tip: Brug <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer" class="link-info">Markdown</a> til formatering.' | safe,
+                                                required=True)
+                    }}
+
+                    {# --- Knapper (Annuller / Gem) --- #}
+                     {# Adskilles med grå border #}
+                    <div class="d-flex justify-content-end align-items-center gap-2 pt-3 mt-3 border-top" style="border-color: var(--border-color-light-alpha) !important;">
+
+                         {# !!! ÆNDRING: Ændret til btn-secondary !!! #}
+                          <a href="{{ url_for('forum.view_thread', thread_id=post.thread_id | default(0), _anchor='post-' + post.id|string ) }}"
+                             class="btn btn-secondary" {# Solid grå knap #}
+                             title="Gå tilbage til tråden uden at gemme">Annuller</a>
+
+                         {# !!! ÆNDRING: Ændret til btn-success for konsistens med "Opret" ??? Eller behold btn-primary #}
+                          <button type="submit" class="btn btn-success" name="submit"> {# Grøn = Afslut/Bekræft handling #}
+                              <i class="bi bi-save me-1"></i> Gem Ændringer
+                          </button>
+
+                    </div>
+                 </form>
+             </div>
+         </div>
+
+    {% else %}
+        {# Fallback - ser OK ud med standard alert-danger #}
+        <div class="alert alert-danger" role="alert">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i> Kan ikke indlæse indlægget! Indlægget, du prøver at redigere, findes muligvis ikke længere.
+          {# !!! ÆNDRING: Tilføjet link-light #}
+          <a href="{{ url_for('forum.index') }}" class="alert-link link-light">Gå til forumoversigt</a>.
+        </div>
+    {% endif %}
+
+</div> {# End container-fluid #}
+{% endblock %}
+
+{% block scripts_extra %} {# Ændret bloknavn #}
+{{ super() }} {# Sørger for at base.html's scripts loades først #}
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script src="{{ url_for('static', filename='js/forum_forms.js') }}"></script>
+{# The EasyMDE initialization is now in forum_forms.js #}
+{# The commented out script below is no longer needed here. #}
+{% endblock %}

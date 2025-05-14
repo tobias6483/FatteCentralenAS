@@ -1,0 +1,328 @@
+{# templates/_macros.html - Makro-bibliotek for genbrugelige HTML-komponenter #}
+{#
+    INDEHOLDER:
+    - render_pagination: Viser pagination links (Bootstrap 5 stil).
+    - user_avatar: Viser en brugers avatar (forventer dict), linker evt. til profil.
+    - render_form_errors: Viser generelle (ikke-felt-specifikke) fejl fra en WTForm.
+    - render_field_with_errors: Gengiver et enkelt WTForms felt med label, input og fejl/hjælp (Bootstrap 5).
+#}
+
+{# ====================================================== #}
+{#                  PAGINATION MAKRO                      #}
+{# ====================================================== #}
+{% macro render_pagination(current_page, items_per_page, total_items, endpoint, view_args={}, nav_class='justify-content-center', size_class='pagination-sm') %}
+  {#
+     Gengiver pagination links baseret på manuelt beregnede værdier.
+     Args:
+       current_page (int): Den nuværende side (1-baseret).
+       items_per_page (int): Antal elementer per side.
+       total_items (int): Det totale antal elementer.
+       endpoint (str): Flask endpoint navnet til links (f.eks. 'forum.search').
+       view_args (dict): Dictionary med ekstra view argumenter (f.eks. {'q': 'search_term'}).
+       nav_class (str): Justering for <ul> (f.eks. 'justify-content-end').
+       size_class (str): Størrelsesklasse ('pagination-sm' eller 'pagination-lg' eller '').
+  #}
+  {% if total_items is not none and items_per_page > 0 %}
+    {% set total_pages = (total_items + items_per_page - 1) // items_per_page %}
+    {% if total_pages > 1 %}
+      <nav aria-label="Side navigation">
+        <ul class="pagination {{ nav_class }} {{ size_class }}">
+
+          {# --- Forrige Side Knap --- #}
+          {% set has_prev = current_page > 1 %}
+          {% set prev_num = current_page - 1 if has_prev else 1 %}
+          {% set prev_url = url_for(endpoint, **({'page': prev_num} | dict(view_args or {}))) if has_prev else '#' %}
+          <li class="page-item {% if not has_prev %}disabled{% endif %}">
+            <a class="page-link" href="{{ prev_url }}" aria-label="Gå til forrige side">
+              <span aria-hidden="true">«</span>
+            </a>
+          </li>
+
+          {# --- Side Nummere (Simpel implementering - kan udvides med iter_pages logik) --- #}
+          {# Viser et begrænset antal sider omkring den nuværende #}
+          {% set window = 2 %} {# Antal sider før/efter den nuværende #}
+          {% set show_first = current_page > window + 1 %}
+          {% set show_last = current_page < total_pages - window %}
+          {% set start_page = max(1, current_page - window) %}
+          {% set end_page = min(total_pages, current_page + window) %}
+
+          {% if show_first %}
+            {% set page_url = url_for(endpoint, **({'page': 1} | dict(view_args or {}))) %}
+            <li class="page-item"><a class="page-link" href="{{ page_url }}">1</a></li>
+            {% if start_page > 2 %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+          {% endif %}
+
+          {% for page_num in range(start_page, end_page + 1) %}
+            {% if page_num == current_page %}
+              <li class="page-item active" aria-current="page">
+                <span class="page-link">{{ page_num }}</span>
+              </li>
+            {% else %}
+              {% set page_url = url_for(endpoint, **({'page': page_num} | dict(view_args or {}))) %}
+              <li class="page-item">
+                <a class="page-link" href="{{ page_url }}">{{ page_num }}</a>
+              </li>
+            {% endif %}
+          {% endfor %}
+
+          {% if show_last %}
+            {% if end_page < total_pages - 1 %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+            {% set page_url = url_for(endpoint, **({'page': total_pages} | dict(view_args or {}))) %}
+            <li class="page-item"><a class="page-link" href="{{ page_url }}">{{ total_pages }}</a></li>
+          {% endif %}
+
+          {# --- Næste Side Knap --- #}
+          {% set has_next = current_page < total_pages %}
+          {% set next_num = current_page + 1 if has_next else total_pages %}
+          {% set next_url = url_for(endpoint, **({'page': next_num} | dict(view_args or {}))) if has_next else '#' %}
+          <li class="page-item {% if not has_next %}disabled{% endif %}">
+            <a class="page-link" href="{{ next_url }}" aria-label="Gå til næste side">
+              <span aria-hidden="true">»</span>
+            </a>
+          </li>
+
+        </ul>
+      </nav>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+
+{# ====================================================== #}
+{#                   USER AVATAR MAKRO                    #}
+{# ====================================================== #}
+{% macro user_avatar(user_data, size='md', link_to_profile=True, img_class='', link_class='') %}
+  {#
+     Gengiver en brugers avatar, primært baseret på en dictionary `user_data`.
+     Forventer at `user_data` kan indeholde:
+       - 'username': Nødvendig for at linke til profilen.
+       - 'avatar_url': Den relative sti til avataren ELLER en absolut URL.
+                       Hvis denne ikke findes, er tom, eller resulterer i fejl, bruges default.
+       - 'display_name': Vist navn (falder tilbage til username).
+
+     Args:
+       user_data (dict/None): Dictionary med bruger info eller None.
+       size (str): Avatar størrelse ('xs', 'sm', 'md', 'lg'). Default 'md'.
+       link_to_profile (bool): Om avataren skal linke til profilen. Default True.
+       img_class (str): Ekstra klasser til <img> tag.
+       link_class (str): Ekstra klasser til <a> tag (hvis link bruges).
+  #}
+  {# Sikker adgang til data, brug defaults hvis 'user_data' er None eller tom #}
+  {% set _user_data = user_data if user_data is mapping else {} %}
+  {% set username = _user_data.get('username', '') %}
+  {% set user_display_name = _user_data.get('display_name', username or 'Ukendt Bruger') %}
+  {% set user_avatar_source = _user_data.get('avatar_url', '').strip() %} {# Henter stien/URL fra data #}
+
+  {# Definer standard avatar stien (relativ til static) #}
+  {% set default_avatar_filename = 'avatars/default_avatar.png' %}
+  {% set fallback_avatar_url = url_for('static', filename=default_avatar_filename) %}
+
+  {# ---- Logik til at bestemme den ENDELIGE avatar URL ---- #}
+  {% set final_avatar_url = fallback_avatar_url %} {# Start med fallback #}
+  {% if user_avatar_source %}
+      {# Hvis kilden er en absolut URL, brug den direkte #}
+      {% if user_avatar_source.startswith(('http://', 'https://', '//')) %}
+          {% set final_avatar_url = user_avatar_source %}
+      {# Ellers, behandl som en filsti relativ til 'static' #}
+      {% else %}
+          {# Fjern eventuelt ledende '/static/' før brug i url_for #}
+          {% set clean_filename = user_avatar_source[8:] if user_avatar_source.startswith('/static/') else user_avatar_source %}
+          {% set final_avatar_url = url_for('static', filename=clean_filename) %}
+      {% endif %}
+  {% endif %}
+
+  {# Bestem størrelse klasse #}
+  {% set size_map = {'xs': 24, 'sm': 32, 'md': 48, 'lg': 64} %}
+  {% set pixel_size = size_map.get(size, 48) %}
+  {% set size_class = 'avatar-' + size if size in size_map else 'avatar-md' %}
+
+  {# Forbedret alt-tekst for tilgængelighed #}
+  {% set alt_text = "Avatar for " + user_display_name if user_display_name != 'Ukendt Bruger' else "Standard brugeravatar" %}
+
+  {# Byg selve <img> tagget #}
+  {% set img_tag %}
+      <img src="{{ final_avatar_url }}"
+           alt="{{ alt_text }}"
+           class="avatar rounded-circle {{ size_class }} {{ img_class }}"
+           onerror="this.onerror=null; this.src='{{ fallback_avatar_url }}';" {# Sørg for altid at have en fungerende fallback #}
+           loading="lazy" {# Forbedrer performance ved mange avatarer #}
+           width="{{ pixel_size }}" {# Eksplicit width/height for CLS #}
+           height="{{ pixel_size }}">
+  {% endset %}
+
+  {# Pak ind i Link hvis relevant #}
+  {% if link_to_profile and username %}
+      <a href="{{ url_for('main.profile', username=username) }}"
+         class="user-avatar-link {{ link_class }}"
+         title="Se profil: {{ user_display_name }}"> {# Tilføjet title for bedre UX #}
+          {{ img_tag | safe }} {# Indsæt billede tagget #}
+      </a>
+  {% else %}
+      {{ img_tag | safe }} {# Vis kun billede uden link #}
+  {% endif %}
+{% endmacro %}
+
+
+{# ====================================================== #}
+{#                   FORM ERRORS MAKRO                    #}
+{# ====================================================== #}
+{% macro render_form_errors(form, only_general=True) %}
+  {#
+     Gengiver IKKE-felt-specifikke fejl for en WTForm.
+     Fokuserer på CSRF og evt. brugerdefinerede globale fejl.
+
+     Args:
+       form: WTForms form objektet.
+       only_general: Hvis True, vises KUN fejl hvis nøgle ikke matcher et kendt feltnavn.
+  #}
+  {% if form.errors %}
+    <div class="form-errors mb-3"> {# Wrapper div #}
+    {% for field_name, error_list in form.errors.items() %}
+        {# Check om fejlnøglen matcher et kendt felt i formen #}
+        {% set is_field_specific = field_name in form %}
+        {% set is_csrf_error = field_name == 'csrf_token' %}
+
+        {# Vis fejlen HVIS:
+           1. Det er en CSRF-fejl.
+           ELLER
+           2. Vi kun skal vise generelle fejl (only_general=True) OG fejlen *ikke* er feltspecifik.
+        #}
+        {% if is_csrf_error or (only_general and not is_field_specific) %}
+             <div class="alert alert-danger alert-dismissible fade show small p-2 mb-1" role="alert"> {# Lidt mindre styling #}
+                 <i class="bi bi-exclamation-triangle-fill me-1"></i> {# Opdateret ikon #}
+                 {% if is_csrf_error %}
+                     Sikkerhedsfejl. Formular sessionen kan være udløbet. Prøv at indsende igen.
+                 {% else %}
+                     {# Giver mening at vise feltnavnet her for debug, selvom det er "generelt" #}
+                     {% if field_name %}<strong>{{ field_name }}:</strong> {% endif %}{{ error_list | join('; ') }}
+                 {% endif %}
+                 <button type="button" class="btn-close btn-sm p-2" data-bs-dismiss="alert" aria-label="Luk"></button> {# Lidt større klik-område #}
+             </div>
+        {% endif %}
+    {% endfor %}
+    </div>
+  {% endif %}
+{% endmacro %}
+
+
+{# ====================================================== #}
+{#          FORM FIELD MAKRO (REVIDERET IGEN - FIX 3)      #}
+{# ====================================================== #}
+{# Denne version fjerner **kwargs fra signaturen og bruger #}
+{# Jinja's 'kwargs' context variable til at hente ekstra #}
+{# argumenter.                                           #}
+{# ====================================================== #}
+{% macro render_field_with_errors(field, placeholder=None, help_text='', label_class='', input_class='', required=None, hide_label=False) %} {# Removed **kwargs from signature #}
+  {#
+     Gengiver et enkelt WTForms felt (input, textarea, select) med Bootstrap 5 styling.
+     Inkluderer label, felt, fejl, hjælpetekst og aria attributter.
+
+     Args:
+       field: WTForms felt objekt (f.eks. form.title).
+       placeholder (str/None): Input placeholder (prioriteres over render_kw). Hvis None, bruges render_kw.
+       help_text (str): Hjælpende tekst under feltet. Kan indeholde HTML.
+       label_class (str): Ekstra klasser til <label>.
+       input_class (str): Ekstra klasser til <input>/<textarea>/<select>.
+       required (bool/None): Tving visning af '*' (hvis None, tages fra feltets validators).
+       hide_label (bool): Hvis True, skjules label visuelt (men er der for screen readers).
+  #}
+  {# ----- 1. Forberedelse ----- #}
+  {% set field_id = field.id %}
+  {% set is_required = (required is sameas true) or (required is none and field.flags.required) %}
+  {% set has_errors = field.errors %}
+
+  {# Definer ID'er for aria-describedby #}
+  {% set help_id = field_id + '-help' if help_text else none %}
+  {% set error_id = field_id + '-error' if has_errors else none %}
+  {% set describedby_ids = [] %}
+  {% if help_id and not error_id %}{% set _ = describedby_ids.append(help_id) %}{% endif %}
+  {% if error_id %}{% set _ = describedby_ids.append(error_id) %}{% endif %}
+  {% set aria_describedby = describedby_ids | join(' ') if describedby_ids else none %}
+
+  {# ----- 2. Byg feltets attributter (final_attrs) ----- #}
+  {% set final_attrs = {} %}
+
+  {# --- a) Start med render_kw (hvis det findes) --- #}
+  {% if field.render_kw is mapping %}
+      {% set final_attrs = final_attrs.update(field.render_kw) %} {# Opdaterer inplace, returnerer None #}
+      {% set final_attrs = field.render_kw.copy() %} {# Sikrere at kopiere #}
+  {% endif %}
+
+
+  {# --- b) Byg Klasser og overskriv evt. render_kw['class'] --- #}
+  {% set base_css_class = 'form-select' if field.type in ['SelectField', 'SelectMultipleField'] else 'form-control' %}
+  {% set error_class = ' is-invalid' if has_errors else '' %}
+  {% set size_class = '' %}
+  {% if 'form-control-sm' in input_class or 'form-select-sm' in input_class %}
+      {% set size_class = ' form-control-sm' if 'form-control' in base_css_class else ' form-select-sm' %}
+  {% elif 'form-control-lg' in input_class or 'form-select-lg' in input_class %}
+      {% set size_class = ' form-control-lg' if 'form-control' in base_css_class else ' form-select-lg' %}
+  {% endif %}
+  {# Hent class fra render_kw, hvis den var der, ellers tom streng #}
+  {% set render_kw_class = final_attrs.get('class', '') %}
+  {% set combined_classes = (base_css_class + size_class + error_class + ' ' + input_class + ' ' + render_kw_class)|trim|replace('  ',' ') %}
+  {% set _ = final_attrs.update({'class': combined_classes }) %}
+
+  {# --- c) Merge extra kwargs passed to the macro call (like autocomplete, type etc.) using Jinja's 'kwargs' variable --- #}
+  {% if kwargs %} {# Check if any extra keyword arguments were passed #}
+      {% for key, value in kwargs.items() %}
+          {# Only add if not already handled explicitly (like class, placeholder, required, aria-*) #}
+          {% if key not in ['class', 'placeholder', 'required', 'aria-describedby', 'aria-invalid'] %}
+              {% set _ = final_attrs.update({key: value}) %}
+          {% endif %}
+      {% endfor %}
+  {% endif %}
+
+  {# --- d) Håndter Placeholder (overskriver render_kw['placeholder'] hvis makro arg er sat) --- #}
+  {% if placeholder is not none %}
+      {% set final_placeholder = placeholder %}
+      {% set _ = final_attrs.update({'placeholder': final_placeholder}) %}
+  {% elif 'placeholder' not in final_attrs or not final_attrs.placeholder %} {# Hvis der ikke var en fra render_kw ELLER den er tom #}
+      {# Fjern placeholder hvis den er tom for at undgå f.eks. placeholder="" #}
+       {% if 'placeholder' in final_attrs %}{% set _ = final_attrs.pop('placeholder') %}{% endif %}
+  {% endif %}
+
+
+  {# --- d) ARIA Attributter og Required (overskriver altid evt. render_kw værdier) --- #}
+  {% if aria_describedby %}{% set _ = final_attrs.update({'aria-describedby': aria_describedby}) %}{% else %}{% if 'aria-describedby' in final_attrs %}{% set _ = final_attrs.pop('aria-describedby') %}{% endif %}{% endif %}
+  {% if has_errors %}{% set _ = final_attrs.update({'aria-invalid': 'true'}) %}{% else %}{% if 'aria-invalid' in final_attrs %}{% set _ = final_attrs.pop('aria-invalid') %}{% endif %}{% endif %}
+  {% if is_required %}{% set _ = final_attrs.update({'required': 'required'}) %}{% else %}{% if 'required' in final_attrs %}{% set _ = final_attrs.pop('required') %}{% endif %}{% endif %}
+
+  {# --- e) Slet potentielt tomme standard attributter (gør HTML renere) ---#}
+  {# Vi har allerede håndteret placeholder ovenfor #}
+  {% if not final_attrs.get('class', '').strip() %}{% set _ = final_attrs.pop('class', None) %}{% endif %}
+
+
+  {# ----- 3. Start Output ----- #}
+  <div class="mb-3 field-wrapper field-type-{{ field.type|lower|replace('field','') }} field-{{ field_id }}">
+
+    {# --- a) Label --- #}
+    {% set final_label_class = "form-label " + label_class %}
+    {% if hide_label %}
+        {% set final_label_class = final_label_class + " visually-hidden" %}
+    {% endif %}
+    {{ field.label(class=final_label_class.strip()) }}
+    {% if not hide_label and is_required %}<span class="text-danger ms-1" aria-hidden="true">*</span>{% endif %}
+
+    {# --- b) Feltet Selv --- #}
+    {{ field(**final_attrs) }} {# <-- Kalder stadig med den samlede dictionary #}
+
+    {# --- c) Fejl Meddelelser / Hjælp Tekst --- #}
+    {% if error_id %}
+      <div class="invalid-feedback mt-1" id="{{ error_id }}">
+        {% for error in field.errors %}
+          <span>{{ error }}</span>{% if not loop.last %}<br>{% endif %}
+        {% endfor %}
+      </div>
+    {% elif help_id %}
+      <div class="form-text small text-muted mt-1" id="{{ help_id }}">
+         {{ help_text | safe }}
+      </div>
+    {% endif %}
+
+  </div> {# End field wrapper #}
+{% endmacro %}

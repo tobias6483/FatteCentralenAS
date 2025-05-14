@@ -1,0 +1,196 @@
+{# templates/forum/category.html - Viser tråde i en kategori - OPDATERET #}
+{% extends "base.html" %}
+{# Importer makroer for pagination og brugeravatar #}
+{% from "_macros.html" import render_pagination, user_avatar %}
+
+{% set category_name = category.name | default('Ukendt Kategori') %} {# Sikker adgang #}
+{% block title %}{{ category_name }} - Forum - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4 forum-container">
+
+    {# ----- Breadcrumbs ----- #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb" style="--bs-breadcrumb-divider: '>'; background-color: transparent; padding: 0;">
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}" class="link-light text-decoration-none">Forum Oversigt</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ category_name }}</li>
+        </ol>
+    </nav>
+
+    {# ----- Kategori Hoved ----- #}
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2 page-header">
+        {# Kategori Titel og Beskrivelse #}
+        <div>
+            <h1 class="h2 page-title mb-1 d-flex align-items-center">
+                <i class="bi {{ category.icon | default('bi-folder') }} me-2 fs-3"></i>{{ category_name }}
+            </h1>
+            {% if category.description %}
+                <p class="text-muted mb-0">{{ category.description }}</p>
+            {% endif %}
+        </div>
+        {# Knap til Ny Tråd #}
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('forum.create_thread', category_slug=category.slug) }}" class="btn btn-success flex-shrink-0">
+                <i class="bi bi-plus-lg me-1"></i> Ny Tråd
+            </a>
+        {% endif %}
+    </div>
+
+   {# --- Search Form --- #}
+   <div class="mb-4">
+       <form action="{{ url_for('forum.search') }}" method="get" class="row g-2">
+           <div class="col">
+               <input type="search" name="q" class="form-control form-control-sm" placeholder="Søg i forum..." value="{{ request.args.get('q', '') }}" aria-label="Søg i forum">
+           </div>
+           <div class="col-auto">
+               <button class="btn btn-sm btn-primary" type="submit"><i class="bi bi-search"></i> Søg</button>
+           </div>
+       </form>
+   </div>
+   {# --- End Search Form --- #}
+
+   {# ----- Top Pagination ----- #}
+   {% if pagination and pagination.pages > 1 %}
+        <div class="d-flex justify-content-end mb-3">
+            {{ render_pagination(pagination, 'forum.view_category', view_args={'category_slug': category.slug}) }}
+        </div>
+    {% endif %}
+
+    {# ----- Liste af Tråde ----- #}
+    <div class="card dashboard-card list-card mb-4 shadow-sm forum-category-list">
+        {# Kolonneoverskrifter #}
+        <div class="card-header d-none d-md-block fw-bold text-muted small text-uppercase"
+             style="background-color: rgba(var(--bs-secondary-rgb), 0.05); letter-spacing: 0.5px;">
+            <div class="row g-0 align-items-center">
+                <div class="col-md-6 ps-5">Tråd / Startet af</div>
+                <div class="col-md-2 text-center">Svar / Visninger</div>
+                <div class="col-md-4 text-end pe-3">Seneste Indlæg</div>
+            </div>
+        </div>
+
+        <div class="card-body list-card-body p-0">
+            <ul class="list-group list-group-flush forum-list">
+                {% set threads_on_page = pagination.items if pagination else [] %}
+                {% if threads_on_page %}
+                    {% for thread in threads_on_page %}
+                        {# --- Data Forberedelse --- #}
+                        {# === KORRIGERET HER: Hent post_count og beregn reply_count === #}
+                        {% set current_post_count = thread_counts.get(thread.id, 0) %}
+                        {% set reply_count = max(0, current_post_count - 1) %}
+                        {# ============================================================== #}
+                        {% set starter_details = all_authors_data.get(thread.author_username, {}) %}
+                        {% set starter_username_display = starter_details.get('username', thread.author_username) %}
+                        {% set latest_post_raw = last_post_info.get(thread.last_post_id, {}) if thread.last_post_id else {} %}
+                        {% set last_poster_username = latest_post_raw.get('author_username') %}
+                        {% set last_poster_details = all_authors_data.get(last_poster_username, {}) if last_poster_username else {} %}
+                        {% set last_poster_username_display = last_poster_details.get('username', last_poster_username) %}
+                        {% set last_post_time = latest_post_raw.get('created_at') %}
+
+                        {# ----- Tråd Række ----- #}
+                        <li class="list-group-item p-3 thread-item {% if thread.is_sticky %}sticky-thread{% endif %}" data-animation-delay="{{ loop.index0 * 0.03 }}s" style="animation-delay: var(--animation-delay, 0s);">
+                            <div class="row g-0 align-items-center">
+
+                                {# --- Kolonne 1: Ikon, Titel & Starter Info --- #}
+                                <div class="col-12 col-md-6 d-flex align-items-center mb-2 mb-md-0">
+                                    <div class="forum-item-icon fs-4 me-3 text-center flex-shrink-0" style="width: 30px;">
+                                        {# Ikon logik (Bruger reply_count korrekt nu) #}
+                                        {% if thread.is_locked %}<i class="bi bi-lock-fill text-warning" title="Tråden er låst for svar"></i>
+                                        {% elif thread.is_sticky %}<i class="bi bi-pin-angle-fill text-info" title="Fasthæftet tråd"></i>
+                                        {% elif reply_count > 15 %}<i class="bi bi-chat-left-dots-fill text-primary" title="Aktiv tråd"></i>
+                                        {% else %}<i class="bi bi-chat-left text-muted"></i>{% endif %}
+                                    </div>
+                                    <div class="forum-item-info flex-grow-1 text-break">
+                                        {# Trådens Titel #}
+                                        <a href="{{ url_for('forum.view_thread', thread_id=thread.id) }}" class="item-title fw-bold text-decoration-none fs-6 mb-0 d-block">
+                                            {{ thread.title | default('Ubenævnt Tråd') }}
+                                        </a>
+                                        {# Starter Info #}
+                                        <span class="item-description d-block small text-muted">
+                                             <a href="{{ url_for('main.profile', username=starter_username_display) if starter_username_display else '#' }}"
+                                                class="{{ '' if starter_username_display else 'fst-italic text-danger' }} fw-normal text-decoration-none">
+                                                 {{ starter_username_display | title if starter_username_display else '[Slettet]' }}
+                                             </a>
+                                            <span title="Tråd oprettet {{ thread.created_at | dt(format='long') }}">- {{ thread.created_at | dt(relative=True) }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                {# --- Kolonne 2: Stats (Svar / Visninger) --- #}
+                                <div class="col-5 col-md-2 text-center text-md-center order-md-2 small ps-md-0 ps-5">
+                                    {# Viser reply_count korrekt nu #}
+                                    <span class="forum-item-stats text-muted d-block d-md-inline-block me-md-3" title="{{ reply_count }} svar">
+                                        Svar
+                                        <strong class="d-block d-md-inline fw-semibold">{{ reply_count }}</strong>
+                                    </span>
+                                    <span class="forum-item-stats text-muted d-block d-md-inline-block" title="{{ thread.view_count | default(0) }} visninger">
+                                        Visn.
+                                        <strong class="d-block d-md-inline fw-semibold">{{ thread.view_count | default(0) }}</strong>
+                                    </span>
+                                </div>
+
+                                {# --- Kolonne 3: Seneste Indlæg --- #}
+                                <div class="col-7 col-md-4 text-end order-md-3">
+                                     {% if last_poster_username %}
+                                         <div class="forum-item-latest small d-flex align-items-center justify-content-end">
+                                             <div class="text-end me-2 text-truncate">
+                                                {# === KORRIGERET HER: Brug current_post_count til sideberegning === #}
+                                                {% set last_page_num = (current_post_count + pagination.per_page - 1) // pagination.per_page if pagination.per_page else 1 %}
+                                                {# ==================================================================== #}
+                                                <a href="{{ url_for('forum.view_thread', thread_id=thread.id, page=last_page_num, _anchor='post-' + (thread.last_post_id|string) ) }}"
+                                                   class="link-light fw-medium text-decoration-none"
+                                                   title="Gå til seneste indlæg af {{ last_poster_username_display | default('Ukendt') }}">
+                                                     {{ last_poster_username_display | title if last_poster_username_display else '[Slettet]' }}
+                                                 </a>
+                                                 <span class="latest-time d-block text-muted" title="{{ last_post_time | dt(format='long') }}">
+                                                     {{ last_post_time | dt(relative=True) }}
+                                                </span>
+                                             </div>
+                                             <a href="{{ url_for('main.profile', username=last_poster_username_display) if last_poster_username_display else '#' }}"
+                                                class="flex-shrink-0"
+                                                title="Se profil: {{ last_poster_username_display }}">
+                                                  {{ user_avatar(user_data=last_poster_details, size='sm') }}
+                                             </a>
+                                         </div>
+                                     {% else %}
+                                          <span class="small text-muted fst-italic">Ingen aktivitet</span>
+                                     {% endif %}
+                                 </div> {# End Kolonne 3 #}
+                             </div> {# End .row #}
+                         </li>
+                     {% endfor %} {# End thread loop #}
+                 {% else %}
+                      <li class="list-group-item text-muted text-center p-4">
+                          <i class="bi bi-journal-bookmark me-2 fs-4 align-middle"></i>Der er ingen tråde i denne kategori endnu.
+                          {% if current_user.is_authenticated %}
+                              <a href="{{ url_for('forum.create_thread', category_slug=category.slug) }}" class="btn btn-sm btn-outline-success ms-3">
+                                 <i class="bi bi-pencil me-1"></i> Opret den Første Tråd!
+                              </a>
+                          {% endif %}
+                      </li>
+                  {% endif %} {# End check for threads_on_page #}
+             </ul> {# End list-group #}
+         </div> {# End card-body #}
+     </div> {# End card #}
+
+    {# ----- Bund Pagination ----- #}
+        {% if pagination and pagination.pages > 1 %}
+            <div class="d-flex justify-content-end">
+                  {{ render_pagination(pagination, 'forum.view_category', view_args={'category_slug': category.slug}) }}
+            </div>
+        {% endif %}
+
+    </div> {# End container-fluid #}
+    {% endblock %} {# Slut på content block #}
+
+
+    {# === TILFØJET SCRIPTS BLOK HER === #}
+    {% block scripts_extra %}
+        {{ super() }} {# Sørger for at base.html's scripts loades først #}
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('[data-animation-delay]').forEach(function (element) {
+                    element.style.setProperty('--animation-delay', element.dataset.animationDelay);
+                });
+            });
+        </script>
+    {% endblock %}

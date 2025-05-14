@@ -1,0 +1,182 @@
+/* ==========================================================
+   LEADERBOARD PAGE STYLES - OPGRADERET & KORRIGERET
+   static/css/leaderboard.css
+   ========================================================== */
+
+/* ----- Generel Side & Header ----- */
+.page-title {
+    color: var(--font-color-header, #f1f3f5);
+}
+.page-title i {
+    color: var(--primary-color);
+    font-size: 0.9em;
+    vertical-align: baseline;
+}
+
+#refreshLeaderboardBtn {
+    /* Bruger global knap styling */
+}
+#refreshLeaderboardBtn i.btn-icon {
+    vertical-align: -0.1em; /* Finjuster ikon lodret */
+}
+
+/* ----- Fejlmeddelelse ----- */
+.error-message { /* Bruger global .alert styling */ }
+
+/* ----- Leaderboard Kort Styling ----- */
+.leaderboard-main-card { /* Bruger .dashboard-card */ }
+.leaderboard-main-card .card-header {
+    background-color: var(--secondary-bg-hover, #343a40) !important; /* Lidt mørkere */
+    border-bottom: 1px solid var(--border-color-dark, #495057);
+    font-weight: 600;
+    color: var(--font-color-header, #f1f3f5); /* Lysere tekst */
+}
+.leaderboard-main-card .card-header i {
+    color: var(--primary-color);
+    opacity: 0.9;
+    margin-right: 0.4rem; /* Lidt plads */
+}
+.leaderboard-main-card .card-footer {
+    background-color: transparent; /* Transparent */
+    border-top: 1px solid var(--border-color-light-alpha, rgba(255, 255, 255, 0.1));
+}
+
+/* ----- Tabel Styling - Korrigeret ----- */
+.leaderboard-table {
+    /* Sørg for, at .table-dark stilarter fra Bootstrap anvendes */
+    /* HTML skal have <table class="table table-dark ..."> */
+    margin-bottom: 0; /* Vigtigt for p-0 på card-body */
+    /* Standard lys tekst for mørk tabel */
+    --bs-table-color: var(--font-color-base, #dee2e6);
+    --bs-table-bg: transparent; /* Arver fra kort */
+    --bs-table-border-color: var(--border-color-dark, #495057); /* Mørk kant */
+    /* Striped i mørkt tema */
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.04); /* Meget subtil lys stribe */
+    --bs-table-striped-color: var(--font-color-base, #dee2e6); /* Samme tekstfarve */
+    /* Hover i mørkt tema */
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.07); /* Lidt mere synlig hover */
+    --bs-table-hover-color: var(--font-color-highlight, #fff); /* Lysere tekst ved hover */
+}
+
+/* Generel celle styling */
+.leaderboard-table > :not(caption) > * > * { /* Gælder th, td */
+    /* Ingen grund til background-color: transparent !important her længere */
+    box-shadow: none !important;
+    vertical-align: middle;
+    padding: 0.6rem 0.8rem; /* Konsistent padding */
+    color: inherit; /* Arv farve fra tr/table */
+}
+
+/* Header Styling */
+.leaderboard-table thead th {
+    color: var(--font-color-muted, #adb5bd);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color-medium, #6c757d) !important; /* Tydeligere */
+    white-space: nowrap;
+    padding: 0.75rem 0.8rem; /* Lidt mere padding i header */
+    background-color: var(--secondary-bg-hover, #343a40); /* Match card header */
+}
+.leaderboard-table thead th i:not(.sort-icon) {
+    margin-right: 0.4rem; opacity: 0.7; font-size: 1em; vertical-align: baseline;
+}
+.leaderboard-table thead th .sort-icon { opacity: 0.4; margin-left: 0.3rem; }
+
+
+/* Kolonne Specifikke Headers/Cells (Justerede bredder) */
+.leaderboard-table .rank-col { width: 5%; }
+.leaderboard-table .medal-col { width: 8%; }
+.leaderboard-table .user-col { width: auto; /* Fleksibel bredde */ }
+.leaderboard-table .balance-col { width: 20%; }
+.leaderboard-table .wins-col { width: 10%; text-align: center; }
+.leaderboard-table .max-win-col { width: 20%; }
+
+
+/* Celle styling (TD) */
+.leaderboard-table tbody td {
+    font-size: 0.9rem;
+    border-top: 1px solid var(--bs-table-border-color) !important; /* Brug Bootstrap variabel */
+}
+
+/* Bruger Kolonne Styling */
+.leaderboard-table td.user-col a {
+    display: flex; align-items: center; gap: 0.6rem; /* Lidt mere luft */
+    text-decoration: none; color: inherit; font-weight: 500;
+}
+.leaderboard-table td.user-col a:hover { color: var(--primary-hover); }
+
+/* Avatar */
+.leaderboard-avatar {
+    width: 28px; height: 28px; border-radius: 50%; object-fit: cover;
+    background-color: var(--secondary-bg-hover); /* Mørk fallback */
+    border: 1px solid var(--border-color-light-alpha);
+    flex-shrink: 0;
+}
+
+
+/* Medalje Ikoner (Brug Font Awesome eller Bootstrap ikoner for konsistens) */
+.medal-icon { /* Erstatter den gamle klasse - brug BI/FA direkte */
+    font-size: 1.2rem;
+    vertical-align: -0.1em; /* Juster */
+    line-height: 1;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+/* Brug disse farver i HTML via inline style ELLER ved at definere farve-specifikke klasser */
+.medal-gold { color: gold !important; } /* #FFD700 */
+.medal-silver { color: silver !important; } /* #C0C0C0 */
+.medal-bronze { color: #CD7F32 !important; }
+
+
+/* Top Rank Highlighting - KORRIGERET BAGGRUND */
+.leaderboard-table tbody tr.top-rank {
+  /* Generel styling, f.eks.: font-weight: 500; */
+}
+.leaderboard-table tbody tr.rank-1 {
+    border-left: 4px solid var(--warning-color, gold); /* Brug --warning-color eller 'gold' */
+    /* == NY BAGGRUND: Mindre transparent, justeret for mørk tema == */
+    --bs-table-accent-bg: rgba(255, 215, 0, 0.10) !important; /* Lysere guld med MERE synlighed */
+}
+.leaderboard-table tbody tr.rank-2 {
+    border-left: 4px solid var(--secondary-color, silver); /* Brug --secondary-color eller 'silver' */
+    /* Baggrund - subtil grålig */
+    --bs-table-accent-bg: rgba(192, 192, 192, 0.08) !important;
+}
+.leaderboard-table tbody tr.rank-3 {
+    border-left: 4px solid #A0522D; /* Lidt mørkere, rigere bronze */
+    /* Baggrund - subtil bronze */
+    --bs-table-accent-bg: rgba(160, 82, 45, 0.10) !important;
+}
+/* Overstyr hover effekt en smule for highlighted rows, så accent bg forbliver */
+.leaderboard-table.table-hover > tbody > tr.rank-1:hover > *,
+.leaderboard-table.table-hover > tbody > tr.rank-2:hover > *,
+.leaderboard-table.table-hover > tbody > tr.rank-3:hover > * {
+    /* Behold den accentuerede baggrund ved hover, men lysn teksten */
+    color: var(--bs-table-hover-color, #fff) !important;
+    background-color: var(--bs-table-accent-bg) !important; /* Sørg for den accentuerede bg ikke overskrives helt */
+}
+
+
+/* Loading/No Data rækker */
+#loadingRow td, #noDataRow td {
+    color: var(--font-color-muted, #adb5bd);
+    font-style: italic;
+    background-color: transparent !important; /* Ingen stribe/highlight */
+    border-bottom: none;
+}
+#loadingRow .spinner-border {
+    color: var(--primary-color); width: 1.2rem; height: 1.2rem;
+}
+
+/* Sidste opdateret (footer) */
+.leaderboard-main-card .card-footer {
+     font-size: 0.75rem; /* Mindre tekst */
+     font-style: italic;
+}
+
+/* Tilbage Knap */
+.text-center > .btn-outline-secondary {
+    /* Arver fra history.css eller global */
+    /* Evt. tilføj: margin-bottom: 1rem; for mere plads */
+}

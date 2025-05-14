@@ -1,0 +1,752 @@
+/* static/css/profile.css */
+
+/* ==================================================
+   PROFIL SIDE SPECIFIK STYLING - KOMPLET v5
+   - Inkluderer tabel fix og fuld opgradering
+   ================================================== */
+
+/* ----- Generelle Sidestrukturer ----- */
+.profile-header {
+    margin-bottom: 1.75rem; /* Lidt mere luft under header */
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-color-medium, #6c757d); /* Brug medium kant */
+}
+.profile-header h2 {
+    color: var(--font-color-header, #f1f3f5); /* Specifik header farve */
+    margin-bottom: 0; /* Fjerner bundmargin fra h2 */
+}
+.profile-header h2 i {
+    color: var(--primary-color, #00cca3); /* Ikon i header */
+    opacity: 0.9; /* Let dæmpning */
+    margin-right: 0.5rem;
+}
+/* Knapper i header (Generelle/Primære) */
+.profile-header .btn {
+    transition: all 0.2s ease-in-out;
+    padding: 0.3rem 0.7rem; /* Lettere padding for små knapper */
+    font-size: 0.9rem; /* Lidt mindre skrift */
+    border-radius: var(--bs-border-radius-sm); /* Let afrunding */
+}
+.profile-header .btn-outline-secondary {
+    border-color: var(--border-color-medium, #6c757d); /* Medium kant */
+    color: var(--font-color-muted, #adb5bd);
+}
+.profile-header .btn-outline-secondary:hover {
+    background-color: var(--secondary-bg-hover, #343a40); /* Brug variabel hover bg */
+    border-color: var(--border-color-light, #adb5bd); /* Lysere kant på hover */
+    color: var(--font-color-base, #dee2e6);
+}
+.profile-header .btn-outline-primary {
+     border-color: var(--primary-color, #00cca3);
+     color: var(--primary-color, #00cca3);
+}
+.profile-header .btn-outline-primary:hover {
+    background-color: var(--primary-hover, #00b38f); /* Brug hover farve for bg */
+    border-color: var(--primary-hover, #00b38f);
+    color: var(--button-text-dark, #111); /* Mørkere tekst på lys knap */
+    box-shadow: 0 0 10px rgba(var(--primary-color-rgb), 0.5); /* Lidt mere glow - bruger RGB var */
+}
+
+
+/* ----- Profil Kort (Hovedkort: #profileInfoCard) ----- */
+.profile-card-main {
+    background-color: var(--card-bg, #212529); /* Brug primær kort baggrund */
+    border: 1px solid var(--border-color-medium, #495057); /* Medium border */
+    border-radius: var(--card-border-radius, 0.5rem); /* Brug variabel */
+    color: var(--font-color-base, #dee2e6);
+    box-shadow: var(--card-shadow-dark, 0 4px 12px rgba(0, 0, 0, 0.4)); /* Brug variabel */
+    overflow: hidden; /* Klip indhold */
+}
+.profile-card-main .card-header {
+    background-color: var(--card-header-bg, rgba(0, 0, 0, 0.15)); /* Brug variabel - Lidt mørkere */
+    border-bottom: 1px solid var(--border-color-medium, #495057);
+    color: var(--font-color-header, #f1f3f5); /* Specifik header farve */
+    font-weight: 600;
+    padding: 0.9rem 1.25rem; /* Lidt mere padding */
+}
+.profile-card-main .card-header i { /* Header ikon */
+   color: var(--primary-color, #00cca3);
+   margin-right: 0.6rem;
+   opacity: 0.9;
+}
+/* Rediger knap i header på hovedkort */
+.profile-card-main .card-header .btn-outline-primary {
+    border-color: var(--primary-color, #00cca3);
+    color: var(--primary-color, #00cca3);
+    padding: 0.2rem 0.5rem; /* Gør den lille */
+    font-size: 0.8rem;
+    float: right; /* Sørg for den er til højre */
+}
+.profile-card-main .card-header .btn-outline-primary:hover {
+    background-color: var(--primary-hover, #00b38f);
+    color: var(--button-text-dark, #111);
+}
+.profile-card-main .card-body {
+    padding: 1.75rem; /* Lidt mere plads */
+}
+
+/* Avatar specifikt */
+.profile-avatar {
+    width: 140px; /* Lidt større */
+    height: 140px;
+    object-fit: cover; /* Undgå distortion */
+    border-radius: 50%;
+    border: 5px solid var(--primary-color, #00cca3); /* Lidt tykkere kant */
+    background-color: var(--dark-bg, #1a1d20); /* Mørkere placeholder baggrund */
+    padding: 5px; /* Giver lidt luft indenfor kanten */
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.55); /* Stærkere skygge */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.profile-avatar:hover {
+    transform: scale(1.04); /* Lidt mere markant hover */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+}
+/* Knapper og feedback under avatar */
+#avatarActions label.btn { /* "Skift avatar..." label */
+   border-color: var(--border-color-medium, #6c757d);
+   color: var(--font-color-muted, #adb5bd);
+   transition: all 0.2s ease-in-out;
+   font-size: 0.9rem; /* Mindre skrift på knapper */
+   font-weight: 500;
+}
+#avatarActions label.btn:hover {
+   background-color: var(--secondary-bg-hover, #343a40);
+   border-color: var(--border-color-light, #adb5bd);
+   color: var(--font-color-highlight, #e9ecef);
+}
+#avatarActions button#submitAvatarBtn { /* "Upload" knap */
+    transition: all 0.2s ease-in-out;
+    font-size: 0.9rem;
+}
+#avatarFeedback {
+    color: var(--font-color-muted, #adb5bd);
+    font-size: 0.85rem;
+    margin-top: 0.5rem !important;
+    min-height: 1.5em; /* Plads til beskeder */
+    transition: color 0.3s ease;
+}
+#avatarFeedback.text-danger { /* Tydeligere fejl farve */
+     color: var(--danger-color, #ff4444);
+     font-weight: 500;
+}
+
+
+/* Bruger Detaljer i Hovedkort */
+.profile-card-main .h4#displayUsername { /* Target specifik ID */
+    color: var(--font-color-highlight, #ffffff);
+    font-weight: 600;
+    margin-bottom: 0.75rem; /* Lidt mere plads under navnet */
+}
+.profile-details-list { /* ul listen */
+    line-height: 1.7;
+    list-style: none; /* Sikrer ingen bullets */
+    padding-left: 0; /* Fjerner default ul padding */
+}
+.profile-details-list li {
+    display: flex;
+    align-items: baseline;
+    padding: 0.1rem 0;
+}
+.profile-details-list li i.fa-fw { /* Ikonerne */
+    color: var(--icon-color-muted, #8699ae);
+    width: 25px; /* Ensartet bredde */
+    text-align: center;
+    margin-right: 0.75rem; /* Lidt mere afstand */
+    flex-shrink: 0;
+}
+.profile-details-list li strong { /* Labels (f.eks., "Email:") */
+    color: var(--font-color-muted, #adb5bd);
+    font-weight: 500;
+    margin-right: 0.5em;
+    display: inline-block;
+    min-width: 90px; /* Ca. bredde */
+    flex-shrink: 0; /* Undgå de bliver klemt */
+}
+/* Selve værdierne */
+.profile-details-list li span { /* Gælder displayEmail, displayRegDate, etc. */
+    color: var(--font-color-base, #dee2e6);
+    font-weight: 500;
+    word-break: break-word; /* Kan ombryde lange emails/datoer */
+}
+.profile-details-list li #displayEmail .fst-italic { /* "Ikke angivet" / "Skjult" */
+    color: var(--font-color-muted, #adb5bd);
+}
+/* Speciel styling for UID */
+.profile-details-list li small.font-monospace {
+     color: var(--info-color, #17a2b8);
+     background-color: rgba(var(--info-color-rgb), 0.15);
+     padding: 0.2em 0.6em;
+     border-radius: var(--card-border-radius-sm, 0.375rem);
+     font-size: 0.85em;
+}
+/* Styling for inviter link */
+ .profile-details-list li a {
+     color: var(--link-color, #00cca3); /* Brug link variabel */
+     text-decoration: none;
+     font-weight: 500;
+     border-bottom: 1px dashed var(--link-hover-color, #00b38f);
+     transition: color 0.2s ease, border-color 0.2s ease;
+ }
+ .profile-details-list li a:hover {
+    color: var(--link-hover-color, #00b38f);
+    border-bottom-style: solid;
+}
+
+
+/* ----- Ekstra Kort (Om Mig, Badges) ----- */
+.profile-extra-card {
+    background-color: var(--secondary-bg-lighter, #2b2b2b); /* Brug defineret variabel */
+    border: 1px solid var(--border-color-dark, #495057); /* Mørkeste kant */
+    color: var(--font-color-base, #dee2e6);
+    box-shadow: var(--card-shadow-inset, inset 0 1px 4px rgba(0, 0, 0, 0.3)); /* Brug variabel */
+    border-radius: var(--card-border-radius-sm, 0.375rem); /* Brug variabel */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+.profile-extra-card .card-header {
+    background-color: rgba(0, 0, 0, 0.12); /* Lidt mørkere end v4 */
+    border-bottom: 1px solid var(--border-color-dark, #495057);
+    color: var(--font-color-muted-lighter, #ccc);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.7rem 1.1rem; /* Justeret padding */
+}
+/* Rediger knap (om mig kort) */
+.profile-extra-card .card-header .btn-outline-primary {
+     border-color: var(--primary-color, #00cca3);
+     color: var(--primary-color, #00cca3);
+     padding: 0.15rem 0.4rem; /* Mindre */
+     font-size: 0.75rem;
+     float: right;
+}
+.profile-extra-card .card-header .btn-outline-primary:hover {
+    background-color: var(--primary-hover, #00b38f);
+    border-color: var(--primary-hover, #00b38f);
+    color: var(--button-text-dark, #111);
+}
+.profile-extra-card .card-body {
+    padding: 1.25rem;
+    flex-grow: 1; /* Tillad body at fylde resten af højden */
+}
+/* Specifikt for 'Om Mig' tekst */
+#aboutMeText {
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--font-color-muted-lighter, #ccc);
+    line-height: 1.6;
+}
+#aboutMeText .fst-italic { /* Default tekst "Brugeren har ikke..." */
+    color: var(--font-color-muted, #999); /* Lidt mørkere end alm. muted */
+    opacity: 0.8;
+}
+
+
+/* ----- STYLING AF PROFILE BADGES ----- */
+
+#badgesContainer {
+    gap: 0.75rem; /* Lidt mere luft mellem badges */
+    padding: 0.5rem 0; /* Lidt luft i toppen/bunden hvis der er mange */
+}
+
+.profile-badge {
+    display: inline-flex; /* Bedre kontrol over ikon centrering */
+    align-items: center;
+    justify-content: center;
+    width: 42px;          /* Lidt større end før? */
+    height: 42px;         /* Sikrer cirkel */
+    padding: 0;           /* Ingen intern padding, fast størrelse styrer */
+    border-radius: 50%;   /* Garanterer cirkelform */
+    font-size: 1.2rem;    /* Juster ikonstørrelse */
+    border: 2px solid rgba(255, 255, 255, 0.1); /* Subtil lys kant */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35),      /* Lidt mørkere ydre skygge */
+                inset 0 1px 1px rgba(255, 255, 255, 0.05), /* Meget svag indre lys kant (top) */
+                inset 0 -1px 2px rgba(0, 0, 0, 0.2);    /* Lille indre mørk kant (bund) */
+    transition: all 0.2s ease-out;
+    cursor: help; /* Indikerer tooltip */
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.2); /* Skygge på selve ikonet */
+
+    /* VIGTIGT: Fjern Bootstrap opacity */
+    --bs-bg-opacity: 1 !important;
+}
+
+.profile-badge:hover {
+    transform: translateY(-2px) scale(1.05); /* Løft og zoom ved hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.45),
+                inset 0 1px 1px rgba(255, 255, 255, 0.05),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.25); /* Tydeligere kant ved hover */
+}
+
+.profile-badge i {
+    line-height: 1; /* Hjælper med centrering */
+    vertical-align: middle;
+}
+
+/* -- Specifikke farve overrides -- */
+/* Sørger for korrekt ikonfarve (lys vs mørk) på de forskellige baggrunde */
+/* Bruger dine definerede variabler */
+
+.profile-badge.bg-primary {
+    background-color: var(--primary-color) !important;
+    color: var(--button-text-dark, #111) !important;
+    border-color: rgba(from var(--primary-hover) r g b / 0.5); /* Brug hover farve med alpha til kant */
+}
+.profile-badge.bg-primary:hover { border-color: var(--primary-color); }
+
+.profile-badge.bg-secondary {
+    background-color: var(--secondary-color) !important;
+    color: var(--font-color-highlight, #fff) !important;
+     border-color: rgba(from var(--secondary-color-hover) r g b / 0.5);
+}
+.profile-badge.bg-secondary:hover { border-color: var(--secondary-color); }
+
+.profile-badge.bg-success {
+    background-color: var(--success-color) !important;
+    color: var(--font-color-highlight, #fff) !important; /* Lys tekst */
+     border-color: hsla(from var(--success-color) h s l / 50%); /* Mørkere tone af grøn */
+}
+.profile-badge.bg-success:hover { border-color: var(--success-color); }
+
+.profile-badge.bg-danger {
+    background-color: var(--danger-color) !important;
+    color: var(--font-color-highlight, #fff) !important;
+     border-color: hsla(from var(--danger-color) h s l / 50%);
+}
+.profile-badge.bg-danger:hover { border-color: var(--danger-color); }
+
+.profile-badge.bg-warning {
+    background-color: var(--warning-color) !important;
+    color: var(--button-text-dark, #111) !important; /* Mørk tekst */
+     border-color: hsla(from var(--warning-color) h s l / 50%);
+}
+.profile-badge.bg-warning:hover { border-color: var(--warning-color); }
+
+.profile-badge.bg-info {
+    background-color: var(--info-color) !important;
+    color: var(--font-color-highlight, #fff) !important; /* Lys tekst */
+    border-color: hsla(from var(--info-color) h s l / 50%);
+}
+.profile-badge.bg-info:hover { border-color: var(--info-color); }
+
+
+/* Tekst hvis ingen badges */
+#noBadgesText {
+    color: var(--font-color-muted, #adb5bd);
+    padding: 1rem 0; /* Lidt mere plads */
+}
+
+
+/* ============================================= */
+/* ===       OPGRADERET XP PROGRESS BAR      === */
+/* ============================================= */
+
+/* Wrapper omkring Niveau/XP tekst og selve baren */
+#progressCard .card-body .mb-2 { /* Direkte targeting hvis du ikke tilføjede .level-info */
+    margin-bottom: 0.5rem; /* Lidt luft ned til baren */
+}
+
+/* "Niveau X" tekst */
+#progressCard label[for="levelProgressBar"] { /* Target den specifikke label */
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--font-color-header, #f1f3f5);
+    margin-bottom: 0.25rem !important; /* Mindre margin under niveau */
+}
+
+/* "XXXX / YYYY XP" tekst */
+#progressCard small.text-muted { /* Target XP teksten */
+    font-size: 0.85rem;
+    color: var(--font-color-muted, #adb5bd);
+}
+
+/* Containeren for progress bar (baggrunds-"track") */
+#progressCard .progress {
+    height: 1.1rem; /* Lidt lavere, mere elegant højde? Juster efter smag */
+    background-color: rgba(0, 0, 0, 0.35); /* Mørkere, let transparent track */
+    border-radius: var(--bs-border-radius-pill, 50rem); /* Fuld afrunding */
+    overflow: hidden; /* Vigtigt for afrunding af indre bar */
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.45); /* Tydeligere indre skygge */
+    border: 1px solid rgba(255, 255, 255, 0.05); /* Meget subtil kant */
+}
+
+/* Selve den farvede fremskridts-bar */
+#progressCard .progress-bar {
+    background-color: var(--primary-color) !important; /* BRUG TEMAETS PRIMÆRE FARVE! Overskriv bg-success */
+    color: var(--button-text-dark, #111111); /* MØRK tekst for kontrast på lys bar */
+    font-weight: 600;
+    font-size: 0.7rem; /* Lidt mindre procenttal */
+    /* Sørg for linjehøjde matcher barens højde for vertikal centrering */
+    line-height: 1.1rem; /* Matcher højden sat på .progress ovenfor */
+
+    /* Fjern default Bootstrap striber og animation */
+    background-image: none !important;
+    animation: none !important;
+
+    box-shadow: inset 0 -1px 2px rgba(0,0,0,0.15); /* Subtil indre skygge på baren */
+
+    /* Sikrer teksten er centreret */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Behold standard BS transition */
+    transition: width .6s ease;
+}
+
+/* Valgfri hover effekt */
+#progressCard .progress:hover .progress-bar {
+    filter: brightness(1.15); /* Gør baren lidt lysere ved hover på HELE track'et */
+    cursor: default; /* Indiker at den ikke er klikbar */
+}
+
+/* Fjern specifik styling for .progress-bar-animated/-striped hvis de stadig bruges */
+/* Dette er backup, hvis klasserne ikke fjernes fra HTML: */
+#progressCard .progress-bar-animated {
+    animation: none !important;
+}
+#progressCard .progress-bar-striped {
+    background-image: none !important;
+}
+
+
+/* ----- TAB SEKTION STYLING ----- */
+.profile-tabs {
+    margin-bottom: 0 !important;
+}
+.profile-tabs .nav-tabs {
+     border-bottom: 1px solid var(--border-color-medium, #495057);
+     margin-bottom: -1px;
+}
+.profile-tabs .nav-link {
+    color: var(--font-color-muted-lighter, #ccc);
+    background-color: transparent;
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.2s ease-in-out;
+    padding: 0.75rem 1.3rem;
+    font-weight: 500;
+    border-radius: 0.375rem 0.375rem 0 0;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+.profile-tabs .nav-link:hover:not(.active) {
+    color: var(--font-color-highlight, #e9ecef);
+    background-color: rgba(var(--primary-color-rgb), 0.08); /* Lidt kraftigere hover */
+    border-color: transparent;
+}
+.profile-tabs .nav-link.active {
+    color: var(--primary-color, #00cca3);
+    background-color: var(--secondary-bg, #2c3034);
+    font-weight: 600;
+    border-color: var(--border-color-medium, #495057);
+    border-bottom-color: var(--secondary-bg, #2c3034);
+    position: relative;
+    top: 1px;
+}
+/* Tab content wrapper */
+.profile-tab-content {
+    border: 1px solid var(--border-color-medium, #495057);
+    border-top: none;
+    padding: 1.5rem;
+    background-color: var(--secondary-bg, #2c3034);
+    border-radius: 0 0 var(--card-border-radius, 0.5rem) var(--card-border-radius, 0.5rem);
+}
+
+/* ======================================
+   TABEL STYLING I PROFIL TABS - Inkl. Fix
+   ====================================== */
+.profile-tab-card { /* Generel kort styling INDE i tabs */
+   background-color: var(--card-bg-darker, #1a1d20); /* Brug mørkeste variant */
+   border: 1px solid var(--border-color-dark, #343a40);
+   box-shadow: none;
+   border-radius: var(--card-border-radius-sm, 0.375rem);
+   margin-bottom: 0;
+   color: var(--font-color-base, #dee2e6);
+}
+.profile-tab-card .card-header {
+   background-color: rgba(255, 255, 255, 0.03);
+   border-bottom: 1px solid var(--border-color-dark, #343a40);
+   color: var(--font-color-muted-lighter, #ccc);
+   font-size: 0.9rem;
+   font-weight: 600;
+   padding: 0.7rem 1rem;
+}
+.profile-tab-card .card-header i {
+   opacity: 0.7;
+}
+.profile-tab-card .card-body {
+     /* Forskellig padding for tabel-body vs liste-body? */
+     /* card-body p-0 bruges i Stats-tabellen, så juster derinde evt */
+}
+/* Specifikt for tabellerne */
+.profile-tab-card .table {
+    background-color: transparent !important; /* Sørg for at overskrive BS */
+    color: var(--font-color-base, #dee2e6);
+    margin-bottom: 0;
+}
+/* Override Bootstrap Striping & Hover for Dark Mode */
+.profile-tab-card .table > :not(caption) > * > * { /* Rammer th, td, etc. bredt */
+    background-color: transparent !important; /* Tving transparent bg for ALLE celler */
+    box-shadow: none !important; /* Fjern evt. BS skygger */
+    color: inherit; /* Nedarv farve fra <tr>/<table> */
+}
+/* Meget subtil stribning hvis ønsket */
+.profile-tab-card .table.table-striped > tbody > tr:nth-of-type(even) > * {
+    background-color: rgba(0, 0, 0, 0.1) !important; /* Subtil mørk stribe */
+}
+/* Korrekt Dark Mode Hover */
+.profile-tab-card .table.table-hover > tbody > tr:hover > * {
+    background-color: var(--secondary-bg-hover, rgba(255, 255, 255, 0.06)) !important;
+    color: var(--font-color-highlight, #ffffff) !important; /* Fremhæv tekst på hover */
+}
+/* Tabel kanter */
+.profile-tab-card .table th,
+.profile-tab-card .table td {
+    border-color: var(--border-color-dark, rgba(255, 255, 255, 0.08)) !important; /* Lidt lysere kant */
+    padding: 0.8rem; /* Standard padding for celler */
+    vertical-align: middle;
+    font-size: 0.9rem;
+}
+
+/* Stats Tabel Specifik */
+.profile-tab-card .stats-table th {
+    font-weight: 500;
+    width: 40%; /* Giv labels lidt mere plads */
+    color: var(--font-color-muted-lighter, #ccc); /* Lysere muted */
+    white-space: nowrap;
+    padding-left: 1.25rem; /* Ryg labels ind */
+}
+.profile-tab-card .stats-table td {
+    font-weight: 500;
+    color: var(--font-color-base, #dee2e6);
+    padding-right: 1.25rem; /* Plads til højre */
+}
+.stats-table td#stat-net { /* Nettodifference */
+    font-weight: 600 !important; /* Sørg for den er fed */
+}
+.stats-table td.text-success, .bets-table td.text-success { color: var(--success-color, #00cc66) !important; }
+.stats-table td.text-danger, .bets-table td.text-danger { color: var(--danger-color, #ff4444) !important; }
+
+
+/* Bets Tabel Specifik */
+.bets-table thead th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--font-color-muted, #adb5bd);
+    font-weight: 600;
+    text-align: center;
+    white-space: nowrap;
+    border-bottom: 2px solid var(--border-color-medium, #495057);
+    padding: 0.6rem 0.75rem;
+    background-color: rgba(0,0,0, 0.15); /* Lidt baggrund for thead */
+}
+.bets-table tbody td {
+    font-size: 0.9rem;
+    text-align: left;
+}
+.bets-table td.text-end { text-align: right !important; }
+.bets-table td.text-center { text-align: center !important; }
+.bets-table .badge {
+    font-size: 0.7rem;
+    padding: 0.35em 0.6em;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+}
+/* Loading / No Data i Tabeller */
+.table-loading-row td, .table-no-data-row td {
+    color: var(--font-color-muted, #adb5bd); /* Brug standard muted */
+    font-style: italic;
+    font-weight: 400;
+    height: 80px; /* Mindre højde for disse rækker */
+    vertical-align: middle !important;
+}
+
+/* ----- Liste i Seneste Aktivitet Tab ----- */
+.recent-activity-list {
+     padding: 0;
+     max-height: 450px; /* Bevar max højde */
+     overflow-y: auto; /* Aktiver scroll */
+ }
+.recent-activity-list .list-group-item {
+    background-color: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--border-color-dark, #343a40); /* Svag separator */
+    color: var(--font-color-base, #dee2e6);
+    padding: 0.8rem 0.5rem; /* Lidt mere luft */
+    border-radius: 0;
+    line-height: 1.4; /* Forbedrer læsbarhed hvis tekst ombryder */
+}
+.recent-activity-list .list-group-item:last-child {
+    border-bottom: none;
+}
+/* Indhold i listen */
+.recent-activity-list .list-group-item .d-flex { /* Sikrer god alignment */
+    align-items: center;
+}
+.recent-activity-list .list-group-item span i.fa-fw { /* Ikon + beskrivelse span */
+    flex-grow: 1; /* Lad denne tage pladsen */
+}
+.recent-activity-list .list-group-item span i.fa-fw { /* Selve ikonet */
+    width: 22px;
+    text-align: center;
+    margin-right: 0.5rem;
+    opacity: 0.9;
+}
+.recent-activity-list .list-group-item small.text-muted { /* Timestamp */
+    font-size: 0.8em;
+    white-space: nowrap;
+    margin-left: auto; /* Skub til højre */
+    padding-left: 0.5rem; /* Lidt luft */
+}
+.recent-activity-list .list-group-item small.text-success { /* Evt. beløb */
+    font-weight: 500;
+    display: block; /* Ny linje */
+    margin-left: calc(22px + 0.5rem); /* Ryg ind svarende til ikon + margin */
+    margin-top: 0.1rem;
+    font-size: 0.85em;
+}
+/* Loading/No data i listen */
+.recent-activity-list .loading-indicator,
+.recent-activity-list .no-data-indicator {
+     border-bottom: none;
+     padding: 1.75rem; /* Mere plads */
+     color: var(--font-color-muted, #adb5bd);
+     font-style: italic;
+     font-weight: 400;
+     display: flex; /* Brug flex til at centrere spinner */
+     align-items: center;
+     justify-content: center;
+}
+
+
+/* ----- Modal Styling (Raffinering) ----- */
+.modal.modal-custom .modal-content {
+     background-color: var(--modal-bg, #1f2327); /* Lidt lysere end standard kort */
+     border: 1px solid var(--modal-border-color, rgba(255, 255, 255, 0.2)); /* Tydeligere kant */
+     color: var(--font-color-base, #dee2e6);
+     box-shadow: 0 0.5rem 2rem rgba(0,0,0,0.6); /* Større, blødere skygge */
+     border-radius: var(--card-border-radius, 0.5rem);
+ }
+.modal.modal-custom .modal-header {
+    border-bottom-color: var(--modal-border-color, rgba(255, 255, 255, 0.15));
+    padding: 1rem 1.25rem;
+}
+.modal.modal-custom .modal-footer {
+    border-top-color: var(--modal-border-color, rgba(255, 255, 255, 0.15));
+    padding: 0.75rem 1.25rem;
+}
+.modal.modal-custom .modal-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+.modal.modal-custom .modal-title i {
+    color: var(--primary-color, #00cca3); /* Farve på modal titel ikon */
+}
+.modal.modal-custom .btn-close { filter: invert(1) grayscale(100%) brightness(200%); }
+/* Input felter i modal */
+.modal.modal-custom .form-control {
+    background-color: var(--input-bg, #0d0d0d);
+    color: var(--input-color, #ffffff);
+    border-color: var(--input-border-color, #495057);
+}
+.modal.modal-custom .form-control::placeholder { /* Standard placeholder */
+     color: var(--input-placeholder-color, #6c757d);
+     opacity: 0.8;
+}
+.modal.modal-custom .form-control:focus {
+    background-color: var(--input-bg-focus, #2a2e31);
+    color: var(--input-color-focus, #ffffff);
+    border-color: var(--input-border-focus, #00cca3); /* Brug variabel */
+    box-shadow: var(--input-focus-shadow, 0 0 0 0.2rem rgba(0, 204, 163, 0.25)); /* Brug variabel */
+}
+/* Floating labels i modal */
+.modal.modal-custom .form-floating > label {
+    color: var(--input-placeholder-color, #6c757d); /* Brug variabel */
+}
+.modal.modal-custom .form-floating > .form-control:focus ~ label,
+.modal.modal-custom .form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: var(--input-placeholder-color, #6c757d);
+    opacity: 0.8;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem); /* Standard BS transform */
+}
+
+
+/* ----- Diverse Helpers & Overrides ----- */
+.feedback-area {
+    min-height: 24px;
+    font-size: 0.85rem;
+    padding-top: 0.35rem;
+    margin-top: 0.25rem; /* Sikrer lidt luft fra elementet ovenfor */
+    transition: color 0.3s ease;
+}
+/* Inline feedback alerts */
+.feedback-area .alert {
+    padding: 0.5rem 0.9rem; /* Lidt mere padding */
+    font-size: 0.9em;
+    margin-bottom: 0;
+    display: inline-block;
+    max-width: 100%;
+    border-radius: var(--card-border-radius-sm, 0.375rem); /* Match kort runding */
+}
+
+/* Knap Loading State (Absolut centreret spinner) */
+.btn { position: relative; overflow: hidden; /* Forhindrer spinner i at gå udenfor ved skaleret transform */ }
+.btn .spinner-border {
+    display: none;
+    width: 1em;
+    height: 1em;
+    border-width: .15em;
+    position: absolute;
+    top: 50%; left: 50%;
+    margin-top: -0.5em;
+    margin-left: -0.5em;
+}
+.btn.is-loading {
+    color: transparent !important; /* Gør tekst OG evt. ikon transparent */
+    pointer-events: none;
+}
+/* Specifikt for spinner farve - vigtigt! */
+.btn.is-loading .spinner-border {
+    display: inline-block;
+    color: white; /* Start med en default der virker på mørke og primære knapper */
+    /* Overvej at style spinner farve mere specifikt pr knap type */
+}
+/* Eksempel: Gør spinner mørk på light/warning knapper */
+/* .btn-light.is-loading .spinner-border,
+.btn-warning.is-loading .spinner-border {
+    color: var(--button-text-dark, #111);
+} */
+
+/* Tilføj fadeIn animation (hvis animations.css er inkluderet) */
+.fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
+    opacity: 0; /* Start skjult */
+}
+
+/* Styles moved from profile.html inline */
+#avatarUploadForm {
+  max-width: 200px;
+}
+
+#badgesContainer {
+  min-height: 50px;
+}
+
+#progressCard .progress {
+  height: 20px;
+}
+
+#betsPane .table-responsive {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+#recentPane .recent-activity-list {
+  max-height: 450px;
+  overflow-y: auto;
+}
+
+#aboutMeTextareaInput {
+  height: 150px;
+}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Søgeresultater for '{{ query | default('...') }}' - FatteCentralen ApS{% endblock %}
+
+{# Inkluder den nye CSS-fil specifikt for denne side #}
+{% block head_extra %}
+    {{ super() }} {# Arv eventuelle styles fra base #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/search_results.css') }}">
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-4 search-results-container"> {# Tilføjet klasse for evt. specifik container styling #}
+
+  <h2 class="mb-3 search-results-header"> {# Justeret margin, tilføjet klasse #}
+    Søgeresultater for: <em class="text-info">{{ query | default('Ukendt søgning') }}</em>
+  </h2>
+
+  {# --- Tjek for data --- #}
+  {% if matched_users_data is defined %}
+    {% set num_results = matched_users_data | length %}
+    <p class="text-muted mb-4 search-results-count"> {# Tilføjet klasse #}
+      Fandt {{ num_results }} matchende bruger(e).
+    </p>
+
+    {# --- Vis Ingen Resultater eller Resultatliste --- #}
+    {% if num_results == 0 %}
+      <div class="alert no-results-alert" role="alert"> {# Udskiftet alert-warning med no-results-alert klasse #}
+        <i class="bi bi-search me-2"></i> Ingen brugere matchede din søgning. Prøv venligst igen.
+      </div>
+    {% else %}
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4"> {# Bootstrap grid #}
+
+        {# Loop gennem hvert bruger-resultat #}
+        {% for user_display_data in matched_users_data.values() %}
+          <div class="col">
+            <div class="card h-100 search-result-card">
+              <div class="card-body d-flex flex-column"> {# Flex for at skubbe knap til bund #}
+
+                {# Top-sektion med avatar og brugernavn (Evt. i en div for mere kontrol) #}
+                <div class="card-top-section d-flex align-items-center mb-3"> {# Klasse tilføjet #}
+                  <img src="{{ user_display_data.avatar_url }}" {# URL'en fra main.py inkluderer default #}
+                       alt="Avatar for {{ user_display_data.username | title }}"
+                       class="search-avatar rounded-circle me-3">
+                  <h5 class="card-title mb-0">{{ user_display_data.username | title }}</h5>
+                </div>
+
+                {# === Udvidet Bruger Information === #}
+                <div class="search-user-info mb-auto"> {# Ændret mb-3 til mb-auto for bedre knap-placering #}
+
+                  {# Level #}
+                  <small class="text-muted d-block">
+                    <i class="bi bi-bar-chart-line-fill me-1"></i> {# Ikon for Level #}
+                    Level: {{ user_display_data.level | default('N/A') }}
+                  </small>
+
+                  {# Rank #}
+                  <small class="text-muted d-block">
+                    <i class="bi bi-award-fill me-1"></i> {# Ikon for Rank #}
+                    Rank: {{ user_display_data.rank | default('N/A') }}
+                  </small>
+
+                  {# Gruppe / Afdeling (NY) - Husk at sende data fra backend! #}
+                  <small class="text-muted d-block mt-1"> {# Lidt ekstra top margin #}
+                      <i class="bi bi-people-fill me-1"></i> {# Ikon for Gruppe #}
+                      Gruppe: {{ user_display_data.group_name | default('Ikke angivet') }} {# ERSTAT 'group_name' MED DIT FELTNAVN #}
+                  </small>
+
+                  {# Medlem Siden (NY) - Husk at sende data (og evt. formatere den pænt) fra backend! #}
+                  <small class="text-muted d-block mt-1">
+                      <i class="bi bi-calendar-plus me-1"></i> {# Ikon for dato #}
+                      Medlem siden: {{ user_display_data.join_date | default('Ukendt') }} {# ERSTAT 'join_date' MED DIT FELTNAVN #}
+                      {# Du skal måske bruge et Jinja-filter til at formatere datoen, f.eks. | format_date #}
+                  </small>
+
+                  {# Bruger ID (NY - Valgfri) #}
+                  {# <small class="text-muted d-block mt-1">
+                      <i class="bi bi-hash me-1"></i>
+                      ID: {{ user_display_data.user_id | default('N/A') }}
+                  </small> #}
+
+                  {# Balance (Hvis relevant) #}
+                  {% if user_display_data.balance is defined %}
+                   <small class="text-muted d-block mt-1">
+                      <i class="bi bi-wallet2 me-1"></i> {# Ikon for Balance #}
+                      Balance: {{ user_display_data.balance | default(0.0) | format_currency }}
+                    </small>
+                  {% endif %}
+                </div>
+
+                {# Knap til Profil - 'mt-auto' PÅ WRAPPEREN virker sammen med mb-auto PÅ INFO #}
+                <div class="mt-auto pt-3"> {# Lidt padding-top for at sikre afstand til info ovenover #}
+                  <a href="{{ user_display_data.profile_url }}" class="btn btn-outline-info btn-sm w-100 btn-profile">
+                    <i class="bi bi-eye-fill"></i> Se Profil
+                  </a>
+                </div>
+
+              </div> {# /card-body #}
+            </div> {# /search-result-card #}
+          </div> {# /col #}
+        {% endfor %} {# Slut på loop #}
+
+      </div> {# /row #}
+    {% endif %} {# /num_results == 0 #}
+
+  {% else %} {# Fallback hvis 'matched_users_data' mangler helt #}
+    <div class="alert alert-danger" role="alert">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i> Fejl: Søgeresultatdata blev ikke sendt korrekt fra serveren.
+    </div>
+  {% endif %} {# /matched_users_data is defined #}
+
+  {# Knap til at gå tilbage - justeret via CSS #}
+  <div class="text-center"> {# Fjernet mt-5, da den nu styles via CSS #}
+    <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-secondary back-to-dashboard-btn">
+      <i class="bi bi-arrow-left"></i> Tilbage til Forsiden
+    </a>
+  </div>
+
+</div> {# /container #}
+{% endblock %}
+
+
+{# ----- Scripts Blok ----- #}
+{% block scripts_extra %}
+    {{ super() }} {# Arv eventuelle scripts fra base #}
+{% endblock %}

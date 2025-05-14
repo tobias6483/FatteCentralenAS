@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% from "_macros.html" import user_avatar %} {# AKTIVERET: user_avatar makro #}
+
+{% block title %}Leaderboard - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    {# Link til den dedikerede CSS fil #}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/leaderboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-md-4 py-4">
+
+  {# --- Side Header (matcher andre sider) --- #}
+  <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom" style="border-color: var(--border-color-medium) !important;">
+      <h1 class="h2 page-title mb-0"><i class="bi bi-bar-chart-line-fill me-2"></i>Leaderboard</h1>
+      <button class="btn btn-sm btn-outline-primary" id="refreshLeaderboardBtn" type="button" title="Opdater leaderboard">
+          {# Knap Loading State #}
+          <span class="spinner-border spinner-border-sm me-1" role="status" style="display: none;"></span>
+          <i class="bi bi-arrow-clockwise fs-6 btn-icon"></i> {# Bootstrap ikon klasse #}
+          <span class="d-none d-sm-inline ms-1 btn-text">Opdater</span>
+       </button>
+  </header>
+
+  {# --- Sort Buttons --- #}
+   <div class="mb-3 text-center" id="leaderboardSortControls">
+       <span class="me-2 small text-muted">Sorter efter:</span>
+       <div class="btn-group btn-group-sm" role="group" aria-label="Sort leaderboard by">
+           <button type="button" class="btn btn-outline-secondary sort-btn" data-sort="balance">Saldo</button>
+           <button type="button" class="btn btn-outline-secondary sort-btn" data-sort="win_rate">Win Rate</button>
+           <button type="button" class="btn btn-outline-secondary sort-btn" data-sort="profit">Net Profit</button>
+       </div>
+   </div>
+
+  {# --- Fejlmeddelelse --- #}
+   <div id="leaderboardError" class="alert alert-danger alert-dismissible fade show error-message" role="alert" style="display: none;">
+        Kunne ikke opdatere leaderboard. <span class="specific-error-message"></span>
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+   </div>
+
+   <!-- Leaderboard Card (Brug standard dashboard-card) -->
+   <div class="card dashboard-card shadow-sm mb-4 leaderboard-main-card fade-in-up">
+     <div class="card-header"><i class="bi bi-trophy-fill me-2"></i>Top Spillere</div>
+     <div class="card-body p-0">
+        <div class="table-responsive">
+           {# Tilføj table-dark for Bootstrap dark mode styling base #}
+           <table class="table table-dark table-striped table-hover align-middle mb-0 leaderboard-table">
+              <thead>
+                  <tr>
+                     {# Tilføjet klasser til TH for nemmere styling #}
+                      <th scope="col" class="text-center rank-col">#</th>
+                      <th scope="col" class="text-center medal-col">Medalje</th>
+                      <th scope="col" class="user-col"><i class="bi bi-person"></i> Bruger</th>
+                      <th scope="col" class="text-end balance-col sortable-header" data-sort="balance"><i class="bi bi-wallet2"></i> Balance <i class="sort-icon bi"></i></th>
+                      <th scope="col" class="text-center wins-col">W/L</th>
+                      <th scope="col" class="text-center winrate-col sortable-header" data-sort="win_rate"><i class="bi bi-percent"></i> Win Rate <i class="sort-icon bi"></i></th>
+                      <th scope="col" class="text-end profit-col sortable-header" data-sort="profit"><i class="bi bi-cash-coin"></i> Net Profit <i class="sort-icon bi"></i></th>
+                  </tr>
+              </thead>
+               <tbody id="leaderboardTableBody">
+                   <tr id="loadingRow">
+                     <td colspan="6" class="text-center py-5 text-muted">
+                         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                         <span class="fst-italic">Henter seneste data...</span>
+                     </td>
+                   </tr>
+                  <tr id="noDataRow" style="display: none;">
+                     <td colspan="6" class="text-center py-5 text-muted fst-italic">
+                          Der er ingen spillere på leaderboardet endnu.
+                     </td>
+                  </tr>
+                   {# EKSEMPEL PÅ RÆKKE MED USER_AVATAR (som JS skal generere) #}
+                   {#
+                   <tr class="rank-1">
+                      <td class="text-center rank-col">1</td>
+                      <td class="text-center medal-col"><i class="bi bi-medal-fill medal-gold"></i></td>
+                      <td class="user-col">
+                          <a href="#" class="text-decoration-none link-light">
+                              {{ user_avatar({'avatar_url': 'url/til/avatar1.png', 'username': 'Bruger1'}, size='sm', img_class='leaderboard-avatar') }}
+                              <span>Bruger1</span>
+                          </a>
+                      </td>
+                      <td class="text-end balance-col">1234.56 kr.</td>
+                      <td class="text-center wins-col">50</td>
+                      <td class="text-end max-win-col">150.00 kr.</td>
+                  </tr>
+                   #}
+               </tbody>
+           </table>
+        </div> {# /table-responsive #}
+     </div> {# /card-body #}
+
+     <div class="card-footer text-muted text-end small py-1 px-3">
+         Senest opdateret: <span id="lastUpdatedTimestamp">Afventer...</span>
+     </div>
+
+   </div> {# /card #}
+
+   <!-- Tilbage-knap -->
+   <div class="text-center mt-4 mb-5">
+     <a href="{{ url_for('main.index') }}" class="btn btn-sm btn-outline-secondary"> {# btn-sm #}
+        <i class="bi bi-arrow-left-circle me-1"></i> Tilbage til Dashboard {# Matcher history #}
+     </a>
+   </div>
+
+ </div> {# /container-fluid #}
+ {% endblock %}
+
+ {% block scripts_extra %}
+     {{ super() }} {# Bevar for base scripts #}
+    {# Sørg for, at din leaderboard.js fil indlæses #}
+     <script src="{{ url_for('static', filename='js/leaderboard.js') }}" defer></script>
+ {% endblock %}

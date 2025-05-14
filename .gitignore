@@ -1,0 +1,52 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+# venv/ # Andre almindelige navne
+# ENV/
+# env/
+# virtualenv/
+
+# Instance folder 
+instance/ 
+
+# IDE / Editor / OS specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment variables file
+.env  
+
+# Logs
+*.log
+logs/
+
+# Database files (hvis relevant)
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploads (ignorer, medmindre du specifikt vil tracke dem)
+uploads/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Andre filer du vil ignorere
+gammel app.txt
+Fattecentralen Projekt ny.xcodeproj/
+Fattecentralen Projekt ny.xcodeproj
+
+# Personal planning/note files
+Plan.rtf
+Sammensat Plan.rtf
+app/kom tilbage.txt
+app/plan.txt

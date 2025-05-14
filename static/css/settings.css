@@ -1,0 +1,132 @@
+/* ----- Custom Styles for Settings Page ----- */
+
+/* Container Styling */
+.settings-container {
+    max-width: 700px; /* Limits width for better readability on large screens */
+}
+
+/* Card Styling (assuming a dark theme base) */
+.settings-container .card { /* Scope styles to this page */
+    background-color: #343a40; /* Card background */
+    border-color: #495057;    /* Card border */
+    color: #dee2e6;         /* Default text color inside card */
+    margin-bottom: 1.5rem;   /* Spacing between cards/elements */
+}
+.settings-container .card-header {
+    background-color: #495057;    /* Header background */
+    border-bottom: 1px solid #6c757d; /* Header bottom border */
+    color: #dee2e6;              /* Header text color */
+    padding: 0.75rem 1.25rem;   /* Padding */
+    font-weight: 500;           /* Slightly bolder header */
+}
+.settings-container .card-body {
+    /* Color already inherited, add padding if needed */
+    padding: 1.5rem;
+}
+
+/* Form Control Styling (Dark theme) */
+.settings-container .form-control,
+.settings-container .form-select { /* Include selects */
+    background-color: #495057; /* Input background */
+    color: #fff;              /* Input text color */
+    border: 1px solid #6c757d; /* Input border */
+}
+.settings-container .form-control::placeholder {
+    color: #adb5bd; /* Placeholder text color */
+    opacity: 1;      /* Ensure visibility */
+}
+.settings-container .form-control:focus,
+.settings-container .form-select:focus {
+    background-color: #495057;    /* Keep background on focus */
+    border-color: #86b7fe;      /* Standard Bootstrap blue focus border */
+    color: #fff;                /* Keep text color */
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); /* Standard focus shadow */
+}
+.settings-container .form-control:disabled,
+.settings-container .form-select:disabled {
+    background-color: #495057; /* Keep bg same for disabled */
+    opacity: 0.7;
+}
+
+/* Floating Label Specifics (Dark theme) */
+.settings-container .form-floating > label {
+    color: #adb5bd; /* Default label color */
+}
+/* Ensure floated label stays readable */
+.settings-container .form-floating > .form-control:focus ~ label,
+.settings-container .form-floating > .form-control:not(:placeholder-shown) ~ label {
+    color: #adb5bd; /* Keep label color when floated */
+    opacity: 0.65;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem); /* Standard transform */
+}
+
+
+/* QR Code Image styling */
+.settings-container #qrImage {
+    max-width: 220px; /* Slightly larger? */
+    height: auto;
+    border: 1px solid #6c757d; /* Border color */
+    display: block;            /* Needed for margin:auto */
+    margin: 1.5rem auto;       /* Vertical and horizontal centering */
+    background-color: white;   /* QR codes usually need a white background */
+    padding: 10px;             /* Add some padding */
+    border-radius: 4px;        /* Slight rounding */
+}
+
+/* Backup koder styling */
+ .settings-container #backupCodesList li {
+     font-family: 'Courier New', Courier, monospace; /* Monospace font */
+     font-size: 1.1rem;           /* Larger font size */
+     padding: 0.4rem 0.6rem;      /* Padding */
+     border-bottom: 1px dashed #495057; /* Dashed separator */
+     background-color: #40464c; /* Slightly different bg for list items? Optional */
+     border-radius: 3px;
+     margin-bottom: 0.3rem;
+     /* Ensure code is easily selectable */
+     -webkit-user-select: all;
+    -moz-user-select: all;
+    -ms-user-select: all;
+    user-select: all;
+ }
+  .settings-container #backupCodesList li:last-child {
+     border-bottom: none;
+     margin-bottom: 0;
+ }
+
+/* Dynamically shown/hidden sections */
+.dynamic-section {
+    display: none; /* Hidden by default */
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #495057; /* Separator line */
+    /* Add a subtle transition? */
+    /* transition: opacity 0.3s ease-in-out; */
+    /* opacity: 0; */
+ }
+.dynamic-section.is-visible {
+     display: block;
+     /* opacity: 1; */
+}
+
+/* Spinner in buttons */
+/* Reusing .is-loading class structure from aktiedyst.css */
+.settings-container .btn .spinner-border { display: none; }
+.settings-container .btn.is-loading .spinner-border { display: inline-block; vertical-align: text-bottom; margin-right: 0.5em; }
+.settings-container .btn.is-loading > *:not(.spinner-border) {
+    opacity: 0.65;
+    pointer-events: none; /* Prevent double clicks while loading */
+}
+
+
+/* Feedback Area Styling */
+ .feedback-area {
+     min-height: 30px; /* Reserve space */
+     padding-top: 0.5rem; /* Space above message */
+     font-size: 0.9em;    /* Slightly smaller font */
+     text-align: center;  /* Center feedback text */
+ }
+ .feedback-area .alert { /* Style alerts inside feedback area */
+     padding: 0.5rem 1rem;
+     margin-bottom: 0; /* No extra bottom margin needed usually */
+     font-size: inherit;
+ }

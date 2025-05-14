@@ -1,0 +1,116 @@
+/* static/css/active_sessions.css */
+
+/* ----- GENEREL SIDE & HEADER ----- */
+/* Bruger global .page-title styling fra layout.css/components.css */
+
+#refresh_sessions_btn i {
+    vertical-align: middle; /* Centrer ikon */
+}
+#refresh_sessions_btn.is-loading .btn-text,
+#refresh_sessions_btn.is-loading .btn-icon {
+    opacity: 0; /* Skjul tekst og ikon */
+}
+#refresh_sessions_btn.is-loading .spinner-border {
+    display: inline-block; /* Vis spinner */
+}
+
+
+/* ----- FEJLMEDDELELSE (Bruger standard .alert) ----- */
+
+
+/* ----- SESSION KORT & TABEL CONTAINER ----- */
+/* Bruger .dashboard-card styling */
+.card {
+    /* Styling kommer fra components.css (.dashboard-card) */
+}
+.card-header {
+     /* Matcher header i andre list-cards */
+     background-color: var(--card-header-bg, rgba(0, 0, 0, 0.1));
+     border-bottom: 1px solid var(--border-color-dark, #495057);
+     font-weight: 600;
+     color: var(--font-color-muted-lighter, #ccc);
+}
+.card-header i {
+     color: var(--primary-color);
+     opacity: 0.9;
+     margin-right: 0.5rem;
+}
+
+
+/* ----- TABEL STYLING ----- */
+/* Genbrug generel mørk tabel styling fra profile/history/leaderboard */
+.table {
+    color: var(--font-color-base, #dee2e6);
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
+/* Override Bootstrap Striping & Hover (HVIS ikke globalt) */
+.table > :not(caption) > * > * {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    color: inherit;
+}
+.table-striped > tbody > tr:nth-of-type(even) > * {
+    background-color: rgba(0, 0, 0, 0.1) !important;
+}
+.table-hover > tbody > tr:hover > * {
+    background-color: var(--secondary-bg-hover, rgba(255, 255, 255, 0.08)) !important;
+    color: var(--font-color-highlight, #ffffff) !important;
+}
+
+/* Tabel Header (Th) */
+.table thead th {
+    color: var(--font-color-muted, #adb5bd);
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--border-color-medium, #495057) !important;
+    white-space: nowrap;
+    vertical-align: middle;
+    padding: 0.75rem 0.8rem;
+    text-align: left; /* Default left align */
+}
+.table thead th i {
+    margin-right: 0.4rem;
+    opacity: 0.7;
+    font-size: 1em;
+}
+.table thead th.text-center { text-align: center !important; }
+.table thead th.text-end { text-align: right !important; }
+
+/* Tabel Celler (Td) */
+.table tbody td {
+    font-size: 0.9rem;
+    padding: 0.8rem; /* Lidt mere padding end thead */
+    border-color: var(--border-color-dark, rgba(255, 255, 255, 0.08)) !important;
+}
+
+/* Specifik styling */
+.table td .badge { /* Session ID Badge */
+    font-size: 0.8em;
+    background-color: var(--secondary-color-hover, #5a6268) !important; /* Mørkere grå */
+    color: var(--font-color-highlight, #ffffff) !important;
+    padding: 0.4em 0.7em;
+}
+
+.table td .btn-join-session { /* "Deltag" knap */
+     /* Gør den mindre for ikke at fylde for meget */
+     padding: 0.2rem 0.5rem;
+     font-size: 0.8rem;
+}
+
+
+/* Loading & No Data Rækker */
+.table-loading-row td,
+.table-no-data-row td {
+    color: var(--font-color-muted, #adb5bd);
+    font-style: italic;
+    text-align: center !important;
+    padding: 2rem 1rem !important; /* Sørg for padding overstyrer */
+    border-bottom: none; /* Fjern kant på disse rækker */
+}
+.table-loading-row .spinner-border {
+    color: var(--primary-color);
+}

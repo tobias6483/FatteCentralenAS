@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Indstillinger - FatteCentralen ApS{% endblock %}
+
+{% block head_extra %}
+  {# Link til den eksterne CSS fil for settings #}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4 settings-container">
+
+    <header class="mb-4">
+        <h1 class="display-6">Sikkerhedsindstillinger</h1>
+         <p class="text-muted">Administrer din kontos sikkerhed, herunder Two-Factor Authentication (2FA).</p>
+    </header>
+
+    <div class="card shadow-sm">
+         <div class="card-header">
+            <i class="bi bi-shield-lock-fill me-2"></i>Two-Factor Authentication (2FA)
+        </div>
+        <div class="card-body">
+             {# ---- Vises hvis 2FA ER aktiveret ---- #}
+             {% if user_settings and user_settings.is_2fa_enabled %} {#<-- Tjekker 'user_settings.is_2fa_enabled' #}
+             <div class="alert alert-success d-flex align-items-center" role="alert">
+                 <i class="bi bi-check-circle-fill me-2"></i>
+                <div>
+                    <strong>2FA er aktiveret</strong> på din konto.
+                </div>
+             </div>
+
+             {# -- Backup Koder Sektion -- #}
+             <div class="mt-4">
+                <h5>Backup Koder</h5>
+                <p class="text-muted small">Hvis du mister adgang til din 2FA app, kan du bruge en af disse engangskoder til at logge ind. Opbevar dem sikkert!</p>
+                <button id="generateBackupCodesBtn" class="btn btn-outline-secondary btn-sm">
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <i class="bi bi-arrow-clockwise btn-icon"></i> <span class="btn-text">Generer Nye Backup Koder</span>
+                </button>
+                {# Område til at vise koder og feedback #}
+                 {# Initially hidden by 'dynamic-section', shown by JS after generation #}
+                <div id="backupCodesSection" class="dynamic-section">
+                    <p><strong>Dine nye backup koder (gem disse!):</strong></p>
+                     <ul id="backupCodesList" class="list-unstyled mb-3">
+                         {# Koder indsættes her af JS #}
+                    </ul>
+                    <div class="alert alert-warning small">
+                         <i class="bi bi-exclamation-triangle me-1"></i> At generere nye koder invaliderer alle tidligere backup koder.
+                     </div>
+                 </div>
+                <div id="backupCodesFeedback" class="feedback-area mt-2"></div> {# Feedback til backup kode handlinger #}
+             </div>
+
+            {# ===== START ÆNDRING: DEAKTIVER 2FA Sektion ===== #}
+             <hr class="my-4"> {# Separator #}
+             <form id="disable2faForm" novalidate> {# Tilføjet <form> tag med ID og novalidate #}
+                 <h5 class="text-danger">Deaktiver 2FA</h5>
+                 <p class="text-muted small">Hvis du deaktiverer 2FA, vil din konto være mindre sikker. Dette kræver din nuværende adgangskode for bekræftelse.</p>
+
+                 {# Tilføjet name="password" for potentiel FormData brug #}
+                 <div class="form-floating mb-3">
+                    <input type="password" id="disable2faPassword" name="password" class="form-control" placeholder="Din adgangskode" required autocomplete="current-password">
+                    <label for="disable2faPassword">Nuværende Adgangskode</label>
+                </div>
+
+                 {# Ændret type til "submit" #}
+                 <button id="disable2faBtn" type="submit" class="btn btn-danger btn-sm">
+                     <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                     <i class="bi bi-shield-x btn-icon"></i> <span class="btn-text">Deaktiver 2FA</span>
+                 </button>
+                 {# Feedback område specifikt til deaktivering #}
+                 <div id="disableFeedback" class="feedback-area mt-2"></div>
+             </form> {# Lukker <form> tagget #}
+            {# ===== SLUT ÆNDRING ===== #}
+
+
+            {# ---- Vises hvis 2FA IKKE er aktiveret ---- #}
+             {% else %} {#<-- Denne else-blok køres hvis 'user_settings.is_2fa_enabled' er False eller None/mangler #}
+             <div class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                 <div>
+                     <strong>2FA er ikke aktiveret.</strong> Det anbefales kraftigt for at øge sikkerheden.
+                 </div>
+             </div>
+
+            <div class="mt-4 text-center"> {# Centreret knap til at starte opsætning #}
+                 <button id="setup2faBtn" class="btn btn-primary">
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <i class="bi bi-shield-check btn-icon"></i> <span class="btn-text">Start Opsætning af 2FA</span>
+                 </button>
+                 {# Feedback specifikt til start-knappen #}
+                <div id="setupStartFeedback" class="feedback-area mt-2"></div>
+            </div>
+
+             {# -- Sektion til QR Kode og Verifikation (skjult initialt via 'dynamic-section') -- #}
+            <div id="setupQrSection" class="dynamic-section">
+                 <p class="text-center"><strong>1. Scan QR-koden</strong> med din authenticator app (f.eks. Google Authenticator, Authy):</p>
+                 <img id="qrImage" src="" alt="QR kode til 2FA opsætning">
+
+                 <p class="text-center mt-3"><strong>2. Bekræft koden</strong> fra appen:</p>
+                 <div class="row justify-content-center">
+                    <div class="col-md-6">
+                         <form id="verify2faForm">
+                             {# Note: 'verify2faCodeInput' now has better placeholder #}
+                            <div class="form-floating mb-3">
+                               <input type="text" id="verify2faCodeInput" class="form-control form-control-lg text-center" placeholder="******" required pattern="[0-9]{6}" inputmode="numeric" autocomplete="one-time-code" aria-describedby="verifyFeedback">
+                               <label for="verify2faCodeInput">6-cifret kode fra App</label>
+                           </div>
+                            <div class="d-grid">
+                                 <button id="verify2faBtn" type="submit" class="btn btn-success">
+                                      <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                     <i class="bi bi-check-circle-fill btn-icon"></i> <span class="btn-text">Bekræft & Aktiver 2FA</span>
+                                 </button>
+                            </div>
+                        </form>
+                         {# Feedback for verificering #}
+                         <div id="verifyFeedback" class="feedback-area mt-2"></div>
+                    </div>
+                </div>
+             </div> {# /setupQrSection #}
+
+             {% endif %} {# Slut på if user_settings.is_2fa_enabled #}
+
+        </div> {# /card-body #}
+    </div> {# /card #}
+
+    {# Privacy Settings Card - Assuming 'form' is passed to the template context and is an instance of UpdateAccountForm #}
+    {% if form %}
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <i class="bi bi-shield-shaded me-2"></i> Privatlivsindstillinger
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('main.settings') }}" id="privacySettingsForm"> {# Ensure action points to the correct settings update route #}
+                {{ form.hidden_tag() if form.hidden_tag }} {# Include CSRF token if form has it #}
+                
+                <div class="form-check mb-2">
+                    {{ form.privacy_profile_public(class="form-check-input") }}
+                    {{ form.privacy_profile_public.label(class="form-check-label") }}
+                    <small class="form-text text-muted d-block">Gør din profilside (inkl. grundlæggende statistik) synlig for andre brugere.</small>
+                </div>
+
+                <div class="form-check mb-2">
+                    {{ form.privacy_show_activity(class="form-check-input") }}
+                    {{ form.privacy_show_activity.label(class="form-check-label") }}
+                    <small class="form-text text-muted d-block">Tillad andre brugere at se din "Seneste Aktivitet" fane på din profil.</small>
+                </div>
+
+                <div class="form-check mb-2">
+                    {{ form.privacy_show_bet_history(class="form-check-input") }}
+                    {{ form.privacy_show_bet_history.label(class="form-check-label") }}
+                    <small class="form-text text-muted d-block">Tillad andre brugere at se din "Spilhistorik" fane på din profil.</small>
+                </div>
+
+                <div class="form-check mb-3">
+                    {{ form.privacy_show_online_status(class="form-check-input") }}
+                    {{ form.privacy_show_online_status.label(class="form-check-label") }}
+                    <small class="form-text text-muted d-block">Vis din online status (grøn prik) til andre brugere på siden (f.eks. i forum, beskeder).</small>
+                </div>
+                
+                {# Submit button for privacy settings - could be combined with other settings forms if desired #}
+                {# For now, assuming it's part of a larger settings form or handled by a general save button #}
+                {# If this form is separate, add its own submit button: #}
+                {# <button type="submit" class="btn btn-primary mt-3">Gem Privatlivsindstillinger</button> #}
+                {# For now, assuming the main 'Gem Ændringer' button on the page will handle this form too if it's part of UpdateAccountForm #}
+
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+
+    <div class="text-center mt-4 mb-5">
+        <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i> Tilbage til Dashboard
+         </a>
+    </div>
+
+</div> {# /container #}
+{% endblock %}
+
+{% block scripts_extra %}
+    {{ super() }} {# Sørger for at base.html's scripts (inkl. utils.js) loades først #}
+
+    {# ---------- FJERNEDE REDUNDANT CSRF SCRIPT BLOK HER ---------- #}
+    {# CSRF token (window.csrfToken) sættes allerede i base.html #}
+
+    {# Loader settings-specifik JavaScript #}
+    <script src="{{ url_for('static', filename='js/settings.js') }}" defer></script>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% from "_macros.html" import render_pagination %}
+
+{% block title %}Alle Notifikationer - {{ APP_NAME }}{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/messages.css') }}"> {# Re-use message styling for now #}
+    <style>
+        .notification-list-item {
+            border-bottom: 1px solid var(--border-color-light);
+            padding: 0.75rem 1rem;
+        }
+        .notification-list-item:last-child {
+            border-bottom: none;
+        }
+        .notification-list-item.unread {
+            background-color: var(--background-color-dark-hover); /* Slightly different for unread */
+            font-weight: bold;
+        }
+        .notification-list-item a {
+            text-decoration: none;
+            color: var(--text-color-light);
+        }
+        .notification-list-item a:hover {
+            color: var(--primary-color);
+        }
+        .notification-icon {
+            font-size: 1.2em;
+            margin-right: 0.75rem;
+            width: 20px; /* Ensure alignment */
+            text-align: center;
+        }
+        .notification-timestamp {
+            font-size: 0.8em;
+            color: var(--text-color-muted);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <header class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-secondary">
+        <h1 class="h2 page-title mb-0"><i class="bi bi-bell-fill me-2"></i>Alle Notifikationer</h1>
+        {# Optional: Add a "Mark all as read" button here if desired later #}
+    </header>
+
+    {% if notifications %}
+        <div class="card shadow-sm">
+            <div class="list-group list-group-flush">
+                {% for notification in notifications %}
+                    <div class="list-group-item notification-list-item {% if not notification.is_read %}unread{% endif %}">
+                        <a href="{{ notification.link if notification.link else '#' }}" class="d-flex align-items-start">
+                            {% if notification.icon %}
+                                <span class="notification-icon"><i class="{{ notification.icon }}"></i></span>
+                            {% else %}
+                                <span class="notification-icon"><i class="bi bi-info-circle-fill"></i></span> {# Default icon #}
+                            {% endif %}
+                            <div class="flex-grow-1">
+                                <p class="mb-1">{{ notification.message | safe }}</p> {# Assuming message is safe or pre-sanitized #}
+                                <small class="notification-timestamp local-datetime" data-utc-datetime="{{ notification.created_at.isoformat() if notification.created_at else '' }}" title="{{ notification.created_at | dt if notification.created_at else '' }}">{{ notification.created_at | dt(relative=True) }}</small>
+                            </div>
+                            {% if not notification.is_read %}
+                                <span class="badge bg-primary rounded-pill ms-2 align-self-center">Ny</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if pagination and pagination.pages > 1 %}
+            <div class="mt-4">
+                {{ render_pagination(pagination, 'main.all_notifications_page') }}
+            </div>
+        {% endif %}
+
+    {% else %}
+        <div class="alert alert-info text-center" role="alert">
+            <i class="bi bi-info-circle-fill me-2"></i> Du har ingen notifikationer.
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
