@@ -22,32 +22,55 @@
        nav_class (str): Justering for <ul> (f.eks. 'justify-content-end').
        size_class (str): Størrelsesklasse ('pagination-sm' eller 'pagination-lg' eller '').
   #}
-  {% if total_items is not none and items_per_page > 0 %}
-    {% set total_pages = (total_items + items_per_page - 1) // items_per_page %}
+  {# Adapt parameters if 'current_page' (param1) appears to be a pagination object,
+     which implies 'items_per_page' (param2) is an endpoint string,
+     and 'total_items' (param3) is a view_args dictionary.
+     'endpoint' (param4) and 'view_args' (param5) from macro signature are used as fallbacks or for the standard call.
+  #}
+  {% set _is_pagination_object_call = current_page is defined and current_page.page is defined and current_page.per_page is defined and current_page.total is defined %}
+
+  {% if _is_pagination_object_call %}
+    {% set _actual_current_page = current_page.page | int %}
+    {% set _actual_items_per_page = current_page.per_page | int %}
+    {% set _actual_total_items = current_page.total | int %}
+    {# In this call pattern, items_per_page (macro arg 2) is the endpoint string #}
+    {% set _actual_endpoint = items_per_page if items_per_page is string else endpoint %}
+    {# In this call pattern, total_items (macro arg 3) is the view_args dict #}
+    {% set _actual_view_args = total_items if total_items is mapping else view_args %}
+  {% else %}
+    {# Assume standard call signature with individual arguments #}
+    {% set _actual_current_page = current_page | int(0) %}
+    {% set _actual_items_per_page = items_per_page | int(0) %}
+    {% set _actual_total_items = total_items | int(0) %}
+    {% set _actual_endpoint = endpoint %}
+    {% set _actual_view_args = view_args %}
+  {% endif %}
+
+  {% if _actual_total_items is not none and _actual_items_per_page > 0 %}
+    {% set total_pages = (_actual_total_items + _actual_items_per_page - 1) // _actual_items_per_page %}
     {% if total_pages > 1 %}
       <nav aria-label="Side navigation">
         <ul class="pagination {{ nav_class }} {{ size_class }}">
 
           {# --- Forrige Side Knap --- #}
-          {% set has_prev = current_page > 1 %}
-          {% set prev_num = current_page - 1 if has_prev else 1 %}
-          {% set prev_url = url_for(endpoint, **({'page': prev_num} | dict(view_args or {}))) if has_prev else '#' %}
+          {% set has_prev = _actual_current_page > 1 %}
+          {% set prev_num = _actual_current_page - 1 if has_prev else 1 %}
+          {% set prev_url = url_for(_actual_endpoint, **({'page': prev_num} | dict(_actual_view_args or {}))) if has_prev and _actual_endpoint else '#' %}
           <li class="page-item {% if not has_prev %}disabled{% endif %}">
             <a class="page-link" href="{{ prev_url }}" aria-label="Gå til forrige side">
               <span aria-hidden="true">«</span>
             </a>
           </li>
 
-          {# --- Side Nummere (Simpel implementering - kan udvides med iter_pages logik) --- #}
-          {# Viser et begrænset antal sider omkring den nuværende #}
-          {% set window = 2 %} {# Antal sider før/efter den nuværende #}
-          {% set show_first = current_page > window + 1 %}
-          {% set show_last = current_page < total_pages - window %}
-          {% set start_page = max(1, current_page - window) %}
-          {% set end_page = min(total_pages, current_page + window) %}
+          {# --- Side Nummere --- #}
+          {% set window = 2 %}
+          {% set show_first = _actual_current_page > window + 1 %}
+          {% set show_last = _actual_current_page < total_pages - window %}
+          {% set start_page = max(1, _actual_current_page - window) %}
+          {% set end_page = min(total_pages, _actual_current_page + window) %}
 
           {% if show_first %}
-            {% set page_url = url_for(endpoint, **({'page': 1} | dict(view_args or {}))) %}
+            {% set page_url = url_for(_actual_endpoint, **({'page': 1} | dict(_actual_view_args or {}))) if _actual_endpoint else '#' %}
             <li class="page-item"><a class="page-link" href="{{ page_url }}">1</a></li>
             {% if start_page > 2 %}
               <li class="page-item disabled"><span class="page-link">…</span></li>
@@ -55,12 +78,12 @@
           {% endif %}
 
           {% for page_num in range(start_page, end_page + 1) %}
-            {% if page_num == current_page %}
+            {% if page_num == _actual_current_page %}
               <li class="page-item active" aria-current="page">
                 <span class="page-link">{{ page_num }}</span>
               </li>
             {% else %}
-              {% set page_url = url_for(endpoint, **({'page': page_num} | dict(view_args or {}))) %}
+              {% set page_url = url_for(_actual_endpoint, **({'page': page_num} | dict(_actual_view_args or {}))) if _actual_endpoint else '#' %}
               <li class="page-item">
                 <a class="page-link" href="{{ page_url }}">{{ page_num }}</a>
               </li>
@@ -71,14 +94,14 @@
             {% if end_page < total_pages - 1 %}
               <li class="page-item disabled"><span class="page-link">…</span></li>
             {% endif %}
-            {% set page_url = url_for(endpoint, **({'page': total_pages} | dict(view_args or {}))) %}
+            {% set page_url = url_for(_actual_endpoint, **({'page': total_pages} | dict(_actual_view_args or {}))) if _actual_endpoint else '#' %}
             <li class="page-item"><a class="page-link" href="{{ page_url }}">{{ total_pages }}</a></li>
           {% endif %}
 
           {# --- Næste Side Knap --- #}
-          {% set has_next = current_page < total_pages %}
-          {% set next_num = current_page + 1 if has_next else total_pages %}
-          {% set next_url = url_for(endpoint, **({'page': next_num} | dict(view_args or {}))) if has_next else '#' %}
+          {% set has_next = _actual_current_page < total_pages %}
+          {% set next_num = _actual_current_page + 1 if has_next else total_pages %}
+          {% set next_url = url_for(_actual_endpoint, **({'page': next_num} | dict(_actual_view_args or {}))) if has_next and _actual_endpoint else '#' %}
           <li class="page-item {% if not has_next %}disabled{% endif %}">
             <a class="page-link" href="{{ next_url }}" aria-label="Gå til næste side">
               <span aria-hidden="true">»</span>

@@ -261,10 +261,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
             toggleButtonLoading(loginButton, true, 'Logger ind...');
             try {
-                const data = await postData("/auth/login", { username, password, remember });
+                const csrfToken = await window.utils.getCsrfToken(); // Added await
+                if (!csrfToken) {
+                    console.error("[login.js] CSRF token is missing or could not be retrieved. Cannot submit login form.");
+                    displayValidationErrors(loginForm, { error: "Sikkerhedstoken mangler eller kunne ikke hentes. Genindlæs siden." }, loginMessageDiv);
+                    toggleButtonLoading(loginButton, false);
+                    return;
+                }
+                const data = await postData("/auth/login", { username, password, remember, csrf_token: csrfToken });
                 if (data.twofa_required) {
                     showToast(data.message || "2FA kode påkrævet.", "info");
-                    window.showForm('twofa'); 
+                    window.showForm('twofa');
                 } else {
                     showToast(data.message || "Login succesfuldt!", "success");
                     if (data.flashes) displayFlashes(data.flashes);
