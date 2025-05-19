@@ -13,7 +13,7 @@ import firebase_admin
 from firebase_admin import credentials
 
 from .config import Config, INSTANCE_FOLDER_PATH
-from .extensions import db, socketio, jwt # Ensure jwt is imported
+from .extensions import db, socketio, jwt, migrate # Ensure jwt and migrate are imported
 from .models import User, PasswordResetRequest, Notification # Removed JsonUserWrapper
 # from .utils import load_user_from_json_file
 
@@ -111,7 +111,11 @@ def create_app(config_class=Config):
         r"/api/*": {"origins": app.config.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')},
         r"/auth/*": {"origins": app.config.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000')}
     }, supports_credentials=True)
-    Migrate(app, db)
+    # migrations_dir = os.path.abspath(os.path.join(app.root_path, '..', '..', 'migrations'))
+    # Corrected path assuming app.root_path is /Users/tobias/Desktop/Fattecentralen/vs code exp/Fattecentralen Projekt/fattecentralen-monorepo/apps/backend
+    # and migrations is at /Users/tobias/Desktop/Fattecentralen/vs code exp/Fattecentralen Projekt/migrations
+    migrations_dir = os.path.normpath(os.path.join(app.root_path, '..', '..', '..', 'migrations'))
+    migrate.init_app(app, db, directory=migrations_dir)
     jwt.init_app(app) # Initialize JWTManager
     setup_logging(app)
 
@@ -147,7 +151,7 @@ def create_app(config_class=Config):
     from .routes.main import main_bp
     from .routes.auth import auth_bp as auth_json_bp
     from .routes.admin import admin_bp
-    from .routes.forum import forum_bp
+    from .routes.forum import forum_bp, forum_api_bp
     # from .routes.user_profile import user_profile_bp # File missing
     from .routes.stocks import stocks_bp as aktiedyst_bp
     # from .routes.api_general import api_general_bp # File missing
@@ -180,6 +184,7 @@ def create_app(config_class=Config):
     app.register_blueprint(api_dashboard_bp)
     app.register_blueprint(messages_bp, url_prefix='/messages')
     app.register_blueprint(sessions_bp, url_prefix='/sessions')
+    app.register_blueprint(forum_api_bp) # New V1 Forum API, prefix is in the blueprint
 
     @app.context_processor
     def inject_csrf_token_global(): return dict(csrf_token_value=generate_csrf())

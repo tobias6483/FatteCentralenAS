@@ -1,5 +1,34 @@
 ## Recent Development Updates
 
+### May 19, 2025: Forum API Development (Initial Stages)
+
+**Objective**: Begin implementation of the Forum API endpoints as defined in the project plan.
+
+**Key Achievements & Remarks**:
+
+*   **API Design Finalized ([`PROJECT_PLAN.md`](./PROJECT_PLAN.md))**:
+    *   Completed the JSON request/response structure definitions for all planned Forum API endpoints:
+        *   `GET /api/v1/forum/categories`
+        *   `GET /api/v1/forum/categories/{categoryId}/threads`
+        *   `GET /api/v1/forum/threads/{threadId}/posts`
+        *   `POST /api/v1/forum/threads/{threadId}/posts`
+    *   Also defined structures for User Profile API endpoints:
+        *   `GET /api/v1/users/me/profile`
+        *   `PUT /api/v1/users/me/profile`
+*   **Backend Forum API Blueprint & Initial Endpoints ([`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py))**:
+    *   Created a new Flask Blueprint `forum_api_bp` with the URL prefix `/api/v1/forum`.
+    *   Registered `forum_api_bp` in the main Flask application factory ([`fattecentralen-monorepo/apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py)).
+    *   Implemented the `GET /api/v1/forum/categories` endpoint to fetch and return all forum categories with last activity details.
+    *   Partially implemented the `GET /api/v1/forum/categories/{categoryId}/threads` endpoint.
+    *   **UPDATE**: The file `fattecentralen-monorepo/apps/backend/routes/forum.py` which was previously in a broken state, has now been **fixed**. The syntax errors in `api_get_category_threads` and `api_get_thread_posts` have been resolved.
+    *   Implemented `POST /api/v1/forum/threads/{threadId}/posts` endpoint, including Firebase authentication, request validation, and creation of new `ForumPost` records.
+    *   Enhanced `GET /api/v1/forum/threads/{threadId}/posts` to include `user_avatar_url` by fetching author details.
+    *   Added `__init__` method to `ForumPost` model in `models.py` to resolve Pylance errors during instantiation.
+*   **Pylance Type Hinting**: Addressed several Pylance type-checking warnings in the new API code and models using `type: ignore` comments where Pylance's inference struggled with SQLAlchemy constructs or conditional imports.
+
+**Next Steps**:
+*   All planned Forum API endpoints for Phase 1 are now complete.
+*   Proceed to Phase 2: Core Frontend Features - UI Transformation & Statiske Komponenter.
 ### May 19, 2025: Socket.IO Enhancements
 
 **Objective**: Improve Socket.IO setup for real-time features, focusing on authentication and room management.

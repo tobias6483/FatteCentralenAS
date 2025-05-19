@@ -9,7 +9,7 @@ import datetime # Explicitly import datetime for type hints if needed
 
 # === Tredjeparts Bibliotek Imports ===
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, jsonify
+    Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, jsonify, g as flask_g
 )
 from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
@@ -20,6 +20,7 @@ from sqlalchemy import select, func, desc, update as sql_update
 from ..extensions import db
 from ..models import User, ForumCategory, ForumThread, ForumPost # User is imported here
 from ..search import add_post_to_index, remove_post_from_index, search_posts
+from ..utils import firebase_token_required # Import the decorator
 
 # Definer logger HELT I TOPPEN af modulet
 log = logging.getLogger(__name__)
@@ -84,6 +85,320 @@ from ..forms import ForumReplyForm, ForumNewThreadForm, ForumEditPostForm
 
 # Opret Blueprint
 forum_bp = Blueprint('forum', __name__, url_prefix='/forum')
+# API Blueprint for Forum
+forum_api_bp = Blueprint('forum_api', __name__, url_prefix='/api/v1/forum')
+
+@forum_api_bp.route('/categories', methods=['GET'])
+def api_get_forum_categories():
+    log.debug("API request: Fetching all forum categories.")
+    try:
+        categories_stmt = select(ForumCategory).order_by(ForumCategory.sort_order, ForumCategory.name) # type: ignore[arg-type]
+        categories = db.session.scalars(categories_stmt).all()
+
+        results = []
+        if not categories:
+            return jsonify([])
+
+        category_ids = [cat.id for cat in categories]
+        last_threads_by_cat_id = {}
+        latest_posts_data = {}
+        usernames_to_fetch = set()
+
+        # Optimized query for last thread info
+        if category_ids:
+            ThreadAlias = aliased(ForumThread)
+            subq_last_thread = select(
+                ThreadAlias.category_id, func.max(ThreadAlias.updated_at).label('max_updated_at')
+            ).group_by(ThreadAlias.category_id).where(ThreadAlias.category_id.in_(category_ids)).subquery()
+
+            stmt_last_thread_info = select(
+                ForumThread.id.label('thread_id'),
+                ForumThread.title.label('thread_title'),
+                ForumThread.category_id,
+                ForumThread.last_post_id,
+                ForumThread.updated_at.label('last_activity_at') # Use thread's updated_at as last_activity
+            ).join(subq_last_thread,
+                   (ForumThread.category_id == subq_last_thread.c.category_id) &
+                   (ForumThread.updated_at == subq_last_thread.c.max_updated_at))
+            last_threads_mapping = db.session.execute(stmt_last_thread_info).mappings().all()
+            last_threads_by_cat_id = {row['category_id']: dict(row) for row in last_threads_mapping}
+
+            last_post_ids = [row.get('last_post_id') for row in last_threads_by_cat_id.values() if row.get('last_post_id')]
+            if last_post_ids:
+                stmt_latest_posts = select(
+                    ForumPost.id,
+                    ForumPost.author_username,
+                    ForumPost.created_at
+                ).where(ForumPost.id.in_(last_post_ids))
+                post_results = db.session.execute(stmt_latest_posts).mappings().all()
+                for post_row in post_results:
+                    latest_posts_data[post_row['id']] = dict(post_row)
+                    if post_row.get('author_username'):
+                        usernames_to_fetch.add(post_row['author_username'])
+
+        authors_details = fetch_user_details(usernames_to_fetch) if usernames_to_fetch else {}
+
+        for category in categories:
+            last_thread_info = last_threads_by_cat_id.get(category.id)
+            last_activity_obj = {}
+
+            if last_thread_info:
+                last_post_id = last_thread_info.get('last_post_id')
+                last_post_detail = latest_posts_data.get(last_post_id) if last_post_id else None
+                author_username = None
+                if last_post_detail: # If there's a last post, use its author
+                    author_username = last_post_detail.get('author_username')
+                elif last_thread_info.get('thread_id'): # Fallback to thread author if no last post (e.g. thread just created)
+                    # This requires fetching thread author if not already available
+                    # For simplicity, we'll rely on last_post_detail for now or leave it blank
+                    # To get thread author: thread_obj = db.session.get(ForumThread, last_thread_info['thread_id']); author_username = thread_obj.author_username
+                    pass
+
+
+                last_activity_obj = {
+                    "thread_id": last_thread_info.get('thread_id'),
+                    "thread_title": last_thread_info.get('thread_title'),
+                    # Use thread's updated_at directly as it reflects the latest activity (new post or thread creation)
+                    "last_post_at": last_thread_info.get('last_activity_at').isoformat() if last_thread_info.get('last_activity_at') else None, # type: ignore[attr-defined]
+                    "last_post_by_username": author_username if author_username else None
+                }
+
+
+            results.append({
+                "id": category.id,
+                "name": category.name,
+                "slug": category.slug,
+                "description": category.description,
+                "icon": category.icon,
+                "thread_count": category.thread_count, # Assuming this is a property or efficiently loaded
+                "post_count": category.post_count,     # Assuming this is a property or efficiently loaded
+                "last_activity": last_activity_obj if last_activity_obj else None
+            })
+        return jsonify(results)
+    except SQLAlchemyError as e:
+        log.exception("API Error: Database error fetching forum categories.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        log.exception("API Error: Unexpected error fetching forum categories.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
+@forum_api_bp.route('/categories/<int:category_id>/threads', methods=['GET'])
+def api_get_category_threads(category_id: int):
+    log.debug(f"API request: Fetching threads for category ID: {category_id}")
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', current_app.config.get('THREADS_PER_PAGE_API', 20), type=int)
+    per_page = max(1, min(per_page, 50)) # Clamp per_page
+
+    try:
+        category = db.session.get(ForumCategory, category_id)
+        if not category:
+            return jsonify({"error": "Category not found"}), 404
+
+        threads_query = (
+            select(ForumThread)
+            .where(ForumThread.category_id == category_id)
+            .options(
+                selectinload(ForumThread.last_post).load_only(ForumPost.id, ForumPost.author_username, ForumPost.created_at) # type: ignore[arg-type]
+            )
+            .order_by(ForumThread.is_sticky.desc(), ForumThread.updated_at.desc())
+        )
+        
+        pagination = db.paginate(threads_query, page=page, per_page=per_page, error_out=False)
+        threads_on_page: List[ForumThread] = pagination.items
+
+        thread_list_data = []
+        for thread in threads_on_page:
+            last_post_data = None
+            if thread.last_post:
+                last_post_data = {
+                    "id": thread.last_post.id,
+                    "author_username": thread.last_post.author_username,
+                    "created_at": thread.last_post.created_at.isoformat() if thread.last_post.created_at else None
+                }
+            
+            thread_list_data.append({
+                "id": thread.id,
+                "title": thread.title,
+                "author_username": thread.author_username, # Author of the thread itself
+                "created_at": thread.created_at.isoformat() if thread.created_at else None,
+                "updated_at": thread.updated_at.isoformat() if thread.updated_at else None, # Timestamp of the latest post or thread update
+                "post_count": thread.post_count, # Using the pre-calculated column
+                "view_count": thread.view_count,
+                "is_sticky": thread.is_sticky,
+                "is_locked": thread.is_locked,
+                "last_post": last_post_data
+            })
+
+        return jsonify({
+            "category": {
+                "id": category.id,
+                "name": category.name,
+                "slug": category.slug
+            },
+            "threads": thread_list_data,
+            "pagination": {
+                "current_page": pagination.page,
+                "per_page": pagination.per_page,
+                "total_items": pagination.total,
+                "total_pages": pagination.pages
+            }
+        })
+
+    except SQLAlchemyError as e:
+        log.exception(f"API Error: Database error fetching threads for category {category_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        log.exception(f"API Error: Unexpected error fetching threads for category {category_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
+
+@forum_api_bp.route('/threads/<int:thread_id>/posts', methods=['GET'])
+def api_get_thread_posts(thread_id: int):
+    log.debug(f"API request: Fetching posts for thread ID: {thread_id}")
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', current_app.config.get('POSTS_PER_PAGE_API', 15), type=int)
+    per_page = max(1, min(per_page, 50)) # Clamp per_page
+
+    try:
+        thread = db.session.query(ForumThread).options(
+            selectinload(ForumThread.category).load_only(ForumCategory.id, ForumCategory.name, ForumCategory.slug) # type: ignore[arg-type]
+        ).filter_by(id=thread_id).first()
+
+        if not thread:
+            return jsonify({"error": "Thread not found"}), 404
+
+        posts_query = (
+            select(ForumPost)
+            .where(ForumPost.thread_id == thread_id)
+            .order_by(ForumPost.created_at.asc()) # Typically posts are ordered chronologically
+        )
+        
+        pagination = db.paginate(posts_query, page=page, per_page=per_page, error_out=False)
+        posts_on_page: List[ForumPost] = pagination.items
+        
+        # Fetch author details in batch if needed (e.g., for avatar URLs not directly on post)
+        # For now, assuming author_username is sufficient, and avatar can be constructed/fetched client-side or via User model
+        # If User objects are needed:
+        author_usernames = {post.author_username for post in posts_on_page if post.author_username}
+        authors_details_map = fetch_user_details(author_usernames) if author_usernames else {}
+
+        post_list_data = []
+        for post in posts_on_page:
+            author_details = authors_details_map.get(post.author_username, {})
+            post_list_data.append({
+                "id": post.id,
+                "author_username": post.author_username,
+                "user_avatar_url": author_details.get('avatar_url'), # If fetching full user details
+                "body_html": post.body_html, # Already sanitized HTML
+                "created_at": post.created_at.isoformat() if post.created_at else None,
+                "updated_at": post.updated_at.isoformat() if post.updated_at else None,
+                "last_edited_by_username": post.last_edited_by,
+            })
+
+        return jsonify({
+            "thread": {
+                "id": thread.id,
+                "title": thread.title,
+                "category_id": thread.category.id if thread.category else None,
+                "category_name": thread.category.name if thread.category else None,
+                "category_slug": thread.category.slug if thread.category else None,
+            },
+            "posts": post_list_data,
+            "pagination": {
+                "current_page": pagination.page,
+                "per_page": pagination.per_page,
+                "total_items": pagination.total,
+                "total_pages": pagination.pages
+            }
+        })
+
+    except SQLAlchemyError as e:
+        log.exception(f"API Error: Database error fetching posts for thread {thread_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        log.exception(f"API Error: Unexpected error fetching posts for thread {thread_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
+
+@forum_api_bp.route('/threads/<int:thread_id>/posts', methods=['POST'])
+@firebase_token_required
+def api_create_thread_post(thread_id: int):
+    log.debug(f"API request: Creating post in thread ID: {thread_id}")
+
+    try:
+        thread = db.session.get(ForumThread, thread_id)
+        if not thread:
+            return jsonify({"error": "Thread not found"}), 404
+        
+        if thread.is_locked:
+            return jsonify({"error": "Thread is locked, cannot post replies."}), 403
+
+        data = request.get_json()
+        if not data or 'body' not in data or not data['body'].strip():
+            return jsonify({"error": "Post body is required and cannot be empty."}), 400
+        
+        post_body = data['body'].strip()
+
+        # Get Firebase UID from the decorator-populated flask_g
+        firebase_user_data = getattr(flask_g, 'firebase_user', None)
+        if not firebase_user_data: # Check if firebase_user itself is None or empty
+            log.error(f"API Create Post: firebase_user not found in flask_g for thread {thread_id}.")
+            return jsonify({"error": "Authentication context error: Firebase user data not found."}), 401
+
+        firebase_uid = firebase_user_data.get('uid')
+        if not firebase_uid:
+            log.error(f"API Create Post: Firebase UID not found in firebase_user data for thread {thread_id}. Data: {firebase_user_data}")
+            return jsonify({"error": "Authentication error: Firebase UID not found in token."}), 401
+
+        # Find the local user by Firebase UID to get their username
+        author = db.session.scalar(select(User).filter_by(firebase_uid=firebase_uid)) # type: ignore[arg-type]
+        if not author or not author.username:
+            log.warning(f"API Create Post: Local user not found or username missing for Firebase UID {firebase_uid} in thread {thread_id}.")
+            return jsonify({"error": "User profile not found or incomplete. Cannot determine author."}), 403
+        
+        author_username = author.username
+
+        new_post = ForumPost(
+            thread_id=thread_id,
+            author_username=author_username,
+            body=post_body
+        )
+        db.session.add(new_post)
+        db.session.commit()
+
+        try:
+            add_post_to_index(new_post)
+        except Exception as index_err:
+            log.error(f"API Create Post: Failed to index new post {new_post.id} for thread {thread_id}: {index_err}")
+
+        log.info(f"API: User '{author_username}' (Firebase UID: {firebase_uid}) created post ID {new_post.id} in thread {thread_id}.")
+        
+        # Update thread's last_post_id and updated_at
+        thread.last_post_id = new_post.id
+        thread.updated_at = new_post.created_at # or func.now() if preferred
+        # Increment post_count on thread - this should ideally be handled by a counter cache or trigger
+        # For now, let's do it directly if the column exists and is simple.
+        # A more robust way is thread.post_count = ForumPost.query.with_parent(thread).count()
+        # or an event listener.
+        # Direct increment:
+        thread.post_count = (thread.post_count or 0) + 1
+        db.session.add(thread)
+        db.session.commit()
+
+
+        return jsonify({
+            "id": new_post.id,
+            "author_username": new_post.author_username,
+            "body_html": new_post.body_html,
+            "created_at": new_post.created_at.isoformat() if new_post.created_at else None,
+            "thread_id": new_post.thread_id
+        }), 201
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        log.exception(f"API Error: Database error creating post in thread {thread_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        db.session.rollback()
+        log.exception(f"API Error: Unexpected error creating post in thread {thread_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
 
 # === HJÆLPEFUNKTION: Batch Fetching og Behandling af Brugerdata ===
 def fetch_user_details(usernames: Set[str]) -> Dict[str, Dict[str, Any]]:

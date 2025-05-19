@@ -103,15 +103,219 @@ Definer JSON request/response strukturer for hver.
   [X] GET /api/v1/aktiedyst/markets/{symbol}/history?period=[1d|7d|1m|...]: Kursdata. (Placeholder implemented)
   [X] POST /api/v1/aktiedyst/orders: Placer en ordre (kræver Firebase Auth). (Placeholder implemented)
 Definer JSON request/response strukturer for hver.
-[ ] API Design - Forum & Andre Features (Detaljeret Definition):
-Forum: GET /api/v1/forum/categories, GET /api/v1/forum/categories/{catId}/threads, GET /api/v1/forum/threads/{threadId}/posts, POST /api/v1/forum/threads/{threadId}/posts (kræver Firebase Auth for POST).
-Brugerprofil: GET /api/v1/users/me/profile (baseret på Firebase Auth), PUT /api/v1/users/me/profile.
+[X] API Design - Forum & Andre Features (Detaljeret Definition):
+  [X] Forum: GET /api/v1/forum/categories, GET /api/v1/forum/categories/{catId}/threads, GET /api/v1/forum/threads/{threadId}/posts, POST /api/v1/forum/threads/{threadId}/posts (kræver Firebase Auth for POST). (All Forum API endpoints implemented)
+  [ ] Brugerprofil: GET /api/v1/users/me/profile (baseret på Firebase Auth), PUT /api/v1/users/me/profile.
 Definer JSON request/response strukturer for hver. Overvej om dele af forum/profil data kan flyttes til Firebase Firestore for nemmere realtid og skalerbarhed.
-[~] Implementer/Opdater API Endpoints i Flask: (Initial placeholders for Aktiedyst and refactoring for Sports Match API done)
-  Skriv/opdater Flask routes i [`apps/backend/routes/`](fattecentralen-monorepo/apps/backend/routes/) for at matche de designede endpoints. (Aktiedyst placeholders created in [`api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py), Sports match endpoint refactored in [`api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py))
-Brug SQLAlchemy til databaseinteraktion.
-Implementer serialisering og korrekt HTTP statuskode/fejlhåndtering.
-Sikre endpoints med den nye Firebase Auth token validering.
+```markdown
+### Forum API JSON Structures:
+
+1.  **`GET /api/v1/forum/categories`**
+    *   Description: Retrieves a list of all forum categories.
+    *   Response: `200 OK`
+        ```json
+        [
+          {
+            "id": 1,
+            "name": "General Discussion",
+            "slug": "general-discussion",
+            "description": "Talk about anything and everything.",
+            "icon": "bi-chat-dots",
+            "thread_count": 15,
+            "post_count": 120,
+            "last_activity": {
+              "thread_id": 101,
+              "thread_title": "Welcome to the new forum!",
+              "last_post_at": "2025-05-20T10:00:00Z",
+              "last_post_by_username": "admin_user"
+            }
+          }
+        ]
+        ```
+
+2.  **`GET /api/v1/forum/categories/{categoryId}/threads`**
+    *   Description: Retrieves a list of threads within a specific category. Supports pagination.
+    *   Path Parameters:
+        *   `categoryId` (integer): The ID of the forum category.
+    *   Query Parameters:
+        *   `page` (integer, optional, default: 1): Page number for pagination.
+        *   `per_page` (integer, optional, default: 20): Number of threads per page.
+    *   Response: `200 OK`
+        ```json
+        {
+          "category": {
+            "id": 1,
+            "name": "General Discussion",
+            "slug": "general-discussion"
+          },
+          "threads": [
+            {
+              "id": 101,
+              "title": "Welcome to the new forum!",
+              "author_username": "admin_user",
+              "created_at": "2025-05-19T12:00:00Z",
+              "updated_at": "2025-05-20T10:00:00Z",
+              "post_count": 5,
+              "view_count": 250,
+              "is_sticky": true,
+              "is_locked": false,
+              "last_post": {
+                "id": 505,
+                "author_username": "new_user",
+                "created_at": "2025-05-20T10:00:00Z"
+              }
+            }
+          ],
+          "pagination": {
+            "current_page": 1,
+            "per_page": 20,
+            "total_items": 15,
+            "total_pages": 1
+          }
+        }
+        ```
+
+3.  **`GET /api/v1/forum/threads/{threadId}/posts`**
+    *   Description: Retrieves posts within a specific thread. Supports pagination.
+    *   Path Parameters:
+        *   `threadId` (integer): The ID of the forum thread.
+    *   Query Parameters:
+        *   `page` (integer, optional, default: 1): Page number for pagination.
+        *   `per_page` (integer, optional, default: 15): Number of posts per page.
+    *   Response: `200 OK`
+        ```json
+        {
+          "thread": {
+            "id": 101,
+            "title": "Welcome to the new forum!",
+            "category_id": 1,
+            "category_name": "General Discussion"
+          },
+          "posts": [
+            {
+              "id": 501,
+              "author_username": "admin_user",
+              "body_html": "<p>Hello everyone! This is the <strong>first</strong> post.</p>",
+              "created_at": "2025-05-19T12:00:00Z",
+              "updated_at": "2025-05-19T12:05:00Z",
+              "last_edited_by_username": "admin_user",
+              "user_avatar_url": "/static/avatars/admin_user_avatar.png"
+            }
+          ],
+          "pagination": {
+            "current_page": 1,
+            "per_page": 15,
+            "total_items": 5,
+            "total_pages": 1
+          }
+        }
+        ```
+
+4.  **`POST /api/v1/forum/threads/{threadId}/posts`**
+    *   Description: Creates a new post in a specific thread. Requires Firebase Authentication.
+    *   Path Parameters:
+        *   `threadId` (integer): The ID of the forum thread.
+    *   Request Body (Authenticated):
+        ```json
+        {
+          "body": "This is my reply to the thread. Supports **Markdown**!"
+        }
+        ```
+    *   Response: `201 Created`
+        ```json
+        {
+          "id": 506,
+          "author_username": "current_authenticated_user",
+          "body_html": "<p>This is my reply to the thread. Supports <strong>Markdown</strong>!</p>",
+          "created_at": "2025-05-20T14:30:00Z",
+          "thread_id": 101
+        }
+        ```
+
+### User Profile API JSON Structures:
+
+1.  **`GET /api/v1/users/me/profile`**
+    *   Description: Retrieves the profile of the currently authenticated user.
+    *   Response (Authenticated): `200 OK`
+        ```json
+        {
+          "uid": "internal_db_user_uid_123",
+          "firebase_uid": "firebase_auth_user_uid",
+          "username": "current_user",
+          "email": "user@example.com",
+          "role": "user",
+          "balance": 100.50,
+          "registration_date": "2025-01-15T09:30:00Z",
+          "last_login": "2025-05-20T12:00:00Z",
+          "avatar_url": "/static/avatars/current_user_avatar.png",
+          "about_me": "Loves coding and sports!",
+          "level": 5,
+          "xp": 1250,
+          "post_count": 42,
+          "settings": {
+            "theme": "dark",
+            "notifications_enabled": true
+          },
+          "privacy_settings": {
+            "profile_public": true,
+            "show_activity": false,
+            "show_bet_history": true,
+            "show_online_status": true
+          }
+        }
+        ```
+
+2.  **`PUT /api/v1/users/me/profile`**
+    *   Description: Updates the profile of the currently authenticated user.
+    *   Request Body (Authenticated):
+        ```json
+        {
+          "about_me": "Updated about me section. Still loves coding and now also enjoys hiking!",
+          "settings": {
+            "theme": "light",
+            "notifications_enabled": false
+          },
+          "privacy_settings": {
+            "show_activity": true,
+            "show_bet_history": false
+          }
+        }
+        ```
+    *   Response: `200 OK`
+        ```json
+        {
+          "uid": "internal_db_user_uid_123",
+          "firebase_uid": "firebase_auth_user_uid",
+          "username": "current_user",
+          "email": "user@example.com",
+          "role": "user",
+          "balance": 100.50,
+          "registration_date": "2025-01-15T09:30:00Z",
+          "last_login": "2025-05-20T12:00:00Z",
+          "avatar_url": "/static/avatars/current_user_avatar.png",
+          "about_me": "Updated about me section. Still loves coding and now also enjoys hiking!",
+          "level": 5,
+          "xp": 1250,
+          "post_count": 42,
+          "settings": {
+            "theme": "light",
+            "notifications_enabled": false
+          },
+          "privacy_settings": {
+            "profile_public": true,
+            "show_activity": true,
+            "show_bet_history": false,
+            "show_online_status": true
+          },
+          "message": "Profile updated successfully."
+        }
+        ```
+```
+[X] Implementer/Opdater API Endpoints i Flask: (Initial placeholders for Aktiedyst and refactoring for Sports Match API done. Forum API fully implemented.)
+  [X] Skriv/opdater Flask routes i [`apps/backend/routes/`](fattecentralen-monorepo/apps/backend/routes/) for at matche de designede endpoints. (Aktiedyst placeholders created in [`api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py), Sports match endpoint refactored in [`api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py). Forum API: `forum_api_bp` created and registered; `GET /categories`, `GET /categories/{catId}/threads`, `GET /threads/{threadId}/posts`, and `POST /threads/{threadId}/posts` (with Firebase Auth) implemented in [`forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py).)
+  [X] Brug SQLAlchemy til databaseinteraktion. (Done for Forum API)
+  [X] Implementer serialisering og korrekt HTTP statuskode/fejlhåndtering. (Done for Forum API)
+  [X] Sikre endpoints med den nye Firebase Auth token validering. (Done for Forum POST API)
 [X] Real-time (Socket.IO) Forberedelse i Flask (apps/backend/sockets.py):
   [X] Gennemgå eksisterende Flask-SocketIO setup. (Reviewed existing setup in [`apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py))
   [X] Definer klare event-navne (live_score_update, stock_price_update, new_user_notification). (Defined `live_score_update` and `stock_price_update`)

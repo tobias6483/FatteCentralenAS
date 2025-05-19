@@ -372,6 +372,10 @@ class ForumPost(db.Model):
             escaped_body = html.escape(value)
             target.body_html = f"<p><b>Fejl under formatering:</b></p><pre>{escaped_body}</pre>"
 
+    # Explicit __init__ to allow keyword argument instantiation
+    def __init__(self, **kwargs): # type: ignore[no-untyped-def]
+        super().__init__(**kwargs)
+
     def __repr__(self):
         return f"<ForumPost(id={self.id}, author='{self.author_username}', thread_id={self.thread_id})>"
 
