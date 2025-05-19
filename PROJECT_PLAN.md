@@ -106,7 +106,247 @@ Mål: At sikre at backend'en eksponerer de nødvendige API'er, integrerer med Fi
     *   [X] GET /api/v1/sports/{sportId}/matches?status=[live|upcoming|finished]&date=YYYY-MM-DD: Liste af kampe.
     *   [X] GET /api/v1/matches/{matchId}: Detaljer for én kamp. (Endpoint refactored, blueprint `matches_api_bp` created)
     *   [X] Definer JSON request/response strukturer for hver.
-    *   *Status: Refactoring af eksisterende match endpoint er udført. Fuld gennemgang for at identificere og implementere manglende funktionalitet for omfattende dækning er påkrævet.*
+    *   *Status: JSON request/response strukturer for eksisterende endpoints er defineret nedenfor. Yderligere endpoints for ligaer, hold, stillinger og udvidede kampdetaljer er foreslået for omfattende dækning.*
+```markdown
+### Live Sports API JSON Structures:
+
+**1. `GET /api/v1/sports`**
+    *   Description: Retrieves a list of all available sports.
+    *   Response: `200 OK`
+        ```json
+        [
+          {
+            "id": "football",
+            "name": "Football",
+            "icon_svg_name": "football-icon",
+            "league_count": 15
+          },
+          {
+            "id": "basketball",
+            "name": "Basketball",
+            "icon_svg_name": "basketball-icon",
+            "league_count": 8
+          }
+        ]
+        ```
+
+**2. `GET /api/v1/sports/{sportId}/matches`**
+    *   Description: Retrieves a list of matches for a specific sport, filterable by status and date.
+    *   Path Parameters:
+        *   `sportId` (string): The ID of the sport (e.g., "football").
+    *   Query Parameters:
+        *   `status` (string, optional): `live`, `upcoming`, `finished`, `scheduled`. Default: `upcoming`.
+        *   `date` (string, optional, format: `YYYY-MM-DD`): Filter matches for a specific date.
+        *   `leagueId` (string, optional): Filter matches for a specific league within the sport.
+        *   `page` (integer, optional, default: 1): Page number for pagination.
+        *   `per_page` (integer, optional, default: 20): Number of matches per page.
+    *   Response: `200 OK`
+        ```json
+        {
+          "sport": {
+            "id": "football",
+            "name": "Football"
+          },
+          "filters": {
+            "status": "live",
+            "date": "2025-05-20",
+            "leagueId": "premier-league"
+          },
+          "matches": [
+            {
+              "id": "match_123",
+              "league": {
+                "id": "premier-league",
+                "name": "Premier League",
+                "logo_url": "/static/logos/premier_league.png"
+              },
+              "home_team": {
+                "id": "team_A",
+                "name": "Team A",
+                "logo_url": "/static/logos/team_a.png"
+              },
+              "away_team": {
+                "id": "team_B",
+                "name": "Team B",
+                "logo_url": "/static/logos/team_b.png"
+              },
+              "start_time_utc": "2025-05-20T19:00:00Z",
+              "status": "live",
+              "minute": 65,
+              "score": {
+                "home": 1,
+                "away": 0,
+                "period": "2H"
+              },
+              "venue": {
+                "id": "venue_1",
+                "name": "Stadium X",
+                "city": "City Y"
+              }
+            }
+          ],
+          "pagination": {
+            "current_page": 1,
+            "per_page": 20,
+            "total_items": 5,
+            "total_pages": 1
+          }
+        }
+        ```
+
+**3. `GET /api/v1/matches/{matchId}`**
+    *   Description: Retrieves detailed information for a single match.
+    *   Path Parameters:
+        *   `matchId` (string): The ID of the match.
+    *   Response: `200 OK`
+        ```json
+        {
+          "id": "match_123",
+          "sport": { "id": "football", "name": "Football" },
+          "league": { "id": "premier-league", "name": "Premier League", "country": "England", "logo_url": "/static/logos/premier_league.png" },
+          "home_team": { "id": "team_A", "name": "Team A", "logo_url": "/static/logos/team_a.png", "country": "England" },
+          "away_team": { "id": "team_B", "name": "Team B", "logo_url": "/static/logos/team_b.png", "country": "England" },
+          "start_time_utc": "2025-05-20T19:00:00Z",
+          "status": "finished",
+          "minute": 90,
+          "score": {
+            "home": 2, "away": 1, "winner": "home", "period": "FT",
+            "half_time_score": { "home": 1, "away": 0 },
+            "full_time_score": { "home": 2, "away": 1 }
+          },
+          "venue": { "id": "venue_1", "name": "Stadium X", "city": "City Y", "capacity": 50000 },
+          "referee": { "id": "ref_007", "name": "John Doe", "nationality": "English" },
+          "lineups": {
+            "home_team_formation": "4-3-3", "away_team_formation": "4-4-2",
+            "home_team_starters": [{ "player_id": "p1", "player_name": "Player One", "jersey_number": 10, "position": "Forward" }],
+            "away_team_starters": [{ "player_id": "p101", "player_name": "Player One Oh One", "jersey_number": 7, "position": "Midfielder" }],
+            "home_team_substitutes": [{ "player_id": "p2", "player_name": "Player Two", "jersey_number": 15, "position": "Defender" }],
+            "away_team_substitutes": [{ "player_id": "p102", "player_name": "Player One Oh Two", "jersey_number": 18, "position": "Forward" }]
+          },
+          "events": [
+            { "id": "event_1", "type": "goal", "minute": 25, "team_id": "team_A", "player_id": "p1", "player_name": "Player One", "detail": "Left foot shot", "score_at_event": { "home": 1, "away": 0 } },
+            { "id": "event_2", "type": "card", "minute": 30, "team_id": "team_B", "player_id": "p101", "player_name": "Player One Oh One", "detail": "Yellow Card - Unsporting behavior" }
+          ],
+          "statistics": {
+            "home_team": { "possession_percentage": 60, "shots_total": 15, "shots_on_target": 7, "corners": 8, "fouls_committed": 10 },
+            "away_team": { "possession_percentage": 40, "shots_total": 8, "shots_on_target": 3, "corners": 3, "fouls_committed": 12 }
+          },
+          "head_to_head_summary": {
+            "last_5_matches": [{ "match_id": "h2h_1", "date": "2024-10-10", "home_team_score": 1, "away_team_score": 1, "winner": "draw" }],
+            "overall_stats": { "total_matches": 10, "team_a_wins": 5, "team_b_wins": 3, "draws": 2 }
+          },
+          "betting_odds": {
+             "pre_match": [{"bookmaker_id": "bm1", "market_name": "Match Winner", "odds": [{"outcome": "Home", "value": 1.8}, {"outcome": "Draw", "value": 3.5}, {"outcome": "Away", "value": 4.0}]}]
+          }
+        }
+        ```
+
+**Proposed New Endpoints for Comprehensive Live Sports API Coverage:**
+
+**4. `GET /api/v1/sports/{sportId}/leagues`**
+    *   Description: Retrieves a list of leagues for a specific sport.
+    *   Path Parameters: `sportId` (string)
+    *   Query Parameters: `page` (int, opt), `per_page` (int, opt)
+    *   Response: `200 OK`
+        ```json
+        {
+          "sport": { "id": "football", "name": "Football" },
+          "leagues": [
+            { "id": "premier-league", "name": "Premier League", "country_code": "GB", "country_name": "United Kingdom", "logo_url": "/static/logos/premier_league.png", "current_season_id": "season_2024_2025", "type": "League" }
+          ],
+          "pagination": { "current_page": 1, "per_page": 20, "total_items": 1, "total_pages": 1 }
+        }
+        ```
+
+**5. `GET /api/v1/leagues/{leagueId}`**
+    *   Description: Retrieves details for a specific league.
+    *   Path Parameters: `leagueId` (string)
+    *   Response: `200 OK`
+        ```json
+        {
+          "id": "premier-league", "name": "Premier League", "sport_id": "football", "country_code": "GB", "country_name": "United Kingdom", "logo_url": "/static/logos/premier_league.png",
+          "current_season": { "id": "season_2024_2025", "name": "2024/2025", "start_date": "2024-08-10", "end_date": "2025-05-18" },
+          "type": "League",
+          "active_seasons": [ {"id": "season_2024_2025", "name": "2024/2025"}, {"id": "season_2023_2024", "name": "2023/2024"} ]
+        }
+        ```
+
+**6. `GET /api/v1/leagues/{leagueId}/standings`**
+    *   Description: Retrieves the standings for a specific league and season.
+    *   Path Parameters: `leagueId` (string)
+    *   Query Parameters: `seasonId` (string, opt)
+    *   Response: `200 OK`
+        ```json
+        {
+          "league": { "id": "premier-league", "name": "Premier League" },
+          "season": { "id": "season_2024_2025", "name": "2024/2025" },
+          "standings": [
+            {
+              "group_name": "Overall",
+              "table": [
+                { "rank": 1, "team": { "id": "team_A", "name": "Team A", "logo_url": "/static/logos/team_a.png" }, "played": 10, "wins": 8, "draws": 1, "losses": 1, "goals_for": 25, "goals_against": 5, "goal_difference": 20, "points": 25, "form": "WWLWD" }
+              ]
+            }
+          ]
+        }
+        ```
+
+**7. `GET /api/v1/leagues/{leagueId}/teams`**
+    *   Description: Retrieves teams in a specific league and season.
+    *   Path Parameters: `leagueId` (string)
+    *   Query Parameters: `seasonId` (string, opt), `page` (int, opt), `per_page` (int, opt)
+    *   Response: `200 OK`
+        ```json
+        {
+          "league": { "id": "premier-league", "name": "Premier League" },
+          "season": { "id": "season_2024_2025", "name": "2024/2025" },
+          "teams": [
+            { "id": "team_A", "name": "Team A", "short_name": "TMA", "country": "England", "logo_url": "/static/logos/team_a.png", "venue_name": "Stadium X" }
+          ],
+          "pagination": { "current_page": 1, "per_page": 20, "total_items": 1, "total_pages": 1 }
+        }
+        ```
+
+**8. `GET /api/v1/teams/{teamId}`**
+    *   Description: Retrieves details for a specific team.
+    *   Path Parameters: `teamId` (string)
+    *   Response: `200 OK`
+        ```json
+        {
+          "id": "team_A", "name": "Team A", "short_name": "TMA", "country": "England", "founded_year": 1900, "logo_url": "/static/logos/team_a.png",
+          "venue": { "id": "venue_1", "name": "Stadium X", "city": "City Y", "capacity": 50000 },
+          "current_leagues": [ { "id": "premier-league", "name": "Premier League" } ],
+          "coach": { "id": "coach_1", "name": "Coach Name", "nationality": "Spanish" }
+        }
+        ```
+
+**9. `GET /api/v1/teams/{teamId}/matches`**
+    *   Description: Retrieves matches for a specific team.
+    *   Path Parameters: `teamId` (string)
+    *   Query Parameters: `status` (string, opt), `seasonId` (string, opt), `limit` (int, opt), `page` (int, opt), `per_page` (int, opt)
+    *   Response: `200 OK`
+        ```json
+        {
+          "team": { "id": "team_A", "name": "Team A" },
+          "filters": { "status": "upcoming", "seasonId": "season_2024_2025" },
+          "matches": [
+            {
+              "id": "match_456",
+              "league": { "id": "premier-league", "name": "Premier League" },
+              "home_team": { "id": "team_A", "name": "Team A" },
+              "away_team": { "id": "team_C", "name": "Team C" },
+              "start_time_utc": "2025-05-25T14:00:00Z",
+              "status": "upcoming",
+              "venue": { "id": "venue_1", "name": "Stadium X" }
+            }
+          ],
+          "pagination": { "current_page": 1, "per_page": 10, "total_items": 5, "total_pages": 1 }
+        }
+        ```
+
+*Note: Consider adding `Player` related endpoints (`/api/v1/players/{playerId}`, `/api/v1/players/{playerId}/stats`) in a future iteration if detailed player information becomes a requirement.*
+
+```
 [/] API Design - Aktiedyst (Mål: Omfattende API dækning):
     *   [X] GET /api/v1/aktiedyst/portfolio: Brugerens portefølje (kræver Firebase Auth). (Placeholder implemented)
     *   [X] GET /api/v1/aktiedyst/transactions: Brugerens transaktionshistorik (kræver Firebase Auth). (Placeholder implemented)
@@ -114,7 +354,337 @@ Mål: At sikre at backend'en eksponerer de nødvendige API'er, integrerer med Fi
     *   [X] GET /api/v1/aktiedyst/markets/{symbol}/history?period=[1d|7d|1m|...]: Kursdata. (Placeholder implemented)
     *   [X] POST /api/v1/aktiedyst/orders: Placer en ordre (kræver Firebase Auth). (Placeholder implemented)
     *   [X] Definer JSON request/response strukturer for hver.
-    *   *Status: Initial scaffolding med placeholder endpoints og mock data er fuldført. Fuld gennemgang for at identificere og implementere manglende funktionalitet for omfattende dækning er påkrævet.*
+    *   *Status: JSON request/response strukturer for eksisterende endpoints er defineret nedenfor. Yderligere endpoints for markedsdetaljer, ordrestatus, og potentielt ranglister er foreslået for omfattende dækning.*
+```markdown
+### Aktiedyst API JSON Structures:
+
+**1. `GET /api/v1/aktiedyst/portfolio`**
+    *   Description: Retrieves the current user's stock portfolio. Requires Firebase Authentication.
+    *   Response: `200 OK`
+        ```json
+        {
+          "user_uid": "firebase_auth_user_uid",
+          "portfolio_value": 12550.75,
+          "cash_balance": 1550.25,
+          "total_investment": 11000.50,
+          "overall_pnl": 1550.25,
+          "overall_pnl_percentage": 14.09,
+          "holdings": [
+            {
+              "symbol": "AAPL",
+              "company_name": "Apple Inc.",
+              "quantity": 10,
+              "average_buy_price": 150.00,
+              "current_price": 175.50,
+              "market_value": 1755.00,
+              "pnl": 255.00,
+              "pnl_percentage": 17.00,
+              "logo_url": "/static/logos/aapl.png"
+            },
+            {
+              "symbol": "MSFT",
+              "company_name": "Microsoft Corp.",
+              "quantity": 5,
+              "average_buy_price": 300.00,
+              "current_price": 320.10,
+              "market_value": 1600.50,
+              "pnl": 100.50,
+              "pnl_percentage": 6.67,
+              "logo_url": "/static/logos/msft.png"
+            }
+          ],
+          "last_updated_utc": "2025-05-20T10:30:00Z"
+        }
+        ```
+
+**2. `GET /api/v1/aktiedyst/transactions`**
+    *   Description: Retrieves the current user's transaction history. Requires Firebase Authentication.
+    *   Query Parameters:
+        *   `page` (integer, optional, default: 1): Page number for pagination.
+        *   `per_page` (integer, optional, default: 20): Number of transactions per page.
+        *   `type` (string, optional): Filter by transaction type (`buy`, `sell`).
+        *   `symbol` (string, optional): Filter by stock symbol.
+    *   Response: `200 OK`
+        ```json
+        {
+          "user_uid": "firebase_auth_user_uid",
+          "transactions": [
+            {
+              "id": "txn_123",
+              "symbol": "AAPL",
+              "company_name": "Apple Inc.",
+              "type": "buy",
+              "quantity": 10,
+              "price_per_share": 150.00,
+              "total_amount": 1500.00,
+              "timestamp_utc": "2025-05-10T14:30:00Z",
+              "status": "completed"
+            },
+            {
+              "id": "txn_124",
+              "symbol": "MSFT",
+              "company_name": "Microsoft Corp.",
+              "type": "sell",
+              "quantity": 2,
+              "price_per_share": 310.00,
+              "total_amount": 620.00,
+              "timestamp_utc": "2025-05-15T09:15:00Z",
+              "status": "completed"
+            }
+          ],
+          "pagination": {
+            "current_page": 1,
+            "per_page": 20,
+            "total_items": 2,
+            "total_pages": 1
+          }
+        }
+        ```
+
+**3. `GET /api/v1/aktiedyst/markets`**
+    *   Description: Retrieves a list of tradable stocks/symbols.
+    *   Query Parameters:
+        *   `page` (integer, optional, default: 1): Page number for pagination.
+        *   `per_page` (integer, optional, default: 50): Number of markets per page.
+        *   `search` (string, optional): Search by symbol or company name.
+        *   `sector` (string, optional): Filter by sector (e.g., "Technology").
+    *   Response: `200 OK`
+        ```json
+        {
+          "markets": [
+            {
+              "symbol": "AAPL",
+              "company_name": "Apple Inc.",
+              "current_price": 175.50,
+              "change_today_value": 1.25,
+              "change_today_percentage": 0.72,
+              "market_cap": 2.8E12,
+              "sector": "Technology",
+              "exchange": "NASDAQ",
+              "logo_url": "/static/logos/aapl.png"
+            },
+            {
+              "symbol": "GOOGL",
+              "company_name": "Alphabet Inc.",
+              "current_price": 150.70,
+              "change_today_value": -0.50,
+              "change_today_percentage": -0.33,
+              "market_cap": 1.9E12,
+              "sector": "Communication Services",
+              "exchange": "NASDAQ",
+              "logo_url": "/static/logos/googl.png"
+            }
+          ],
+          "pagination": {
+            "current_page": 1,
+            "per_page": 50,
+            "total_items": 100,
+            "total_pages": 2
+          }
+        }
+        ```
+
+**4. `GET /api/v1/aktiedyst/markets/{symbol}/history`**
+    *   Description: Retrieves historical price data for a specific stock symbol.
+    *   Path Parameters:
+        *   `symbol` (string): The stock symbol (e.g., "AAPL").
+    *   Query Parameters:
+        *   `period` (string, optional): `1d`, `5d`, `1m`, `3m`, `6m`, `1y`, `ytd`, `max`. Default: `1m`.
+        *   `interval` (string, optional): `1min`, `5min`, `15min`, `1h`, `1d`. Default depends on period.
+    *   Response: `200 OK`
+        ```json
+        {
+          "symbol": "AAPL",
+          "company_name": "Apple Inc.",
+          "period": "1m",
+          "interval": "1d",
+          "history": [
+            { "timestamp_utc": "2025-04-20T00:00:00Z", "open": 165.00, "high": 166.50, "low": 164.00, "close": 165.75, "volume": 12000000 },
+            { "timestamp_utc": "2025-04-21T00:00:00Z", "open": 165.80, "high": 167.20, "low": 165.50, "close": 166.90, "volume": 15000000 }
+          ],
+          "previous_close": 164.50,
+          "currency": "USD"
+        }
+        ```
+
+**5. `POST /api/v1/aktiedyst/orders`**
+    *   Description: Places a new stock order (buy/sell). Requires Firebase Authentication.
+    *   Request Body:
+        ```json
+        {
+          "symbol": "AAPL",
+          "type": "buy", // "buy" or "sell"
+          "order_type": "market", // "market", "limit", "stop"
+          "quantity": 10,
+          "limit_price": null, // Required if order_type is "limit"
+          "stop_price": null   // Required if order_type is "stop"
+        }
+        ```
+    *   Response: `201 Created` (for successful market orders or pending limit/stop orders)
+        ```json
+        {
+          "order_id": "order_789",
+          "user_uid": "firebase_auth_user_uid",
+          "symbol": "AAPL",
+          "type": "buy",
+          "order_type": "market",
+          "quantity": 10,
+          "status": "pending_execution", // or "filled", "partially_filled", "cancelled", "rejected"
+          "message": "Market order for 10 AAPL shares submitted.",
+          "created_at_utc": "2025-05-20T11:00:00Z"
+        }
+        ```
+    *   Response: `400 Bad Request` (for validation errors, insufficient funds, etc.)
+        ```json
+        {
+          "error_code": "INSUFFICIENT_FUNDS",
+          "message": "Insufficient funds to place this order."
+        }
+        ```
+
+**Proposed New Endpoints for Comprehensive Aktiedyst API Coverage:**
+
+**6. `GET /api/v1/aktiedyst/markets/{symbol}`**
+    *   Description: Retrieves detailed information for a specific stock symbol, including company info, news, and key stats.
+    *   Path Parameters: `symbol` (string)
+    *   Response: `200 OK`
+        ```json
+        {
+          "symbol": "AAPL",
+          "company_name": "Apple Inc.",
+          "description": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.",
+          "sector": "Technology",
+          "industry": "Consumer Electronics",
+          "exchange": "NASDAQ",
+          "website": "https://www.apple.com",
+          "logo_url": "/static/logos/aapl.png",
+          "current_price_info": {
+            "price": 175.50,
+            "change_value": 1.25,
+            "change_percentage": 0.72,
+            "day_high": 176.00,
+            "day_low": 174.50,
+            "volume": 25000000,
+            "previous_close": 174.25,
+            "timestamp_utc": "2025-05-20T11:15:00Z"
+          },
+          "key_stats": {
+            "market_cap": 2.8E12,
+            "pe_ratio": 28.5,
+            "eps": 6.15,
+            "dividend_yield": 0.55,
+            "52_week_high": 190.00,
+            "52_week_low": 140.00
+          },
+          "news": [
+            { "id": "news_1", "title": "Apple Announces New Product Line", "source": "Tech News Daily", "url": "https://example.com/news1", "published_at_utc": "2025-05-19T08:00:00Z" }
+          ],
+          "analyst_ratings": {
+            "buy": 25,
+            "hold": 10,
+            "sell": 2,
+            "recommendation": "Strong Buy"
+          }
+        }
+        ```
+
+**7. `GET /api/v1/aktiedyst/orders`**
+    *   Description: Retrieves a list of the current user's orders (open, filled, cancelled). Requires Firebase Authentication.
+    *   Query Parameters:
+        *   `status` (string, optional): `open`, `filled`, `cancelled`, `pending_execution`, `rejected`.
+        *   `symbol` (string, optional): Filter by stock symbol.
+        *   `page` (integer, optional, default: 1).
+        *   `per_page` (integer, optional, default: 20).
+    *   Response: `200 OK`
+        ```json
+        {
+          "user_uid": "firebase_auth_user_uid",
+          "orders": [
+            {
+              "id": "order_789",
+              "symbol": "AAPL",
+              "type": "buy",
+              "order_type": "limit",
+              "quantity_ordered": 10,
+              "quantity_filled": 0,
+              "limit_price": 170.00,
+              "status": "open",
+              "created_at_utc": "2025-05-20T11:00:00Z",
+              "updated_at_utc": "2025-05-20T11:00:00Z"
+            }
+          ],
+          "pagination": { "current_page": 1, "per_page": 20, "total_items": 1, "total_pages": 1 }
+        }
+        ```
+
+**8. `GET /api/v1/aktiedyst/orders/{orderId}`**
+    *   Description: Retrieves details for a specific order. Requires Firebase Authentication.
+    *   Path Parameters: `orderId` (string)
+    *   Response: `200 OK`
+        ```json
+        {
+          "id": "order_789",
+          "user_uid": "firebase_auth_user_uid",
+          "symbol": "AAPL",
+          "company_name": "Apple Inc.",
+          "type": "buy",
+          "order_type": "limit",
+          "quantity_ordered": 10,
+          "quantity_filled": 5,
+          "average_fill_price": 169.50, // If partially or fully filled
+          "limit_price": 170.00,
+          "status": "partially_filled",
+          "created_at_utc": "2025-05-20T11:00:00Z",
+          "updated_at_utc": "2025-05-20T12:30:00Z",
+          "fills": [ // Details of each fill for the order
+            { "fill_id": "fill_abc", "quantity": 5, "price": 169.50, "timestamp_utc": "2025-05-20T12:30:00Z" }
+          ]
+        }
+        ```
+
+**9. `DELETE /api/v1/aktiedyst/orders/{orderId}`**
+    *   Description: Cancels an open order. Requires Firebase Authentication.
+    *   Path Parameters: `orderId` (string)
+    *   Response: `200 OK`
+        ```json
+        {
+          "order_id": "order_789",
+          "status": "cancelled",
+          "message": "Order successfully cancelled."
+        }
+        ```
+    *   Response: `404 Not Found` (if order doesn't exist or isn't cancellable)
+    *   Response: `403 Forbidden` (if user doesn't own the order)
+
+**10. `GET /api/v1/aktiedyst/leaderboard`**
+    *   Description: Retrieves the Aktiedyst leaderboard.
+    *   Query Parameters:
+        *   `period` (string, optional): `daily`, `weekly`, `monthly`, `all_time`. Default: `weekly`.
+        *   `page` (integer, optional, default: 1).
+        *   `per_page` (integer, optional, default: 20).
+    *   Response: `200 OK`
+        ```json
+        {
+          "period": "weekly",
+          "leaderboard": [
+            {
+              "rank": 1,
+              "user": { "username": "StockWizard", "avatar_url": "/static/avatars/stockwizard.png" },
+              "portfolio_value": 18500.00,
+              "pnl_percentage_period": 22.50
+            },
+            {
+              "rank": 2,
+              "user": { "username": "MarketMaster", "avatar_url": "/static/avatars/marketmaster.png" },
+              "portfolio_value": 17200.00,
+              "pnl_percentage_period": 18.75
+            }
+          ],
+          "pagination": { "current_page": 1, "per_page": 20, "total_items": 50, "total_pages": 3 },
+          "last_updated_utc": "2025-05-20T00:00:00Z"
+        }
+        ```
+```
 [X] API Design - Forum & Andre Features (Fuldført for Forum & Brugerprofil):
   [X] Forum: GET /api/v1/forum/categories, GET /api/v1/forum/categories/{catId}/threads, GET /api/v1/forum/threads/{threadId}/posts, POST /api/v1/forum/threads/{threadId}/posts (kræver Firebase Auth for POST). (All Forum API endpoints implemented)
   [X] Brugerprofil: GET /api/v1/users/me/profile (baseret på Firebase Auth), PUT /api/v1/users/me/profile. (Implemented in [`fattecentralen-monorepo/apps/backend/routes/api_user_profile.py`](fattecentralen-monorepo/apps/backend/routes/api_user_profile.py:1) and registered in [`fattecentralen-monorepo/apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py:1))
