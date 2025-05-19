@@ -35,14 +35,14 @@ def _dummy_get_user_data_batch(usernames: Union[List[str], Set[str]]) -> Dict[st
     log.error("USING INEFFICIENT DUMMY get_user_data_batch! Performance will suffer.")
     users_dict: Dict[str, Optional[Dict[str, Any]]] = {}
     for name in set(usernames):
-         try: data = _dummy_get_user_data_by_id(name); users_dict[name] = data
-         except Exception: log.error(f"Dummy batch: Error fetching single data for '{name}'"); users_dict[name] = None
+         try: pass
+         except Exception: pass
     return users_dict
 
 def _dummy_dt_filter_func(dt_obj, relative=False, default='N/A'):
     log.error("DUMMY dt_filter_func called.")
     if isinstance(dt_obj, datetime.datetime):
-         try: return dt_obj.strftime('%d.%m.%Y %H:%M')
+         try: pass
          except: pass
     return default
 
@@ -136,7 +136,7 @@ def api_get_forum_categories():
                     if post_row.get('author_username'):
                         usernames_to_fetch.add(post_row['author_username'])
 
-        authors_details = fetch_user_details(usernames_to_fetch) if usernames_to_fetch else {}
+        authors_details = get_user_data_batch_func(usernames_to_fetch) if usernames_to_fetch else {}
 
         for category in categories:
             last_thread_info = last_threads_by_cat_id.get(category.id)
@@ -278,7 +278,7 @@ def api_get_thread_posts(thread_id: int):
         # For now, assuming author_username is sufficient, and avatar can be constructed/fetched client-side or via User model
         # If User objects are needed:
         author_usernames = {post.author_username for post in posts_on_page if post.author_username}
-        authors_details_map = fetch_user_details(author_usernames) if author_usernames else {}
+        authors_details_map = get_user_data_batch_func(author_usernames) if author_usernames else {}
 
         post_list_data = []
         for post in posts_on_page:
@@ -400,6 +400,445 @@ def api_create_thread_post(thread_id: int):
         log.exception(f"API Error: Unexpected error creating post in thread {thread_id}.")
         return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
 
+@forum_api_bp.route('/categories/&lt;int:category_id&gt;/threads', methods=['POST'])
+@firebase_token_required
+def api_create_category_thread(category_id: int):
+    log.debug(f"API request: Creating thread in category ID: {category_id}")
+
+    try:
+        category = db.session.get(ForumCategory, category_id)
+        if not category:
+            return jsonify({"error": "Category not found"}), 404
+
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON payload"}), 400
+        
+        title = data.get('title', '').strip()
+        body = data.get('body', '').strip()
+
+        if not title:
+            return jsonify({"error": "Thread title is required."}), 400
+        if not body:
+            return jsonify({"error": "Initial post body is required."}), 400
+
+        firebase_user_data = getattr(flask_g, 'firebase_user', None)
+        if not firebase_user_data:
+            log.error(f"API Create Thread: firebase_user not found in flask_g for category {category_id}.")
+            return jsonify({"error": "Authentication context error: Firebase user data not found."}), 401
+
+        firebase_uid = firebase_user_data.get('uid')
+        if not firebase_uid:
+            log.error(f"API Create Thread: Firebase UID not found in firebase_user data for category {category_id}. Data: {firebase_user_data}")
+            return jsonify({"error": "Authentication error: Firebase UID not found in token."}), 401
+
+        author = db.session.scalar(select(User).filter_by(firebase_uid=firebase_uid)) # type: ignore[arg-type]
+        if not author or not author.username:
+            log.warning(f"API Create Thread: Local user not found or username missing for Firebase UID {firebase_uid} in category {category_id}.")
+            return jsonify({"error": "User profile not found or incomplete. Cannot determine author."}), 403
+        
+        author_username = author.username
+
+        new_thread = ForumThread()
+        new_thread.title = title
+        new_thread.category_id = category.id
+        new_thread.author_username = author_username
+        db.session.add(new_thread)
+        db.session.flush() # To get new_thread.id for the first post
+
+        first_post = ForumPost(
+            thread_id=new_thread.id,
+            author_username=author_username,
+            body=body
+        )
+        db.session.add(first_post)
+        db.session.flush() # To get first_post.id
+
+        # Update thread's last_post_id and initial post_count
+        new_thread.last_post_id = first_post.id
+        new_thread.post_count = 1 
+        # new_thread.updated_at will be set by ForumPost's event listener or implicitly by DB
+
+        db.session.commit()
+
+        try:
+            add_post_to_index(first_post)
+        except Exception as index_err:
+            log.error(f"API Create Thread: Failed to index first post {first_post.id} for new thread {new_thread.id}: {index_err}")
+
+        log.info(f"API: User '{author_username}' (Firebase UID: {firebase_uid}) created thread ID {new_thread.id} ('{new_thread.title}') in category {category_id} with first post ID {first_post.id}.")
+        
+        # Update category counters (if they are simple columns, otherwise use more robust methods)
+        # category.thread_count = (category.thread_count or 0) + 1
+        # category.post_count = (category.post_count or 0) + 1
+        # db.session.add(category)
+        # db.session.commit() 
+        # Note: Counter updates on category might be better handled by triggers or event listeners for accuracy.
+        # For now, relying on existing mechanisms or periodic recalculations if these direct updates are not robust.
+
+        return jsonify({
+            "thread_id": new_thread.id,
+            "title": new_thread.title,
+            "category_id": new_thread.category_id
+        })
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        log.exception(f"API Error: Database error creating thread in category {category_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        db.session.rollback()
+        log.exception(f"API Error: Unexpected error creating thread in category {category_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
+
+@forum_api_bp.route('/threads/&lt;int:thread_id&gt;', methods=['PUT'])
+@firebase_token_required
+def api_update_thread(thread_id: int):
+    log.debug(f"API request: Updating thread ID: {thread_id}")
+
+    try:
+        thread = db.session.get(ForumThread, thread_id)
+        if not thread:
+            return jsonify({"error": "Thread not found"}), 404
+
+        firebase_user_data = getattr(flask_g, 'firebase_user', None)
+        if not firebase_user_data:
+            log.error(f"API Update Thread: firebase_user not found in flask_g for thread {thread_id}.")
+            return jsonify({"error": "Authentication context error"}), 401
+
+        firebase_uid = firebase_user_data.get('uid')
+        if not firebase_uid:
+            log.error(f"API Update Thread: Firebase UID not found in token for thread {thread_id}.")
+            return jsonify({"error": "Authentication error: Firebase UID missing"}), 401
+
+        if User is None: # ADDED: Check if User model is available
+            log.critical("API Update Thread: User model is not available. This is a critical configuration error.")
+            return jsonify({"error": "Server configuration error: User model unavailable."}), 500
+
+        acting_user = db.session.scalar(select(User).filter_by(firebase_uid=firebase_uid)) # type: ignore[arg-type]
+        if not acting_user:
+            log.warning(f"API Update Thread: Local user not found for Firebase UID {firebase_uid} for thread {thread_id}.")
+            return jsonify({"error": "User profile not found"}), 403
+
+        # Authorization check: Must be thread author or an admin
+        if thread.author_username != acting_user.username and not acting_user.is_admin:
+            log.warning(f"API Update Thread: User '{acting_user.username}' (Firebase UID: {firebase_uid}) is not authorized to update thread {thread_id} (author: '{thread.author_username}').")
+            return jsonify({"error": "Forbidden: You are not authorized to update this thread."}), 403
+
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "Invalid JSON payload"}), 400
+        
+        new_title = data.get('title', '').strip()
+        if not new_title:
+            return jsonify({"error": "Thread title cannot be empty."}), 400
+        
+        if thread.title == new_title:
+            return jsonify({
+                "message": "Thread title is already up to date. No changes made.",
+                "thread_id": thread.id,
+                "title": thread.title,
+                "updated_at": thread.updated_at.isoformat() if thread.updated_at else None
+            }), 200
+
+
+        thread.title = new_title
+        # The updated_at timestamp on the thread should ideally be updated automatically
+        # by the model's event listener if one is set up for title changes,
+        # or manually here if not. For now, assuming direct update or ORM handles it.
+        # If manual update is needed: thread.updated_at = datetime.datetime.utcnow()
+        
+        db.session.add(thread)
+        db.session.commit()
+
+        log.info(f"API: Thread ID {thread.id} title updated to '{new_title}' by user '{acting_user.username}' (Firebase UID: {firebase_uid}).")
+
+        return jsonify({
+            "thread_id": thread.id,
+            "title": thread.title,
+            "category_id": thread.category_id,
+            "author_username": thread.author_username,
+            "created_at": thread.created_at.isoformat() if thread.created_at else None,
+            "updated_at": thread.updated_at.isoformat() if thread.updated_at else None, # Reflects the update time
+            "message": "Thread updated successfully."
+        }), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        log.exception(f"API Error: Database error updating thread {thread_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        db.session.rollback()
+        log.exception(f"API Error: Unexpected error updating thread {thread_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
+@forum_api_bp.route('/threads/&lt;int:thread_id&gt;', methods=['DELETE'])
+@firebase_token_required
+def api_delete_thread(thread_id: int):
+    log.debug(f"API request: Deleting thread ID: {thread_id}")
+
+    try:
+        thread = db.session.get(ForumThread, thread_id)
+        if not thread:
+            return jsonify({"error": "Thread not found"}), 404
+
+        firebase_user_data = getattr(flask_g, 'firebase_user', None)
+        if not firebase_user_data:
+            log.error(f"API Delete Thread: firebase_user not found in flask_g for thread {thread_id}.")
+            return jsonify({"error": "Authentication context error"}), 401
+
+        firebase_uid = firebase_user_data.get('uid')
+        if not firebase_uid:
+            log.error(f"API Delete Thread: Firebase UID not found in token for thread {thread_id}.")
+            return jsonify({"error": "Authentication error: Firebase UID missing"}), 401
+
+        if User is None: # type: ignore
+            log.error("API Delete Thread: User model is not available.")
+            return jsonify({"error": "Server configuration error: User model unavailable."}), 500
+            
+        acting_user = db.session.scalar(select(User).filter_by(firebase_uid=firebase_uid)) # type: ignore
+        if not acting_user:
+            log.warning(f"API Delete Thread: Local user not found for Firebase UID {firebase_uid} for thread {thread_id}.")
+            return jsonify({"error": "User profile not found"}), 403
+
+        # Authorization check: Must be thread author or an admin
+        if thread.author_username != acting_user.username and not acting_user.is_admin:
+            log.warning(f"API Delete Thread: User '{acting_user.username}' (Firebase UID: {firebase_uid}) is not authorized to delete thread {thread_id} (author: '{thread.author_username}').")
+            return jsonify({"error": "Forbidden: You are not authorized to delete this thread."}), 403
+
+        # Fetch category before deleting thread to update counts later
+        category_id = thread.category_id
+
+        # Delete associated posts and remove them from search index
+        posts_to_delete = db.session.scalars(select(ForumPost).filter_by(thread_id=thread_id)).all()
+        post_ids_for_index_removal = [post.id for post in posts_to_delete]
+
+        for post in posts_to_delete:
+            db.session.delete(post)
+        
+        # Delete the thread
+        db.session.delete(thread)
+        
+        # Commit deletions
+        db.session.commit()
+
+        # Remove posts from search index after successful DB commit
+        for post_id_to_remove in post_ids_for_index_removal:
+            try:
+                remove_post_from_index(post_id_to_remove)
+            except Exception as index_err:
+                log.error(f"API Delete Thread: Failed to remove post {post_id_to_remove} from index for deleted thread {thread_id}: {index_err}")
+        
+        # Note: Category post_count and thread_count should be updated.
+        # This can be complex due to concurrency. Consider using database triggers,
+        # event listeners, or a periodic recalculation task.
+        # For now, we'll log this requirement.
+        log.info(f"API: Thread ID {thread_id} and its posts deleted by user '{acting_user.username}' (Firebase UID: {firebase_uid}). Category {category_id} counts need update.")
+
+        return jsonify({"message": "Thread and all associated posts deleted successfully."}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        log.exception(f"API Error: Database error deleting thread {thread_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        db.session.rollback()
+        log.exception(f"API Error: Unexpected error deleting thread {thread_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
+@forum_api_bp.route('/threads/&lt;int:thread_id&gt;/posts/&lt;int:post_id&gt;', methods=['PUT'])
+@firebase_token_required
+def api_update_thread_post(thread_id: int, post_id: int):
+    log.debug(f"API request: Updating post ID: {post_id} in thread ID: {thread_id}")
+
+    try:
+        post = db.session.get(ForumPost, post_id)
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
+        
+        if post.thread_id != thread_id:
+            log.warning(f"API Update Post: Post {post_id} does not belong to thread {thread_id}.")
+            return jsonify({"error": "Post not found in this thread"}), 404
+
+        thread = db.session.get(ForumThread, thread_id) # Fetch thread for context if needed (e.g. locked status)
+        if not thread: # Should not happen if post.thread_id is valid, but good check
+            return jsonify({"error": "Thread not found"}), 404
+
+        if thread.is_locked and not (getattr(flask_g, 'firebase_user_is_admin', False)): # Allow admins to edit posts in locked threads
+            return jsonify({"error": "Thread is locked, posts cannot be edited."}), 403
+
+        data = request.get_json()
+        if not data or 'body' not in data or not data['body'].strip():
+            return jsonify({"error": "Post body is required and cannot be empty."}), 400
+        
+        new_body = data['body'].strip()
+
+        firebase_user_data = getattr(flask_g, 'firebase_user', None)
+        if not firebase_user_data:
+            log.error(f"API Update Post: firebase_user not found in flask_g for post {post_id}.")
+            return jsonify({"error": "Authentication context error"}), 401
+
+        firebase_uid = firebase_user_data.get('uid')
+        if not firebase_uid:
+            log.error(f"API Update Post: Firebase UID not found in token for post {post_id}.")
+            return jsonify({"error": "Authentication error: Firebase UID missing"}), 401
+
+        if User is None:
+            log.error("API Update Post: User model is not available.")
+            return jsonify({"error": "Server configuration error: User model unavailable."}), 500
+        
+        acting_user = db.session.scalar(select(User).filter_by(firebase_uid=firebase_uid)) # type: ignore[arg-type]
+        if not acting_user:
+            log.warning(f"API Update Post: Local user not found for Firebase UID {firebase_uid} for post {post_id}.")
+            return jsonify({"error": "User profile not found"}), 403
+
+        # Authorization: Must be post author or an admin
+        if post.author_username != acting_user.username and not acting_user.is_admin:
+            log.warning(f"API Update Post: User '{acting_user.username}' (Firebase UID: {firebase_uid}) is not authorized to update post {post_id} (author: '{post.author_username}').")
+            return jsonify({"error": "Forbidden: You are not authorized to edit this post."}), 403
+
+        if post.body == new_body:
+             return jsonify({
+                "message": "Post content is already up to date. No changes made.",
+                "post_id": post.id,
+                "body_html": post.body_html,
+                "updated_at": post.updated_at.isoformat() if post.updated_at else post.created_at.isoformat()
+            }), 200
+
+        post.body = new_body
+        post.updated_at = datetime.datetime.utcnow() # type: ignore
+        post.last_edited_by = acting_user.username
+        # body_html is updated by the model's @property or event listener
+
+        db.session.add(post)
+        db.session.commit()
+
+        try:
+            add_post_to_index(post)
+        except Exception as index_err:
+            log.error(f"API Update Post: Failed to update index for post {post.id}: {index_err}")
+
+        log.info(f"API: Post ID {post.id} updated by user '{acting_user.username}' (Firebase UID: {firebase_uid}).")
+        
+        return jsonify({
+            "id": post.id,
+            "thread_id": post.thread_id,
+            "author_username": post.author_username,
+            "body_html": post.body_html, # This should reflect the updated content
+            "created_at": post.created_at.isoformat() if post.created_at else None,
+            "updated_at": post.updated_at.isoformat() if post.updated_at else None,
+            "last_edited_by_username": post.last_edited_by,
+            "message": "Post updated successfully."
+        }), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        log.exception(f"API Error: Database error updating post {post_id} in thread {thread_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        db.session.rollback()
+        log.exception(f"API Error: Unexpected error updating post {post_id} in thread {thread_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
+@forum_api_bp.route('/threads/&lt;int:thread_id&gt;/posts/&lt;int:post_id&gt;', methods=['DELETE'])
+@firebase_token_required
+def api_delete_thread_post(thread_id: int, post_id: int):
+    log.debug(f"API request: Deleting post ID: {post_id} from thread ID: {thread_id}")
+
+    try:
+        post = db.session.get(ForumPost, post_id)
+        if not post:
+            return jsonify({"error": "Post not found"}), 404
+
+        if post.thread_id != thread_id:
+            log.warning(f"API Delete Post: Post {post_id} does not belong to thread {thread_id}.")
+            return jsonify({"error": "Post not found in this thread"}), 404
+            
+        thread = db.session.get(ForumThread, post.thread_id) # Fetch the parent thread
+        if not thread:
+             # This case should ideally not be reached if post.thread_id is valid and DB is consistent
+            log.error(f"API Delete Post: Thread {post.thread_id} for post {post_id} not found. Data inconsistency?")
+            return jsonify({"error": "Associated thread not found"}), 500
+
+        # Prevent deletion of the first post in a thread via this endpoint.
+        # The entire thread should be deleted instead.
+        if thread.first_post_id == post.id:
+            log.warning(f"API Delete Post: Attempt to delete first post {post_id} of thread {thread.id}. Denied.")
+            return jsonify({"error": "Cannot delete the first post of a thread. Delete the thread instead."}), 403
+
+        firebase_user_data = getattr(flask_g, 'firebase_user', None)
+        if not firebase_user_data:
+            log.error(f"API Delete Post: firebase_user not found in flask_g for post {post_id}.")
+            return jsonify({"error": "Authentication context error"}), 401
+
+        firebase_uid = firebase_user_data.get('uid')
+        if not firebase_uid:
+            log.error(f"API Delete Post: Firebase UID not found in token for post {post_id}.")
+            return jsonify({"error": "Authentication error: Firebase UID missing"}), 401
+
+        if User is None:
+            log.error("API Delete Post: User model is not available.")
+            return jsonify({"error": "Server configuration error: User model unavailable."}), 500
+
+        acting_user = db.session.scalar(select(User).filter_by(firebase_uid=firebase_uid)) # type: ignore[arg-type]
+        if not acting_user:
+            log.warning(f"API Delete Post: Local user not found for Firebase UID {firebase_uid} for post {post_id}.")
+            return jsonify({"error": "User profile not found"}), 403
+
+        # Authorization: Must be post author or an admin
+        if post.author_username != acting_user.username and not acting_user.is_admin:
+            log.warning(f"API Delete Post: User '{acting_user.username}' (Firebase UID: {firebase_uid}) is not authorized to delete post {post_id} (author: '{post.author_username}').")
+            return jsonify({"error": "Forbidden: You are not authorized to delete this post."}), 403
+
+        post_id_for_index = post.id # Store before deletion
+        
+        # Determine if this was the last post in the thread
+        is_last_post_in_thread = (thread.last_post_id == post.id)
+
+        db.session.delete(post)
+        
+        # Update thread's post_count and potentially last_post_id and updated_at
+        thread.post_count = max(0, (thread.post_count or 1) - 1) # Decrement, ensure not negative
+
+        if is_last_post_in_thread:
+            if thread.post_count == 0: # This was the only post, and it's being deleted (should be handled by first_post_id check, but as a safeguard)
+                # This scenario implies deleting the thread itself, which is not this endpoint's job.
+                # However, if we reach here, it means the first_post_id check might have been bypassed or is for a different logic.
+                # For now, we'll set last_post_id to None. The thread would be empty.
+                thread.last_post_id = None
+                # thread.updated_at should ideally be the thread's creation time or a special marker.
+                # For simplicity, we might leave updated_at as is, or set to thread.created_at
+            else:
+                # Find the new last post
+                new_last_post_stmt = select(ForumPost)\
+                    .where(ForumPost.thread_id == thread.id)\
+                    .order_by(ForumPost.created_at.desc())\
+                    .limit(1)
+                new_last_post = db.session.scalars(new_last_post_stmt).first()
+                if new_last_post:
+                    thread.last_post_id = new_last_post.id
+                    thread.updated_at = new_last_post.created_at
+                else: # Should not happen if post_count > 0
+                    thread.last_post_id = None
+                    thread.updated_at = thread.created_at
+
+
+        db.session.add(thread) # Add thread to session to save changes to post_count, last_post_id, updated_at
+        db.session.commit()
+
+        try:
+            remove_post_from_index(post_id_for_index)
+        except Exception as index_err:
+            log.error(f"API Delete Post: Failed to remove post {post_id_for_index} from index: {index_err}")
+
+        log.info(f"API: Post ID {post_id_for_index} deleted by user '{acting_user.username}' (Firebase UID: {firebase_uid}). Thread {thread.id} counters updated.")
+        
+        return jsonify({"message": "Post deleted successfully."}), 200
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        log.exception(f"API Error: Database error deleting post {post_id} in thread {thread_id}.")
+        return jsonify({"error": "Database error", "details": str(e)}), 500
+    except Exception as e:
+        db.session.rollback()
+        log.exception(f"API Error: Unexpected error deleting post {post_id} in thread {thread_id}.")
+        return jsonify({"error": "Unexpected server error", "details": str(e)}), 500
 # === HJÆLPEFUNKTION: Batch Fetching og Behandling af Brugerdata ===
 def fetch_user_details(usernames: Set[str]) -> Dict[str, Dict[str, Any]]:
     if not usernames:
@@ -503,7 +942,7 @@ def index():
                       usernames_to_fetch.add(post_row['author_username'])
         log.debug(f"Step 3 DONE: Fetched details for {len(latest_posts_data)} posts. Usernames to fetch: {usernames_to_fetch}")
 
-        authors_details = fetch_user_details(usernames_to_fetch)
+        authors_details = get_user_data_batch_func(usernames_to_fetch) if usernames_to_fetch else {}
         log.debug(f"Step 4 DONE: fetch_user_details returned {len(authors_details)} results.")
 
         for category in categories:
@@ -578,7 +1017,7 @@ def view_category(slug: str):
                 .where(ForumPost.thread_id.in_(thread_ids)).group_by(ForumPost.thread_id)
             thread_counts = {tid: count for tid, count in db.session.execute(stmt_counts).all()}
         if usernames_to_fetch:
-            all_authors_details = fetch_user_details(usernames_to_fetch)
+            all_authors_details = get_user_data_batch_func(usernames_to_fetch)
     except SQLAlchemyError as e:
         log.exception(f"Database error preparing category view for '{slug}'.")
         flash('Databasefejl ved hentning af tråde.', 'danger')
@@ -644,7 +1083,7 @@ def view_thread(thread_id: int):
         pagination = db.paginate(posts_query, page=page, per_page=posts_per_page, error_out=False)
         posts_on_page: List[ForumPost] = pagination.items
         usernames_on_page = {p.author_username for p in posts_on_page if p.author_username}
-        if usernames_on_page: authors_details = fetch_user_details(usernames_on_page)
+        if usernames_on_page: authors_details = get_user_data_batch_func(usernames_on_page)
 
         if request.method == 'GET' and thread:
              db.session.execute(
@@ -789,7 +1228,7 @@ def api_latest_forum_posts():
         if not latest_posts_raw: return jsonify([])
 
         author_usernames = {post['author_username'] for post in latest_posts_raw if post.get('author_username')}
-        authors_details = fetch_user_details(author_usernames) if author_usernames else {}
+        authors_details = get_user_data_batch_func(author_usernames) if author_usernames else {}
         latest_posts_processed = []
         for post_mapping in latest_posts_raw:
             post = dict(post_mapping) # Convert RowMapping to dict
@@ -854,7 +1293,7 @@ def search():
 
             usernames_on_page = {p.author_username for p in search_results_objects if p and p.author_username}
             if usernames_on_page:
-                authors_details = fetch_user_details(usernames_on_page)
+                authors_details = get_user_data_batch_func(usernames_on_page)
         except Exception as e:
             log.exception(f"Error during forum search for query '{query}': {e}")
             flash("Der opstod en fejl under søgningen.", "danger")

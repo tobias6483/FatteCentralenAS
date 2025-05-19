@@ -31,6 +31,7 @@ Database (Suppl.): Firebase Firestore eller Realtime Database.
 Testing: Jest & React Testing Library (unit/integration), Playwright eller Cypress (E2E).
 Linting/Formatting: ESLint, Prettier.
 Deployment: Vercel (for Next.js frontend), Docker & en cloud-platform (f.eks. Google Cloud Run, AWS ECS/App Runner) for Flask backend. Firebase Hosting for statiske dele, hvis relevant.
+
 Fase 0: Monorepo & Grundlæggende Frontend Setup
 Mål: At etablere monorepo-strukturen, initialisere et kørende Next.js-projekt med grundlæggende konfiguration, tooling og Firebase-integration.
 
@@ -75,26 +76,15 @@ Mål: At etablere monorepo-strukturen, initialisere et kørende Next.js-projekt 
 [X] Hent Firebase config-objektet og gem det sikkert i apps/frontend/ (via miljøvariabler). (Stored in `.env.local`)
 [X] Initialiser Firebase SDK i apps/frontend/src/lib/firebase.ts (eller lignende). (Created `src/lib/firebase.ts` with initialization logic)
 
-### Overordnet Backend Udviklingsstrategi
-*Bemærkning: Den overordnede strategi for backend-udvikling vil følge disse faser. Detaljer for den nuværende "Fase 1" nedenfor er specifikke opgaver inden for denne bredere ramme.*
+Fase 1: Backend API Klargøring & Grundlæggende Autentificering (Python/Flask apps/backend/)
+Mål: At sikre at backend'en eksponerer de nødvendige API'er, integrerer med Firebase Authentication, og at real-time setup er klar.
 
-1.  **Phase 1: Implement Core User Profile API**:
-    *   Fokus: Oprettelse af `api_user_profile.py`, implementering af `GET` og `PUT` for `/api/v1/users/me/profile`, og registrering af blueprint.
-    *   *Status*: I gang. `api_user_profile.py` er oprettet, og grundlæggende endpoints implementeres.
-2.  **Phase 2: Solidify Forum APIs**:
-    *   Fokus: Gennemgang af eksisterende GET endpoints, implementering af fuld CRUD (Create, Read, Update, Delete) operationer for forumtråde og -posts.
-3.  **Phase 3: Review and Complete Sports & Aktiedyst APIs**:
-    *   Fokus: Gennemgang af eksisterende endpoints for Live Sports og Aktiedyst, identifikation og implementering af manglende funktionalitet for at sikre omfattende API-dækning.
-4.  **Phase 4: Develop Admin API**:
-    *   Fokus: Definition af omfanget for admin-specifikke funktionaliteter og implementering af de nødvendige API-endpoints.
-
-**Generelle Bemærkninger til Backend Udvikling**:
+**Generelle Bemærkninger og Status for Indledende Backend Arbejde:**
+*   **Fuldført Indledende API'er**: Kernen af User Profile API (`GET` og `PUT` for `/api/v1/users/me/profile`) og Forum API'er (fuld CRUD for tråde og posts) er implementeret og funktionelle. Se [`CHANGELOG.md`](CHANGELOG.md) for detaljer (Maj 19).
 *   **Lokal Flask JWTs vs. Firebase ID Tokens**: Der er en løbende overvejelse om potentielt at udfase lokale Flask JWTs (access/refresh tokens) genereret af backend til API-autentificering. Målet ville være, at frontend udelukkende stoler på Firebase ID tokens for alle API-anmodninger for at strømline autentificering. Dette er stadig under diskussion, og den nuværende lokale JWT-generering forbliver på plads indtil videre.
 *   **Løbende Opgaver**: Fejlhåndtering, sikkerhedsforbedringer, databasemigreringer og omfattende testning vil være kontinuerlige bestræbelser gennem alle faser.
 
----
-Fase 1: Backend API Klargøring & Grundlæggende Autentificering (Python/Flask apps/backend/)
-Mål: At sikre at backend'en eksponerer de nødvendige API'er, integrerer med Firebase Authentication, og at real-time setup er klar.
+**Detaljerede Opgaver for Fase 1:**
 
 79.1 | [X] Backend Miljø Opsætning:
 79.2 |   [X] Genereret `requirements.txt` fra det oprindelige projektmiljø.
@@ -103,30 +93,31 @@ Mål: At sikre at backend'en eksponerer de nødvendige API'er, integrerer med Fi
 79.5 |   [X] Installeret afhængigheder fra `requirements.txt` i det nye backend-miljø.
 79.6 |   [X] Downloadet Firebase Admin SDK service account key og gemt sikkert. (Note: Gemt i `~/.firebase_keys/fattecentralenas-service-account.json`)
 79.7 |   [X] Konfigureret environment variable for service account key path. (Note: `GOOGLE_APPLICATION_CREDENTIALS` sat i `apps/backend/.env`)
-[ ] Flask-JWT-Extended & Firebase Auth Integration:
+[X] Flask-JWT-Extended & Firebase Auth Integration: (Omfattende arbejde udført på Firebase ID token validering, API endpoint refactoring for Firebase auth, og sammenkædning af lokale konti. Se CHANGELOG Maj 19.)
   Flask-JWT-Extended er allerede delvist opsat. Nu skal fokus være på at validere JWTs udstedt af Firebase Authentication.
-  Implementer en funktion/decorator i Flask til at verificere Firebase ID tokens sendt i Authorization headeren fra frontend.
-  Opdater login_route, register_route, me_route til ikke selv at udstede JWTs, men i stedet forvente at frontend håndterer login/signup via Firebase, og derefter sender Firebase ID token til Flask. me_route vil validere dette token og returnere brugerdata fra din lokale database baseret på Firebase UID.
-  Sørg for at user_loader mm. i Flask-JWT-Extended fungerer med brugeridentiteter fra Firebase-tokens (f.eks. ved at slå brugeren op i din database via Firebase UID).
+  [X] Implementer en funktion/decorator i Flask til at verificere Firebase ID tokens sendt i Authorization headeren fra frontend. (Udført, f.eks. @firebase_token_required)
+  [X] Opdater login_route, register_route, me_route til ikke selv at udstede JWTs, men i stedet forvente at frontend håndterer login/signup via Firebase, og derefter sender Firebase ID token til Flask. me_route vil validere dette token og returnere brugerdata fra din lokale database baseret på Firebase UID. (Udført for /api/v1/auth/me og register_or_sync_firebase_user)
+  [X] Sørg for at user_loader mm. i Flask-JWT-Extended fungerer med brugeridentiteter fra Firebase-tokens (f.eks. ved at slå brugeren op i din database via Firebase UID). (Implicit håndteret ved at hente bruger via firebase_uid)
   *Bemærkning: Som diskuteret forbliver lokal JWT-generering i traditionelle login-flows indtil videre. Fokus er på Firebase ID token validering for API-kald.*
-[ ] Database Review (Eksisterende apps/backend/):
-  Bekræft at nuværende databasemodeller (models.py) er tilstrækkelige for kernefunktionaliteter. Migrationer (Alembic/Flask-Migrate) skal være up-to-date.
-[X] API Design - Live Sports (Detaljeret Definition):
-GET /api/v1/sports: Liste af sportsgrene/ligaer.
-GET /api/v1/sports/{sportId}/matches?status=[live|upcoming|finished]&date=YYYY-MM-DD: Liste af kampe.
-GET /api/v1/matches/{matchId}: Detaljer for én kamp. (Endpoint refactored, blueprint `matches_api_bp` created in [`apps/backend/routes/api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py) and registered in [`apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py))
-Definer JSON request/response strukturer for hver.
-[X] API Design - Aktiedyst (Detaljeret Definition): (Initial scaffolding with placeholder endpoints and mock data complete in [`apps/backend/routes/api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py). Blueprint `aktiedyst_api_bp` registered in [`apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py))
-  [X] GET /api/v1/aktiedyst/portfolio: Brugerens portefølje (kræver Firebase Auth). (Placeholder implemented)
-  [X] GET /api/v1/aktiedyst/transactions: Brugerens transaktionshistorik (kræver Firebase Auth). (Placeholder implemented)
-  [X] GET /api/v1/aktiedyst/markets: Liste over handlebare aktier/symboler. (Placeholder implemented)
-  [X] GET /api/v1/aktiedyst/markets/{symbol}/history?period=[1d|7d|1m|...]: Kursdata. (Placeholder implemented)
-  [X] POST /api/v1/aktiedyst/orders: Placer en ordre (kræver Firebase Auth). (Placeholder implemented)
-Definer JSON request/response strukturer for hver.
-[X] API Design - Forum & Andre Features (Detaljeret Definition):
+[X] Database Review (Eksisterende apps/backend/): (Bruger model udvidet for Firebase, migrationer anvendt. Se CHANGELOG Maj 18.)
+  [X] Bekræft at nuværende databasemodeller (models.py) er tilstrækkelige for kernefunktionaliteter. Migrationer (Alembic/Flask-Migrate) skal være up-to-date. (Modeller opdateret, migrationer kørt)
+[/] API Design - Live Sports (Mål: Omfattende API dækning):
+    *   [X] GET /api/v1/sports: Liste af sportsgrene/ligaer.
+    *   [X] GET /api/v1/sports/{sportId}/matches?status=[live|upcoming|finished]&date=YYYY-MM-DD: Liste af kampe.
+    *   [X] GET /api/v1/matches/{matchId}: Detaljer for én kamp. (Endpoint refactored, blueprint `matches_api_bp` created)
+    *   [X] Definer JSON request/response strukturer for hver.
+    *   *Status: Refactoring af eksisterende match endpoint er udført. Fuld gennemgang for at identificere og implementere manglende funktionalitet for omfattende dækning er påkrævet.*
+[/] API Design - Aktiedyst (Mål: Omfattende API dækning):
+    *   [X] GET /api/v1/aktiedyst/portfolio: Brugerens portefølje (kræver Firebase Auth). (Placeholder implemented)
+    *   [X] GET /api/v1/aktiedyst/transactions: Brugerens transaktionshistorik (kræver Firebase Auth). (Placeholder implemented)
+    *   [X] GET /api/v1/aktiedyst/markets: Liste over handlebare aktier/symboler. (Placeholder implemented)
+    *   [X] GET /api/v1/aktiedyst/markets/{symbol}/history?period=[1d|7d|1m|...]: Kursdata. (Placeholder implemented)
+    *   [X] POST /api/v1/aktiedyst/orders: Placer en ordre (kræver Firebase Auth). (Placeholder implemented)
+    *   [X] Definer JSON request/response strukturer for hver.
+    *   *Status: Initial scaffolding med placeholder endpoints og mock data er fuldført. Fuld gennemgang for at identificere og implementere manglende funktionalitet for omfattende dækning er påkrævet.*
+[X] API Design - Forum & Andre Features (Fuldført for Forum & Brugerprofil):
   [X] Forum: GET /api/v1/forum/categories, GET /api/v1/forum/categories/{catId}/threads, GET /api/v1/forum/threads/{threadId}/posts, POST /api/v1/forum/threads/{threadId}/posts (kræver Firebase Auth for POST). (All Forum API endpoints implemented)
   [X] Brugerprofil: GET /api/v1/users/me/profile (baseret på Firebase Auth), PUT /api/v1/users/me/profile. (Implemented in [`fattecentralen-monorepo/apps/backend/routes/api_user_profile.py`](fattecentralen-monorepo/apps/backend/routes/api_user_profile.py:1) and registered in [`fattecentralen-monorepo/apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py:1))
-    *Bemærkning: Implementering af `api_user_profile.py` er i gang som en del af "Phase 1: Implement Core User Profile API" fra den overordnede backend strategi.*
 Definer JSON request/response strukturer for hver. Overvej om dele af forum/profil data kan flyttes til Firebase Firestore for nemmere realtid og skalerbarhed.
 ```markdown
 ### Forum API JSON Structures:
@@ -343,6 +334,8 @@ Definer JSON request/response strukturer for hver. Overvej om dele af forum/prof
   [X] Standardiser datastrukturer for events. (Defined for `live_score_update` and `stock_price_update`)
   [X] Overvej Socket.IO rooms for målrettede events (f.eks. match_{matchId}, user_{firebaseUserId}). (Adopted `match_{matchId}` for live sports, `aktiedyst_market_{symbol}` for stocks, and noted `user_{firebaseUserId}` for user-specific notifications. Refactored `handle_subscribe_to_live_scores` to use `match_{matchId}` in [`apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:931))
   [X] Sørg for at Socket.IO forbindelser også kan autentificeres (f.eks. ved at klienten sender Firebase ID token ved connect). (Implemented Firebase ID token verification in `on_connect` handler in [`apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:83). Addressed Pylance errors.)
+
+
 Fase 2: Core Frontend Features - UI Transformation & Statiske Komponenter (apps/frontend/)
 Mål: At omdanne de vigtigste dele af den eksisterende HTML/CSS/JS til responsive Next.js/React komponenter. Fokus på statisk struktur og udseende med mock data. Inspireret af Bet365/Nordnet.
 
@@ -378,6 +371,8 @@ Byg disse som custom Shadcn-komponenter eller rene React/Tailwind komponenter i 
 [ ] (Stærkt Anbefalet) Opsæt Storybook (apps/frontend/):
 Kør: npx storybook@latest init.
 Tilføj dine genbrugelige UI-komponenter (Shadcn og custom) til Storybook for isoleret udvikling, test og dokumentation.
+
+
 Fase 3: Frontend Data Integration & Firebase Autentificering (apps/frontend/)
 Mål: At forbinde den statiske UI til Firebase Authentication og backend API'erne. Hente og vise rigtige data. Implementere formular-logik.
 
@@ -404,6 +399,8 @@ useMutation til at sende ordre til Flask POST /api/v1/aktiedyst/orders. Invalide
 Implementer useQuery for forum data, brugerprofiler etc. fra Flask API'er (eller direkte fra Firebase Firestore hvis dele er flyttet dertil).
 [ ] API Error Handling & Notifikationer:
 Brug Shadcn Toast (via Sonner) til at vise API-fejl og succes-notifikationer (f.eks. "Ordre placeret!").
+
+
 Fase 4: Real-time Implementering (apps/frontend/ & apps/backend/)
 Mål: At integrere live-opdateringer fra backend (Flask-SocketIO og evt. Firebase) ind i frontend.
 
@@ -423,9 +420,12 @@ Backend (Flask/Socket.IO eller Firebase Functions + Firestore/RTDB) sender event
 Frontend lytter og viser notifikationer (Shadcn Toast).
 [ ] Performance Optimering for Real-time:
 React.memo, omhyggelig datahåndtering for at undgå unødvendige re-renders. Send kun ændrede data over sockets.
+
+
 Fase 5: Avancerede Features & UI/UX Polishing (apps/frontend/)
 Mål: At implementere mere komplekse funktioner og forfine den samlede brugeroplevelse.
 
+[ ] Udvikling af Admin API: Definition af scope og implementering af nødvendige endpoints (Status: Ikke påbegyndt).
 [ ] Avancerede Aktiedyst Features:
 Udvidet StockChart (forskellige graf-typer, tekniske indikatorer, zoom/pan).
 Avancerede ordretyper (limit, stop-loss).
@@ -446,6 +446,8 @@ Grundig test på forskellige skærmstørrelser (mobil, tablet, desktop). Juster 
 Semantisk HTML, tastaturnavigation, ARIA-attributter (Shadcn/Radix hjælper). Test med a11y-værktøjer.
 [ ] Dark Mode (Valgfrit):
 Implementer med next-themes og Tailwind's dark: variant.
+
+
 Fase 6: Yderligere Firebase Integration (Udvidelsesmuligheder)
 Mål: At udnytte Firebase yderligere hvor det giver mening for at forbedre funktionalitet, skalerbarhed eller udviklingshastighed.
 
@@ -460,6 +462,8 @@ Til serverless backend-logik tæt knyttet til Firebase-events (f.eks. billedbeha
 Kan skrives i Node.js, Python, Go m.fl.
 [ ] Firebase Hosting:
 Kan overvejes for Next.js frontend, især hvis der er tæt integration med andre Firebase services. Alternativt er Vercel stadig et stærkt valg for Next.js.
+
+
 Fase 7: Testning & Deployment
 Mål: At sikre applikationens kvalitet og stabilitet, og opsætte en automatiseret deployment pipeline.
 
@@ -480,6 +484,8 @@ Deploy backend (Docker-container) til Google Cloud Run, AWS App Runner, eller li
 [ ] Konfigurer Miljøvariabler:
 Brug .env.local (i .gitignore) til lokal udvikling.
 Konfigurer produktionsvariabler i hosting platformenes UI (Vercel, Firebase, Cloud provider). Adskil NEXT_PUBLIC_ (browser) og server-side variabler.
+
+
 Fase 8: Launch & Vedligeholdelse
 Mål: At lancere den moderniserede applikation og etablere processer for løbende drift og forbedring.
 

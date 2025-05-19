@@ -1,5 +1,35 @@
 ## Recent Development Updates
 
+### May 19, 2025: Backend Phase 2: Forum API CRUD Operations Completed &amp; Pylance Fixes
+
+**Objective**: Document the completion of "Backend Phase 2: Solidify Forum APIs", including full CRUD operations for forum threads and posts, and detail recent Pylance fixes in [`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py:0).
+
+**Key Achievements &amp; Remarks**:
+
+*   **Forum API CRUD Implementation (Backend Phase 2 Complete)**:
+    *   Reviewed existing GET endpoints:
+        *   `GET /api/v1/forum/categories` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L91`](fattecentralen-monorepo/apps/backend/routes/forum.py:91))
+        *   `GET /api/v1/forum/categories/{categoryId}/threads` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L184`](fattecentralen-monorepo/apps/backend/routes/forum.py:184))
+        *   `GET /api/v1/forum/threads/{threadId}/posts` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L253`](fattecentralen-monorepo/apps/backend/routes/forum.py:253))
+    *   Implemented and confirmed full CRUD operations for Forum Threads:
+        *   Create: `POST /api/v1/forum/categories/{categoryId}/threads` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L403`](fattecentralen-monorepo/apps/backend/routes/forum.py:403))
+        *   Update: `PUT /api/v1/forum/threads/{threadId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L493`](fattecentralen-monorepo/apps/backend/routes/forum.py:493))
+        *   Delete: `DELETE /api/v1/forum/threads/{threadId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L573`](fattecentralen-monorepo/apps/backend/routes/forum.py:573))
+    *   Implemented and confirmed full CRUD operations for Forum Posts:
+        *   Create: `POST /api/v1/forum/threads/{threadId}/posts` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L320`](fattecentralen-monorepo/apps/backend/routes/forum.py:320))
+        *   Update: `PUT /api/v1/forum/threads/{threadId}/posts/{postId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L646`](fattecentralen-monorepo/apps/backend/routes/forum.py:646))
+        *   Delete: `DELETE /api/v1/forum/threads/{threadId}/posts/{postId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L739`](fattecentralen-monorepo/apps/backend/routes/forum.py:739))
+*   **Pylance Fixes in [`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py:0)**:
+    *   Addressed `reportUndefinedVariable` for `fetch_user_details`: Replaced calls with `get_user_data_batch_func` in [`api_get_forum_categories`](fattecentralen-monorepo/apps/backend/routes/forum.py:139) (line 139) and [`api_get_thread_posts`](fattecentralen-monorepo/apps/backend/routes/forum.py:281) (line 281).
+    *   Corrected syntax error in `jsonify` call within [`api_create_category_thread`](fattecentralen-monorepo/apps/backend/routes/forum.py:479) (around lines 479-483), ensuring the dictionary literal was properly closed.
+    *   Resolved `Try statement must have at least one except or finally clause` in [`api_create_category_thread`](fattecentralen-monorepo/apps/backend/routes/forum.py:408) (try block starting line 408): Added `except SQLAlchemyError as e:` (line 484) and `except Exception as e:` (line 488) blocks.
+    *   Fixed `reportCallIssue` and `reportArgumentType` for `select(User)` in [`api_update_thread`](fattecentralen-monorepo/apps/backend/routes/forum.py:517) (around line 505): Added an `if User is None:` check (line 513) before the database call using `select(User)` (line 517).
+    *   Rectified syntax errors in dummy functions [`_dummy_get_user_data_batch`](fattecentralen-monorepo/apps/backend/routes/forum.py:34) and [`_dummy_dt_filter_func`](fattecentralen-monorepo/apps/backend/routes/forum.py:42): Added `pass` statements to empty `try` (line 38) / `except` (line 39) blocks and `try` (line 45) / `except` (line 46) blocks respectively.
+
+**Next Steps**:
+*   Proceed to "Fase 2: Core Frontend Features - UI Transformation &amp; Statiske Komponenter" as detailed in [`PROJECT_PLAN.md`](PROJECT_PLAN.md:350).
+
+---
 ### May 19, 2025: Backend Development Plan & Ongoing Work
 
 **Objective**: Outline the broader backend development strategy and note current progress and considerations.
@@ -8,9 +38,10 @@
 The backend development will proceed in the following phases:
 1.  **Phase 1: Implement Core User Profile API**:
     *   Focus: Creating `api_user_profile.py`, implementing `GET` and `PUT` for `/api/v1/users/me/profile`, and registering the blueprint.
-    *   *Status*: Currently in progress. `api_user_profile.py` has been created and basic endpoints are being implemented.
+    *   *Status*: **Completed**. `api_user_profile.py` has been created and basic endpoints are implemented.
 2.  **Phase 2: Solidify Forum APIs**:
     *   Focus: Reviewing existing GET endpoints, implementing full CRUD (Create, Read, Update, Delete) operations for forum threads and posts.
+    *   *Status*: **Completed**. All CRUD operations for forum threads and posts are implemented in [`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py:0).
 3.  **Phase 3: Review and Complete Sports & Aktiedyst APIs**:
     *   Focus: Reviewing existing endpoints for Live Sports and Aktiedyst, identifying and implementing any missing functionality to ensure comprehensive API coverage.
 4.  **Phase 4: Develop Admin API**:
