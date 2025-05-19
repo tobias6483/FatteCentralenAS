@@ -152,10 +152,11 @@ def create_app(config_class=Config):
     from .routes.stocks import stocks_bp as aktiedyst_bp
     # from .routes.api_general import api_general_bp # File missing
     # from .routes.api_forum import api_forum_bp # File missing
-    from .routes.stocks import stocks_bp as api_aktiedyst_bp
+    # from .routes.stocks import stocks_bp as api_aktiedyst_bp # This is likely old or for HTML views
+    from .routes.api_aktiedyst import aktiedyst_api_bp as new_aktiedyst_v1_api_bp # New V1 API
     # from .routes.api_user import api_user_bp # File missing
     # from .routes.api_admin import api_admin_bp # File missing
-    from .routes.api_sports import sports_api_bp as api_sports_bp # Use alias
+    from .routes.api_sports import sports_api_bp as api_sports_bp, matches_api_bp # Use alias
     from .routes.api_dashboard import api_dashboard_bp
     # Potentially from .routes.api_bets import api_bets_bp (if defined in api_bets.py)
     from .routes.messages import messages_bp # Potentially from .routes.messages import messages_bp (if defined in messages.py)
@@ -170,10 +171,12 @@ def create_app(config_class=Config):
     app.register_blueprint(aktiedyst_bp, url_prefix='/aktiedyst')
     # app.register_blueprint(api_general_bp)
     # app.register_blueprint(api_forum_bp)
-    app.register_blueprint(api_aktiedyst_bp, name='api_stocks')
+    # app.register_blueprint(api_aktiedyst_bp, name='api_stocks') # Commenting out old/conflicting registration
+    app.register_blueprint(new_aktiedyst_v1_api_bp) # New V1 API, prefix is in the blueprint
     # app.register_blueprint(api_user_bp)
     # app.register_blueprint(api_admin_bp)
     app.register_blueprint(api_sports_bp) # This blueprint already has /api/v1/sports prefix
+    app.register_blueprint(matches_api_bp) # This blueprint already has /api/v1/matches prefix
     app.register_blueprint(api_dashboard_bp)
     app.register_blueprint(messages_bp, url_prefix='/messages')
     app.register_blueprint(sessions_bp, url_prefix='/sessions')

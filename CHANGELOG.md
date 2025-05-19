@@ -1,5 +1,44 @@
 ## Recent Development Updates
 
+### May 19, 2025: Focused API Development Sprint
+
+**Objective**: Advance core API functionalities for Live Sports and Aktiedyst.
+
+**Key Achievements & Remarks**:
+
+*   **Live Sports API Enhancement ([`apps/backend/routes/api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py)):**
+    *   Refactored the event details endpoint to `GET /api/v1/matches/{match_id}`.
+    *   *Comment*: This change streamlines access to specific match data and improves the overall organization of sports-related API routes by utilizing a dedicated blueprint (`matches_api_bp`).
+*   **Aktiedyst API V1 Initialization ([`apps/backend/routes/api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py)):**
+    *   Successfully created the foundational scaffolding for the Aktiedyst API (V1).
+    *   Placeholder endpoints for key operations (e.g., portfolio, transactions, market data, order placement) are now in place.
+    *   *Comment*: This establishes the basic structure, allowing for iterative development of the Aktiedyst features. Mock data is returned by placeholders for initial frontend integration testing.
+*   **Backend Integration ([`apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py)):**
+    *   Updated to register the newly created blueprints for both the refined Live Sports matches endpoint and the new Aktiedyst V1 API.
+    *   *Comment*: Ensures that these new API segments are correctly wired into the Flask application and accessible.
+
+These updates represent significant progress in Phase 1 of the project plan, specifically targeting API definition and implementation.
+### May 19, 2025 (Live Sports & Aktiedyst API Scaffolding)
+
+*   **Live Sports API Refinements (`apps/backend/routes/api_sports.py`):**
+    *   Refactored the endpoint for fetching specific event/match details to `GET /api/v1/matches/{match_id}`.
+    *   This involved creating a new Flask Blueprint `matches_api_bp` specifically for match-related routes, improving organization.
+    *   The new `matches_api_bp` was registered in `apps/backend/__init__.py`.
+*   **Aktiedyst API V1 Scaffolding (`apps/backend/routes/api_aktiedyst.py`):**
+    *   Created a new file `api_aktiedyst.py` to house the V1 Aktiedyst API endpoints.
+    *   Defined a new Flask Blueprint `aktiedyst_api_bp` (aliased as `new_aktiedyst_v1_api_bp` in `__init__.py`) with the prefix `/api/v1/aktiedyst`.
+    *   Registered the `new_aktiedyst_v1_api_bp` in `apps/backend/__init__.py`.
+    *   Added placeholder implementations for the following Aktiedyst API V1 endpoints as per `PROJECT_PLAN.md`:
+        *   `GET /api/v1/aktiedyst/ping` (basic test endpoint)
+        *   `GET /api/v1/aktiedyst/portfolio`
+        *   `GET /api/v1/aktiedyst/transactions`
+        *   `GET /api/v1/aktiedyst/markets`
+        *   `GET /api/v1/aktiedyst/markets/{symbol}/history`
+        *   `POST /api/v1/aktiedyst/orders`
+    *   These placeholders include mock data responses and are ready for further implementation of business logic and database integration.
+*   **Backend Initialization (`apps/backend/__init__.py`):**
+    *   Resolved a Pylance import error related to `api_aktiedyst` by ensuring the file was created before uncommenting its import and registration.
+
 ### May 19, 2025 (Model Cleanup & Pylance Fixes)
 
 *   **Backend Model Cleanup & Refinements:**

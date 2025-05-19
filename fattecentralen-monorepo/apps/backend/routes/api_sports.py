@@ -10,170 +10,274 @@ from ..extensions import db # If direct db session usage is needed
 
 log = logging.getLogger(__name__)
 sports_api_bp = Blueprint("sports_api", __name__, url_prefix="/api/v1/sports")
+matches_api_bp = Blueprint("matches_api", __name__, url_prefix="/api/v1/matches")
 
 @sports_api_bp.route("", methods=["GET"])
 def get_sports_list():
     """
-    Returns a list of available sports.
+    Returns a list of available sport categories, each with their leagues.
+    Matches the designed API structure.
     """
     try:
-        # Query active sports, ordered by group then title
-        # Query active leagues, ordered by sport_category.name then league.name
-        # We need to join with SportCategory to order by its name
-        leagues = League.query.join(SportCategory).filter(League.active == True).order_by(SportCategory.name, League.name).all()
+        sport_categories = SportCategory.query.order_by(SportCategory.name).all()
         
-        sports_data = []
-        for league in leagues:
-            sports_data.append({
-                "key": league.slug, # Corresponds to the old 'key', used by external APIs
-                "title": league.name,
-                "group": league.sport_category.name if league.sport_category else "Unknown",
-                "active": league.active
-                # Add more fields if needed
+        response_data = []
+        for category in sport_categories:
+            leagues_data = []
+            # Assuming 'leagues' is the relationship name in SportCategory model
+            # and it's configured for lazy='dynamic' or similar to allow further filtering/ordering
+            active_leagues = category.leagues.filter(League.active == True).order_by(League.name).all() # type: ignore
+            
+            for league in active_leagues:
+                leagues_data.append({
+                    "id": league.id,
+                    "name": league.name,
+                    "slug": league.slug,
+                    "country": league.country,
+                    "logo_url": league.logo_url
+                })
+            
+            response_data.append({
+                "id": category.id,
+                "name": category.name,
+                "slug": category.slug,
+                "icon": category.icon,
+                "leagues": leagues_data
             })
             
-        return jsonify(sports_data), 200
+        return jsonify(response_data), 200
         
     except Exception as e:
-        log.exception(f"Error fetching sports list: {e}")
-        return jsonify({"error": "Intern serverfejl ved hentning af sportsgrene."}), 500
+        log.exception(f"Error fetching structured sports list: {e}")
+        return jsonify({"error": "Intern serverfejl ved hentning af sportsgrene og ligaer."}), 500
 
 
-@sports_api_bp.route("/<string:sport_key>/matches", methods=["GET"])
-def get_sport_matches(sport_key: str):
+@sports_api_bp.route("/<string:league_slug>/matches", methods=["GET"]) # Renamed sport_key to league_slug for clarity
+def get_league_matches(league_slug: str): # Renamed sport_key to league_slug
     """
-    Returns a list of matches for a given sport_key.
+    Returns a list of matches for a given league_slug.
     Optional query parameters:
-    - status: "upcoming", "live", "finished"
-    - date: "YYYY-MM-DD"
+    - status: "upcoming", "live", "finished", "scheduled", "postponed", "cancelled" (uses SportEvent.status)
+    - date: "YYYY-MM-DD" (filters by SportEvent.commence_time)
     """
     try:
-        # Find the league by its slug (which corresponds to the old sport_key)
-        league = League.query.filter_by(slug=sport_key).first()
+        league = League.query.filter_by(slug=league_slug).first()
         if not league:
-            return jsonify({"error": "Liga/Sportsgren ikke fundet."}), 404
+            return jsonify({"error": "Liga ikke fundet."}), 404
 
-        # Filter SportEvent by league_id
         query = SportEvent.query.filter_by(league_id=league.id)
 
-        # Filter by date
         date_str = request.args.get("date")
         if date_str:
             try:
                 filter_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-                # Filter events where commence_time is on the filter_date (UTC)
-                # We need to compare the date part of commence_time (which is UTC)
-                # with the provided date.
-                # One way is to filter for commence_time >= date_start_utc AND commence_time < date_end_utc
-                
-                # Create timezone-aware datetime objects for the start and end of the filter_date in UTC
                 date_start_utc = datetime(filter_date.year, filter_date.month, filter_date.day, 0, 0, 0, tzinfo=timezone.utc)
                 date_end_utc = date_start_utc + timedelta(days=1)
-                
                 query = query.filter(SportEvent.commence_time >= date_start_utc, SportEvent.commence_time < date_end_utc) # type: ignore[operator]
-                log.debug(f"Filtering matches for sport '{sport_key}' on date: {date_str} (UTC range: {date_start_utc} to {date_end_utc})")
+                log.debug(f"Filtering matches for league '{league_slug}' on date: {date_str}")
             except ValueError:
                 return jsonify({"error": "Ugyldigt datoformat. Brug YYYY-MM-DD."}), 400
-
-        # Filter by status (derived from commence_time)
-        status = request.args.get("status")
-        now_utc = datetime.now(timezone.utc)
-        # Approximate duration of a match for "live" and "finished" status
-        # This could be made configurable or even sport-specific in the future
-        APPROX_MATCH_DURATION_HOURS = 3
         
-        if status:
-            if status == "upcoming":
-                query = query.filter(SportEvent.commence_time > now_utc) # type: ignore[operator]
-            elif status == "live":
-                # Match started but not yet "finished" by our approximation
-                live_start_threshold = now_utc - timedelta(hours=APPROX_MATCH_DURATION_HOURS)
-                query = query.filter(SportEvent.commence_time <= now_utc, SportEvent.commence_time > live_start_threshold) # type: ignore[operator]
-            elif status == "finished":
-                finished_threshold = now_utc - timedelta(hours=APPROX_MATCH_DURATION_HOURS)
-                query = query.filter(SportEvent.commence_time <= finished_threshold) # type: ignore[operator]
+        status_param = request.args.get("status")
+        if status_param:
+            # Filter directly on the SportEvent.status field
+            valid_statuses = ["scheduled", "live", "finished", "postponed", "cancelled", "upcoming"] # "upcoming" can be derived or a specific status
+            if status_param.lower() in valid_statuses:
+                if status_param.lower() == "upcoming":
+                     query = query.filter(SportEvent.commence_time > datetime.now(timezone.utc)) # type: ignore[operator]
+                else:
+                    query = query.filter(SportEvent.status == status_param.lower()) # type: ignore[operator]
             else:
-                return jsonify({"error": "Ugyldig status. Tilladte værdier: upcoming, live, finished."}), 400
-            log.debug(f"Filtering matches for sport '{sport_key}' by status: {status}")
+                return jsonify({"error": f"Ugyldig status. Tilladte værdier: {', '.join(valid_statuses)}."}), 400
+            log.debug(f"Filtering matches for league '{league_slug}' by status: {status_param}")
 
         matches = query.order_by(SportEvent.commence_time).all() # type: ignore[arg-type]
 
-        matches_data = []
+        response_data = []
         for match in matches:
-            # Determine status for each match if not already filtered by a specific status
-            # This is for display purposes if no status filter was applied or to be more precise
-            current_match_status = "unknown"
-            if match.commence_time > now_utc:
-                current_match_status = "upcoming"
-            elif match.commence_time <= now_utc and match.commence_time > (now_utc - timedelta(hours=APPROX_MATCH_DURATION_HOURS)):
-                current_match_status = "live" # Approximation
-            elif match.commence_time <= (now_utc - timedelta(hours=APPROX_MATCH_DURATION_HOURS)):
-                current_match_status = "finished" # Approximation
+            home_team_data = None
+            if match.home_team_obj:
+                home_team_data = {
+                    "id": match.home_team_obj.id,
+                    "name": match.home_team_obj.name,
+                    "short_name": match.home_team_obj.short_name,
+                    "slug": match.home_team_obj.slug,
+                    "logo_url": match.home_team_obj.logo_url
+                }
+            elif match.home_team_name_raw: # Fallback if team object not linked
+                 home_team_data = {"name": match.home_team_name_raw }
 
-            matches_data.append({
+
+            away_team_data = None
+            if match.away_team_obj:
+                away_team_data = {
+                    "id": match.away_team_obj.id,
+                    "name": match.away_team_obj.name,
+                    "short_name": match.away_team_obj.short_name,
+                    "slug": match.away_team_obj.slug,
+                    "logo_url": match.away_team_obj.logo_url
+                }
+            elif match.away_team_name_raw: # Fallback
+                away_team_data = {"name": match.away_team_name_raw}
+
+            scores_data = {
+                "home": match.home_score,
+                "away": match.away_score,
+                "period1_home": match.home_score_period1,
+                "period1_away": match.away_score_period1,
+                "period2_home": match.home_score_period2,
+                "period2_away": match.away_score_period2,
+                "overtime_home": match.home_score_overtime,
+                "overtime_away": match.away_score_overtime,
+                "penalties_home": match.home_score_penalties,
+                "penalties_away": match.away_score_penalties
+            }
+            
+            league_data = { # Provide context of the league these matches belong to
+                "id": league.id,
+                "name": league.name,
+                "slug": league.slug
+            }
+
+            response_data.append({
                 "id": match.id,
-                "league_slug": match.league.slug if match.league else None, # Changed from sport_key
                 "commence_time": match.commence_time.isoformat() if match.commence_time else None,
-                "home_team": match.home_team_display_name, # Use display name
-                "away_team": match.away_team_display_name, # Use display name
-                "last_update_api": match.last_api_data_fetch.isoformat() if match.last_api_data_fetch else None, # Corrected attribute
-                "derived_status": current_match_status # Add the derived status
-                # Add scores here if/when the model supports them
+                "status": match.status, # Use the direct status from the model
+                "minute": match.minute,
+                "period": match.period,
+                "home_team": home_team_data,
+                "away_team": away_team_data,
+                "scores": scores_data,
+                "league": league_data
             })
         
-        return jsonify(matches_data), 200
+        return jsonify(response_data), 200
 
     except Exception as e:
-        log.exception(f"Error fetching matches for sport {sport_key}: {e}")
+        log.exception(f"Error fetching matches for league {league_slug}: {e}")
         return jsonify({"error": "Intern serverfejl ved hentning af kampe."}), 500
 
 
-@sports_api_bp.route("/matches/<string:match_id>", methods=["GET"])
+# Endpoint for specific match details, now under its own blueprint
+
+@matches_api_bp.route("/<string:match_id>", methods=["GET"])
 def get_match_details(match_id: str):
     """
-    Returns details for a specific match, including available outcomes.
+    Returns detailed information for a specific sport event (match),
+    including available outcomes, statistics, timeline, etc.
     """
     try:
         match = SportEvent.query.get(match_id)
         if not match:
             return jsonify({"error": "Kamp ikke fundet."}), 404
 
-        # Determine derived status for the match
-        now_utc = datetime.now(timezone.utc)
-        APPROX_MATCH_DURATION_HOURS = 3 # Consistent with the list endpoint
-        derived_status = "unknown"
-        if match.commence_time > now_utc:
-            derived_status = "upcoming"
-        elif match.commence_time <= now_utc and match.commence_time > (now_utc - timedelta(hours=APPROX_MATCH_DURATION_HOURS)):
-            derived_status = "live"
-        elif match.commence_time <= (now_utc - timedelta(hours=APPROX_MATCH_DURATION_HOURS)):
-            derived_status = "finished"
+        home_team_data = None
+        if match.home_team_obj:
+            home_team_data = {
+                "id": match.home_team_obj.id,
+                "name": match.home_team_obj.name,
+                "short_name": match.home_team_obj.short_name,
+                "slug": match.home_team_obj.slug,
+                "logo_url": match.home_team_obj.logo_url
+            }
+        elif match.home_team_name_raw:
+             home_team_data = {"name": match.home_team_name_raw }
 
-        outcomes_data = []
-        # SportEvent.outcomes is a dynamic relationship, so .all() executes the query
+        away_team_data = None
+        if match.away_team_obj:
+            away_team_data = {
+                "id": match.away_team_obj.id,
+                "name": match.away_team_obj.name,
+                "short_name": match.away_team_obj.short_name,
+                "slug": match.away_team_obj.slug,
+                "logo_url": match.away_team_obj.logo_url
+            }
+        elif match.away_team_name_raw:
+            away_team_data = {"name": match.away_team_name_raw}
+
+        scores_data = {
+            "home": match.home_score,
+            "away": match.away_score,
+            "period1_home": match.home_score_period1,
+            "period1_away": match.away_score_period1,
+            "period2_home": match.home_score_period2,
+            "period2_away": match.away_score_period2,
+            "overtime_home": match.home_score_overtime,
+            "overtime_away": match.away_score_overtime,
+            "penalties_home": match.home_score_penalties,
+            "penalties_away": match.away_score_penalties
+        }
+
+        league_data = None
+        if match.league:
+            league_data = {
+                "id": match.league.id,
+                "name": match.league.name,
+                "slug": match.league.slug,
+                "country": match.league.country,
+                "logo_url": match.league.logo_url
+            }
+        
+        sport_category_data = None
+        if match.league and match.league.sport_category:
+            sport_category_data = {
+                "id": match.league.sport_category.id,
+                "name": match.league.sport_category.name,
+                "slug": match.league.sport_category.slug
+            }
+
+        # Group outcomes by bookmaker and then by market_key
+        outcomes_by_bookmaker = {}
         for outcome in match.outcomes.all(): # type: ignore
-            outcomes_data.append({
-                "id": outcome.id,
-                "bookmaker": outcome.bookmaker,
-                "market_key": outcome.market_key,
+            bookmaker_entry = outcomes_by_bookmaker.setdefault(outcome.bookmaker, {})
+            market_entry = bookmaker_entry.setdefault(outcome.market_key, {
+                "market_name": outcome.market_key.replace("_", " ").title(), # Basic market name generation
+                "selections": [],
+                "last_update_api": None # Will be updated with the latest outcome update for this market
+            })
+            market_entry["selections"].append({
                 "name": outcome.name,
                 "price": outcome.price,
-                "point": outcome.point,
-                "last_update_api": outcome.last_update_api.isoformat() if outcome.last_update_api else None,
+                "point": outcome.point
             })
+            if outcome.last_update_api:
+                current_latest = market_entry["last_update_api"]
+                if not current_latest or outcome.last_update_api > datetime.fromisoformat(current_latest.replace("Z", "+00:00")):
+                    market_entry["last_update_api"] = outcome.last_update_api.isoformat() if outcome.last_update_api else None
+        
+        # Transform the grouped outcomes into the desired list format
+        final_outcomes_data = []
+        for bookmaker, markets in outcomes_by_bookmaker.items():
+            for market_key, market_details in markets.items():
+                final_outcomes_data.append({
+                    "bookmaker": bookmaker,
+                    "market_key": market_key,
+                    "market_name": market_details["market_name"],
+                    "selections": market_details["selections"],
+                    "last_update_api": market_details["last_update_api"]
+                })
 
-        match_data = {
+
+        event_data = {
             "id": match.id,
-            "league_slug": match.league.slug if match.league else None, # Changed from sport_key
             "commence_time": match.commence_time.isoformat() if match.commence_time else None,
-            "home_team": match.home_team_display_name, # Use display name
-            "away_team": match.away_team_display_name, # Use display name
-            "last_update_api": match.last_api_data_fetch.isoformat() if match.last_api_data_fetch else None, # Corrected attribute
-            "derived_status": derived_status,
-            "outcomes": outcomes_data
+            "status": match.status, # Direct from model
+            "minute": match.minute,
+            "period": match.period,
+            "home_team": home_team_data,
+            "away_team": away_team_data,
+            "scores": scores_data,
+            "league": league_data,
+            "sport_category": sport_category_data,
+            "venue_info": match.venue_info, # Assumes JSON serializable
+            "statistics": match.statistics, # Assumes JSON serializable
+            "timeline_events": match.timeline_events, # Assumes JSON serializable
+            "lineups": match.lineups, # Assumes JSON serializable
+            "outcomes": final_outcomes_data,
+            "last_api_update": match.last_api_update.isoformat() if match.last_api_update else None # SportEvent.last_api_update
         }
         
-        return jsonify(match_data), 200
+        return jsonify(event_data), 200
 
     except Exception as e:
         log.exception(f"Error fetching details for match {match_id}: {e}")

@@ -91,24 +91,24 @@ Opdater login_route, register_route, me_route til ikke selv at udstede JWTs, men
 Sørg for at user_loader mm. i Flask-JWT-Extended fungerer med brugeridentiteter fra Firebase-tokens (f.eks. ved at slå brugeren op i din database via Firebase UID).
 [ ] Database Review (Eksisterende apps/backend/):
 Bekræft at nuværende databasemodeller (models.py) er tilstrækkelige for kernefunktionaliteter. Migrationer (Alembic/Flask-Migrate) skal være up-to-date.
-[ ] API Design - Live Sports (Detaljeret Definition):
+[X] API Design - Live Sports (Detaljeret Definition):
 GET /api/v1/sports: Liste af sportsgrene/ligaer.
 GET /api/v1/sports/{sportId}/matches?status=[live|upcoming|finished]&date=YYYY-MM-DD: Liste af kampe.
-GET /api/v1/matches/{matchId}: Detaljer for én kamp.
+GET /api/v1/matches/{matchId}: Detaljer for én kamp. (Endpoint refactored, blueprint `matches_api_bp` created in [`apps/backend/routes/api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py) and registered in [`apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py))
 Definer JSON request/response strukturer for hver.
-[ ] API Design - Aktiedyst (Detaljeret Definition):
-GET /api/v1/aktiedyst/portfolio: Brugerens portefølje (kræver Firebase Auth).
-GET /api/v1/aktiedyst/transactions: Brugerens transaktionshistorik (kræver Firebase Auth).
-GET /api/v1/aktiedyst/markets: Liste over handlebare aktier/symboler.
-GET /api/v1/aktiedyst/markets/{symbol}/history?period=[1d|7d|1m|...]: Kursdata.
-POST /api/v1/aktiedyst/orders: Placer en ordre (kræver Firebase Auth).
+[X] API Design - Aktiedyst (Detaljeret Definition): (Initial scaffolding with placeholder endpoints and mock data complete in [`apps/backend/routes/api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py). Blueprint `aktiedyst_api_bp` registered in [`apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py))
+  [X] GET /api/v1/aktiedyst/portfolio: Brugerens portefølje (kræver Firebase Auth). (Placeholder implemented)
+  [X] GET /api/v1/aktiedyst/transactions: Brugerens transaktionshistorik (kræver Firebase Auth). (Placeholder implemented)
+  [X] GET /api/v1/aktiedyst/markets: Liste over handlebare aktier/symboler. (Placeholder implemented)
+  [X] GET /api/v1/aktiedyst/markets/{symbol}/history?period=[1d|7d|1m|...]: Kursdata. (Placeholder implemented)
+  [X] POST /api/v1/aktiedyst/orders: Placer en ordre (kræver Firebase Auth). (Placeholder implemented)
 Definer JSON request/response strukturer for hver.
 [ ] API Design - Forum & Andre Features (Detaljeret Definition):
 Forum: GET /api/v1/forum/categories, GET /api/v1/forum/categories/{catId}/threads, GET /api/v1/forum/threads/{threadId}/posts, POST /api/v1/forum/threads/{threadId}/posts (kræver Firebase Auth for POST).
 Brugerprofil: GET /api/v1/users/me/profile (baseret på Firebase Auth), PUT /api/v1/users/me/profile.
 Definer JSON request/response strukturer for hver. Overvej om dele af forum/profil data kan flyttes til Firebase Firestore for nemmere realtid og skalerbarhed.
-[ ] Implementer/Opdater API Endpoints i Flask:
-Skriv/opdater Flask routes i apps/backend/routes/ for at matche de designede endpoints.
+[~] Implementer/Opdater API Endpoints i Flask: (Initial placeholders for Aktiedyst and refactoring for Sports Match API done)
+  Skriv/opdater Flask routes i [`apps/backend/routes/`](fattecentralen-monorepo/apps/backend/routes/) for at matche de designede endpoints. (Aktiedyst placeholders created in [`api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py), Sports match endpoint refactored in [`api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py))
 Brug SQLAlchemy til databaseinteraktion.
 Implementer serialisering og korrekt HTTP statuskode/fejlhåndtering.
 Sikre endpoints med den nye Firebase Auth token validering.
