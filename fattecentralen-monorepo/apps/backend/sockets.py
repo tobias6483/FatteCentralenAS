@@ -3,8 +3,10 @@ import logging
 import redis # Added for RedisError
 import json # Added for Redis data
 from flask import request, url_for, current_app
-from flask_socketio import join_room, leave_room, emit
+from flask_socketio import join_room, leave_room, emit, disconnect
 from datetime import datetime, timezone # Added timezone
+import firebase_admin # Added for Firebase auth
+from firebase_admin import auth as firebase_auth # Added for Firebase auth
 from flask_login import current_user # To get authenticated user
 
 # Lokal import fra app pakken
@@ -75,10 +77,47 @@ def get_player_details_for_session(session_id: str, player_usernames: set) -> di
 @socketio.on("connect")
 def on_connect():
     sid = request.sid # type: ignore[attr-defined]
-    # Use current_user if available and authenticated
-    user_display = current_user.id if current_user.is_authenticated else "Anonymous"
-    logger.info(f"Client connected: SID='{sid}', User='{user_display}'")
-    emit("status", {"msg": "Connected successfully."}, to=sid)
+    auth_token = request.args.get('token') # Assuming token is passed as a query param
+    decoded_token = None # Initialize to ensure it's always bound
+
+    if not auth_token:
+        logger.warning(f"Socket.IO connection attempt (SID: {sid}) without auth token. Disconnecting.")
+        emit("auth_error", {"msg": "Authentication token required."}, to=sid)
+        disconnect(sid)
+        return
+
+    try:
+        decoded_token = firebase_auth.verify_id_token(auth_token, check_revoked=True)
+        firebase_uid = decoded_token.get('uid')
+        logger.info(f"Socket.IO Client connected and Firebase token verified: SID='{sid}', Firebase UID='{firebase_uid}'")
+        
+        # TODO: Associate firebase_uid with the session/current_user if needed for subsequent events.
+        # For now, Flask's current_user (if authenticated via session) is separate.
+        # We could potentially load/set a user context based on firebase_uid here.
+        # For example: flask_g.firebase_user = decoded_token (similar to the HTTP decorator)
+        # However, flask_g might not persist reliably across different socket events for the same SID.
+        # A common pattern is to store this mapping (sid -> firebase_uid) in Redis or a global dict if needed.
+
+        user_display = current_user.id if current_user.is_authenticated else f"FirebaseUser:{firebase_uid[:8]}..."
+        logger.info(f"Client connected: SID='{sid}', User='{user_display}' (Firebase UID: {firebase_uid})")
+        emit("status", {"msg": "Connected and authenticated successfully."}, to=sid)
+
+    except firebase_auth.RevokedIdTokenError:
+        logger.warning(f"Socket.IO connection attempt (SID: {sid}) with revoked Firebase token. UID: {decoded_token.get('uid') if decoded_token else 'unknown'}. Disconnecting.")
+        emit("auth_error", {"msg": "Token has been revoked. Please re-authenticate."}, to=sid)
+        disconnect(sid)
+    except firebase_auth.UserDisabledError:
+        logger.warning(f"Socket.IO connection attempt (SID: {sid}) for disabled Firebase user. UID: {decoded_token.get('uid') if decoded_token else 'unknown'}. Disconnecting.")
+        emit("auth_error", {"msg": "User account has been disabled."}, to=sid)
+        disconnect(sid)
+    except firebase_auth.InvalidIdTokenError as e:
+        logger.warning(f"Socket.IO connection attempt (SID: {sid}) with invalid Firebase ID token: {e}. Disconnecting.")
+        emit("auth_error", {"msg": f"Invalid authentication token."}, to=sid)
+        disconnect(sid)
+    except Exception as e:
+        logger.error(f"Socket.IO connection error (SID: {sid}) during Firebase token verification: {e}. Disconnecting.")
+        emit("auth_error", {"msg": "Authentication error."}, to=sid)
+        disconnect(sid)
 
 @socketio.on("disconnect")
 def on_disconnect():
@@ -931,8 +970,8 @@ def handle_subscribe_to_live_scores(data):
 
     subscribed_rooms = []
     for event_id in event_ids:
-        if isinstance(event_id, str) and event_id: # Basic validation
-            room_name = f"event_score_{event_id}"
+        if isinstance(event_id, str) and event_id: # Basic validation, assuming event_id is the matchId
+            room_name = f"match_{event_id}" # Changed room name for consistency
             try:
                 join_room(room_name)
                 subscribed_rooms.append(room_name)
@@ -944,9 +983,9 @@ def handle_subscribe_to_live_scores(data):
         # Optionally send a success confirmation to the client
         # emit('subscription_ack', {'status': 'success', 'subscribed_to': subscribed_rooms}, to=sid)
     else:
-        logger.info(f"User {current_user.id} (SID: {sid}) sent subscription request but no valid event_ids provided or processed.")
+        logger.info(f"User {current_user.id} (SID: {sid}) sent subscription request but no valid match_ids provided or processed.")
 
-# TODO: Add logic in on_disconnect to leave these event_score_{event_id} rooms.
+# TODO: Add logic in on_disconnect to leave these match_{matchId} rooms.
 # This might involve tracking which SIDs are in which rooms, or iterating through
 # potential rooms if the list of active events is manageable.
     username = current_user.id

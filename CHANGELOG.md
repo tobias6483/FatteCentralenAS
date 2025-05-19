@@ -1,5 +1,26 @@
 ## Recent Development Updates
 
+### May 19, 2025: Socket.IO Enhancements
+
+**Objective**: Improve Socket.IO setup for real-time features, focusing on authentication and room management.
+
+**Key Achievements & Remarks**:
+
+*   **Socket.IO Firebase Authentication ([`fattecentralen-monorepo/apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:83)):**
+    *   Modified the `on_connect` event handler to verify a Firebase ID token.
+    *   The token is expected as a query parameter (`token`) during the Socket.IO connection.
+    *   Connections with invalid or missing tokens are rejected.
+    *   Resolved Pylance "possibly unbound" and "attribute of None" errors for `decoded_token` in exception handling.
+    *   *Comment*: This enhances security by ensuring only authenticated users can establish a persistent Socket.IO connection and improves code robustness.
+*   **Socket.IO Room Refactoring for Live Sports ([`fattecentralen-monorepo/apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:931)):**
+    *   Updated the `handle_subscribe_to_live_scores` function to use `match_{matchId}` for room names.
+    *   *Comment*: This aligns the Socket.IO room naming with the Live Sports API endpoint structure (`GET /api/v1/matches/{match_id}`), improving consistency.
+*   **Defined New Socket.IO Events and Data Structures:**
+    *   `live_score_update`: For broadcasting sports match score changes. Room: `match_{matchId}`.
+    *   `stock_price_update`: For broadcasting Aktiedyst stock price changes. Room: `aktiedyst_market_{symbol}`.
+    *   *Comment*: These definitions provide a clear structure for future real-time data transmission.
+
+These changes address key items in Phase 1 of the [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) concerning real-time communication.
 ### May 19, 2025: Focused API Development Sprint
 
 **Objective**: Advance core API functionalities for Live Sports and Aktiedyst.

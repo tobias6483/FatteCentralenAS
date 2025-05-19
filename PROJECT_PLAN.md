@@ -112,12 +112,12 @@ Definer JSON request/response strukturer for hver. Overvej om dele af forum/prof
 Brug SQLAlchemy til databaseinteraktion.
 Implementer serialisering og korrekt HTTP statuskode/fejlhåndtering.
 Sikre endpoints med den nye Firebase Auth token validering.
-[ ] Real-time (Socket.IO) Forberedelse i Flask (apps/backend/sockets.py):
-Gennemgå eksisterende Flask-SocketIO setup.
-Definer klare event-navne (live_score_update, stock_price_update, new_user_notification).
-Standardiser datastrukturer for events.
-Overvej Socket.IO rooms for målrettede events (f.eks. match_{matchId}, user_{firebaseUserId}).
-Sørg for at Socket.IO forbindelser også kan autentificeres (f.eks. ved at klienten sender Firebase ID token ved connect).
+[X] Real-time (Socket.IO) Forberedelse i Flask (apps/backend/sockets.py):
+  [X] Gennemgå eksisterende Flask-SocketIO setup. (Reviewed existing setup in [`apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py))
+  [X] Definer klare event-navne (live_score_update, stock_price_update, new_user_notification). (Defined `live_score_update` and `stock_price_update`)
+  [X] Standardiser datastrukturer for events. (Defined for `live_score_update` and `stock_price_update`)
+  [X] Overvej Socket.IO rooms for målrettede events (f.eks. match_{matchId}, user_{firebaseUserId}). (Adopted `match_{matchId}` for live sports, `aktiedyst_market_{symbol}` for stocks, and noted `user_{firebaseUserId}` for user-specific notifications. Refactored `handle_subscribe_to_live_scores` to use `match_{matchId}` in [`apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:931))
+  [X] Sørg for at Socket.IO forbindelser også kan autentificeres (f.eks. ved at klienten sender Firebase ID token ved connect). (Implemented Firebase ID token verification in `on_connect` handler in [`apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:83). Addressed Pylance errors.)
 Fase 2: Core Frontend Features - UI Transformation & Statiske Komponenter (apps/frontend/)
 Mål: At omdanne de vigtigste dele af den eksisterende HTML/CSS/JS til responsive Next.js/React komponenter. Fokus på statisk struktur og udseende med mock data. Inspireret af Bet365/Nordnet.
 
