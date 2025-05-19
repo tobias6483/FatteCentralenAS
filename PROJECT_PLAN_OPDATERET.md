@@ -1258,12 +1258,118 @@ At transformere det nuværende Fattecentralen-projekt (HTML, JavaScript, Python,
     *   Gennemgå alle eksisterende sider, sektioner og eventuelle design-templates.
     *   Identificer de 5-7 vigtigste/mest komplekse brugerflader, der skal transformeres først.
     *   **Prioriteringsliste (forslag baseret på planen):**
-        1.  Login/Signup sider/modals.
-        2.  Live Sports Oversigt (inkl. liste af sportsgrene, ligaer, kampe).
-        3.  Aktiedyst Dashboard (inkl. portfolio-oversigt, markedsliste, basal graf).
-        4.  Forum Oversigt (kategoriliste, trådliste for en kategori).
-        5.  Brugerprofil Side (visning af info, faner for indstillinger/historik).
+        1.  Login/Signup sider/modals. 
+        2.  Home / dashboard
+        3.  Live Sports Oversigt (inkl. liste af sportsgrene, ligaer, kampe).
+        4.  Aktiedyst Dashboard (inkl. portfolio-oversigt, markedsliste, basal graf).
+        5.  Forum Oversigt (kategoriliste, trådliste for en kategori).
+        6.  Brugerprofil Side (visning af info, faner for indstillinger/historik).
     *   Dokumenter URL-struktur (hvis relevant fra gammelt site) og kernefunktionalitet for hver valgt side/sektion.
+
+
+
+---
+
+## Fase 2: Core Frontend Features - UI Transformation & Statiske Komponenter (`apps/frontend/`)
+**Mål:** At omdanne de vigtigste dele af den eksisterende HTML/CSS/JS (inklusive alle relevante "templates" og tilhørende JavaScript-filer) til en moderne, responsiv Next.js/React SPA-struktur med TypeScript og Tailwind CSS. Fokus i denne fase er på at bygge den **statiske struktur og udseende** af UI-komponenter og sider ved brug af **mock data**. Design skal inspireres af Bet365/FlashScore (Sport) og Nordnet/TradingView (Aktiedyst), samtidig med at der skabes en unik "Fattecentralen" identitet.
+**Status:** Ikke påbegyndt.
+
+### F2.0: `[ ]` Forberedende Analyse af Eksisterende Assets (HTML Templates & JS Filer)
+*   **F2.0.1:** `[ ]` **Kortlægning af Templates til Nye Next.js Routes/Komponenter:**
+    *   Gennemgå systematisk hver fil i `templates/` mappen.
+    *   For hver `.html` fil, bestem dens primære formål og hvordan den vil blive mappet til en Next.js side (`app/.../page.tsx`), layout (`app/.../layout.tsx`), eller en større genbrugelig komponent.
+    *   Noter specielt `base.html` (og evt. `_macros.html`), da disse vil danne grundlag for det globale `app/layout.tsx` og genbrugelige layout-komponenter som `DashboardLayout.tsx` samt mindre, delte UI-elementer.
+*   **F2.0.2:** `[ ]` **Kortlægning af JavaScript-filer til Ny Frontend Logik:**
+    *   Gennemgå systematisk hver fil i `static/js/` mappen.
+    *   For hver `.js` fil, analyser dens funktionalitet (DOM manipulation, event handlers, AJAX kald etc.).
+    *   Planlæg hvordan denne logik vil blive genimplementeret i den nye Next.js/React frontend:
+        *   **Client Components:** For interaktivitet og browser-specifik logik.
+        *   **React Hooks:** For state management og sideeffekter (`useState`, `useEffect`, custom hooks).
+        *   **State Management (Zustand):** For global state.
+        *   **API Kald (TanStack Query):** Eksisterende AJAX-kald erstattes af TanStack Query hooks i Fase 3.
+        *   **Event Handlers:** Direkte på React-elementer.
+*   **F2.0.3:** `[ ]` **Identificer Afhængigheder og Eksterne Biblioteker (i gammel JS):**
+    *   Noter eventuelle eksterne JavaScript-biblioteker (udover jQuery, hvis det bruges), der anvendes i de gamle `.js` filer.
+    *   Vurder om disse stadig er nødvendige, eller om deres funktionalitet kan dækkes af moderne React-økosystem værktøjer (f.eks. erstattes date pickers med Shadcn-komponenter).
+
+### F2.1: `[ ]` Identificer og Prioriter Nøgle-Sider/Templates til Transformation
+*   **F2.1.1:** `[ ]` **Udvidet Liste over Identificerede Nøgle Sider/Templates fra Eksisterende Projekt (baseret på screenshots og plan):**
+    *   **Kerne Layout:**
+        *   `templates/base.html` (Grundlag for `app/layout.tsx` og `DashboardLayout.tsx`)
+        *   `templates/_macros.html` (Potentielle genbrugelige UI-elementer/komponenter)
+    *   **Autentificering:**
+        *   `templates/auth/login.html` (JS: `static/js/login.js`?)
+        *   `templates/auth/request_reset.html`
+        *   `templates/auth/reset_password_form.html`
+    *   **Hoved Dashboard/Forside:**
+        *   `templates/index.html` (JS: `static/js/dashboard.js`? eller `static/js/app.js`?) -> Din "Home / dashboard"
+    *   **Live Sports:**
+        *   `templates/live_sports.html` (JS: `static/js/live_sports.js`)
+    *   **Aktiedyst:**
+        *   `templates/aktiedyst.html` (JS: `static/js/aktiedyst.js`)
+    *   **Forum:**
+        *   `templates/forum/category.html`
+        *   `templates/forum/create_thread.html` (JS: `static/js/forum_forms.js`?)
+        *   `templates/forum/edit_post.html` (JS: `static/js/forum_forms.js`?)
+        *   `templates/forum/thread.html` (JS: `static/js/forum_thread.js`?)
+        *   `templates/forum/search_results.html` (Forum-specifik søgning)
+    *   **Brugerprofil & Indstillinger:**
+        *   `templates/profile.html` (JS: `static/js/profile.js`)
+        *   `templates/settings.html` (JS: `static/js/settings.js`)
+    *   **Admin Sektion:**
+        *   `templates/admin/menu.html` (og andre under `admin/`) (JS: `static/js/admin_menu.js`?)
+    *   **Gamification/Interaktion:**
+        *   `templates/badges/*` (Hvis dette er en feature, der skal med)
+        *   `templates/game_area.html` (JS: `static/js/game_area.js`?)
+        *   `templates/join_game.html` (JS: `static/js/join_game.js`?)
+        *   `templates/leaderboard.html` (JS: `static/js/leaderboard.js`)
+    *   **Beskeder (Messaging System):**
+        *   `templates/messages/compose_message.html`
+        *   `templates/messages/inbox.html`
+        *   `templates/messages/sent.html`
+        *   `templates/messages/view_message.html` (JS: `static/js/messages.js`?)
+    *   **Notifikationer:**
+        *   `templates/notifications/index.html`
+    *   **Diverse Sider:**
+        *   `templates/history.html` (JS: `static/js/history.js`?)
+        *   `templates/search_results.html` (Generel søgning)
+        *   `templates/active_sessions.html` (JS: `static/js/active_sessions.js`?)
+        *   `templates/session_detail.html` (JS: `static/js/session_details.js`?)
+    *   **Fejlsider:**
+        *   `templates/errors/404.html`, `429.html`, `500.html`, etc. (Next.js har standardhåndtering, men indhold kan genbruges).
+    *   **Globale JS-filer:**
+        *   `static/js/app.js` (Overordnet app-logik?)
+        *   `static/js/global.js` (Fælles funktioner?)
+        *   `static/js/utils.js` (Hjælpefunktioner?)
+*   **F2.1.2:** `[ ]` **Prioriteringsliste for *Indledende* Transformation i Fase 2 (justeret):**
+    *   Denne liste fokuserer på de mest centrale brugerflader for at få en MVP (Minimum Viable Product) af de nye sektioner op at køre med statisk UI. Andre sider fra F2.1.1 transformeres efterfølgende.
+    1.  **Login/Signup sider/modals** (`templates/auth/*`)
+    2.  **Home / Dashboard** (`templates/index.html`)
+    3.  **Live Sports Oversigt** (`templates/live_sports.html`)
+    4.  **Aktiedyst Dashboard** (`templates/aktiedyst.html`)
+    5.  **Forum (Kategoriliste & Trådliste)** (`templates/forum/category.html`, dele af `templates/forum/thread.html` for listevisning)
+    6.  **Brugerprofil Side (Basisvisning & Indstillinger)** (`templates/profile.html`, `templates/settings.html`)
+    7.  **(Overvej) Leaderboard** (`templates/leaderboard.html`) - da det ofte er en engagerende feature.
+*   **F2.1.3:** `[ ]` **Dokumenter URL-struktur og Kernefunktionalitet:**
+    *   For hver side/template på prioriteringslisten, dokumenter den gamle URL (hvis relevant) og den forventede nye Next.js URL.
+    *   Beskriv kort kernefunktionaliteten, der skal genskabes statisk i Fase 2.
+*   **F2.1.4:** `[ ]` **JavaScript Biblioteksanalyse (fra F2.0.3):**
+    *   For hvert identificeret eksternt JS-bibliotek i det gamle projekt:
+        *   Vurder om funktionaliteten kan og bør genskabes med Framer Motion, Shadcn/ui komponenter, standard React/Tailwind/CSS, eller om biblioteket (eller et moderne alternativ) skal installeres i Next.js projektet.
+        *   Planlæg integrationen (Fase 5 for avanceret `anime.js`, ellers tidligere hvis det er simple UI-elementer).
+
+---
+
+
+
+
+
+
+
+
+
+
+
 *   **F2.1.2:** `[ ]` **Analyser eksisterende templates for genbrugelige mønstre:**
     *   Udover hele sider, kig efter gentagne UI-mønstre i templates (f.eks. specifikke kort-layouts, listeelementer, datavisningsformater).
     *   Planlæg hvordan disse mønstre kan omdannes til genbrugelige React-komponenter (se F2.7). Dette er nøglen til en effektiv SPA-udvikling.
