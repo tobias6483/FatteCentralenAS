@@ -6,7 +6,7 @@ This repository contains the Fattecentralen project, which is being transformed 
 
 The new architecture involves:
 *   A **monorepo structure** (`fattecentralen-monorepo/`) housing the distinct frontend and backend applications.
-*   A **Next.js frontend** (React, TypeScript, Tailwind CSS, Shadcn/ui) for a dynamic Single Page Application (SPA) experience.
+*   A **Next.js frontend** (React, TypeScript, Tailwind CSS, Shadcn/ui) for a dynamic Single Page Application (SPA) experience. This means that while the application will have many "pages" or views (converted from the original HTML files), navigation between them will primarily involve dynamically updating the content of the main page rather than full page reloads from the server, leading to a faster and smoother user experience.
 *   A **Python/Flask backend** serving as a headless API, integrated with Firebase for authentication and potentially other services.
 
 ## Project Vision
