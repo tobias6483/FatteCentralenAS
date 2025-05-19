@@ -74,6 +74,25 @@ Mål: At etablere monorepo-strukturen, initialisere et kørende Next.js-projekt 
 [X] (Valgfrit for nu) Aktiver Firestore eller Realtime Database. (User confirmed Realtime Database enabled)
 [X] Hent Firebase config-objektet og gem det sikkert i apps/frontend/ (via miljøvariabler). (Stored in `.env.local`)
 [X] Initialiser Firebase SDK i apps/frontend/src/lib/firebase.ts (eller lignende). (Created `src/lib/firebase.ts` with initialization logic)
+
+### Overordnet Backend Udviklingsstrategi
+*Bemærkning: Den overordnede strategi for backend-udvikling vil følge disse faser. Detaljer for den nuværende "Fase 1" nedenfor er specifikke opgaver inden for denne bredere ramme.*
+
+1.  **Phase 1: Implement Core User Profile API**:
+    *   Fokus: Oprettelse af `api_user_profile.py`, implementering af `GET` og `PUT` for `/api/v1/users/me/profile`, og registrering af blueprint.
+    *   *Status*: I gang. `api_user_profile.py` er oprettet, og grundlæggende endpoints implementeres.
+2.  **Phase 2: Solidify Forum APIs**:
+    *   Fokus: Gennemgang af eksisterende GET endpoints, implementering af fuld CRUD (Create, Read, Update, Delete) operationer for forumtråde og -posts.
+3.  **Phase 3: Review and Complete Sports & Aktiedyst APIs**:
+    *   Fokus: Gennemgang af eksisterende endpoints for Live Sports og Aktiedyst, identifikation og implementering af manglende funktionalitet for at sikre omfattende API-dækning.
+4.  **Phase 4: Develop Admin API**:
+    *   Fokus: Definition af omfanget for admin-specifikke funktionaliteter og implementering af de nødvendige API-endpoints.
+
+**Generelle Bemærkninger til Backend Udvikling**:
+*   **Lokal Flask JWTs vs. Firebase ID Tokens**: Der er en løbende overvejelse om potentielt at udfase lokale Flask JWTs (access/refresh tokens) genereret af backend til API-autentificering. Målet ville være, at frontend udelukkende stoler på Firebase ID tokens for alle API-anmodninger for at strømline autentificering. Dette er stadig under diskussion, og den nuværende lokale JWT-generering forbliver på plads indtil videre.
+*   **Løbende Opgaver**: Fejlhåndtering, sikkerhedsforbedringer, databasemigreringer og omfattende testning vil være kontinuerlige bestræbelser gennem alle faser.
+
+---
 Fase 1: Backend API Klargøring & Grundlæggende Autentificering (Python/Flask apps/backend/)
 Mål: At sikre at backend'en eksponerer de nødvendige API'er, integrerer med Firebase Authentication, og at real-time setup er klar.
 
@@ -85,12 +104,13 @@ Mål: At sikre at backend'en eksponerer de nødvendige API'er, integrerer med Fi
 79.6 |   [X] Downloadet Firebase Admin SDK service account key og gemt sikkert. (Note: Gemt i `~/.firebase_keys/fattecentralenas-service-account.json`)
 79.7 |   [X] Konfigureret environment variable for service account key path. (Note: `GOOGLE_APPLICATION_CREDENTIALS` sat i `apps/backend/.env`)
 [ ] Flask-JWT-Extended & Firebase Auth Integration:
-Flask-JWT-Extended er allerede delvist opsat. Nu skal fokus være på at validere JWTs udstedt af Firebase Authentication.
-Implementer en funktion/decorator i Flask til at verificere Firebase ID tokens sendt i Authorization headeren fra frontend.
-Opdater login_route, register_route, me_route til ikke selv at udstede JWTs, men i stedet forvente at frontend håndterer login/signup via Firebase, og derefter sender Firebase ID token til Flask. me_route vil validere dette token og returnere brugerdata fra din lokale database baseret på Firebase UID.
-Sørg for at user_loader mm. i Flask-JWT-Extended fungerer med brugeridentiteter fra Firebase-tokens (f.eks. ved at slå brugeren op i din database via Firebase UID).
+  Flask-JWT-Extended er allerede delvist opsat. Nu skal fokus være på at validere JWTs udstedt af Firebase Authentication.
+  Implementer en funktion/decorator i Flask til at verificere Firebase ID tokens sendt i Authorization headeren fra frontend.
+  Opdater login_route, register_route, me_route til ikke selv at udstede JWTs, men i stedet forvente at frontend håndterer login/signup via Firebase, og derefter sender Firebase ID token til Flask. me_route vil validere dette token og returnere brugerdata fra din lokale database baseret på Firebase UID.
+  Sørg for at user_loader mm. i Flask-JWT-Extended fungerer med brugeridentiteter fra Firebase-tokens (f.eks. ved at slå brugeren op i din database via Firebase UID).
+  *Bemærkning: Som diskuteret forbliver lokal JWT-generering i traditionelle login-flows indtil videre. Fokus er på Firebase ID token validering for API-kald.*
 [ ] Database Review (Eksisterende apps/backend/):
-Bekræft at nuværende databasemodeller (models.py) er tilstrækkelige for kernefunktionaliteter. Migrationer (Alembic/Flask-Migrate) skal være up-to-date.
+  Bekræft at nuværende databasemodeller (models.py) er tilstrækkelige for kernefunktionaliteter. Migrationer (Alembic/Flask-Migrate) skal være up-to-date.
 [X] API Design - Live Sports (Detaljeret Definition):
 GET /api/v1/sports: Liste af sportsgrene/ligaer.
 GET /api/v1/sports/{sportId}/matches?status=[live|upcoming|finished]&date=YYYY-MM-DD: Liste af kampe.
@@ -105,7 +125,8 @@ Definer JSON request/response strukturer for hver.
 Definer JSON request/response strukturer for hver.
 [X] API Design - Forum & Andre Features (Detaljeret Definition):
   [X] Forum: GET /api/v1/forum/categories, GET /api/v1/forum/categories/{catId}/threads, GET /api/v1/forum/threads/{threadId}/posts, POST /api/v1/forum/threads/{threadId}/posts (kræver Firebase Auth for POST). (All Forum API endpoints implemented)
-  [ ] Brugerprofil: GET /api/v1/users/me/profile (baseret på Firebase Auth), PUT /api/v1/users/me/profile.
+  [X] Brugerprofil: GET /api/v1/users/me/profile (baseret på Firebase Auth), PUT /api/v1/users/me/profile. (Implemented in [`fattecentralen-monorepo/apps/backend/routes/api_user_profile.py`](fattecentralen-monorepo/apps/backend/routes/api_user_profile.py:1) and registered in [`fattecentralen-monorepo/apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py:1))
+    *Bemærkning: Implementering af `api_user_profile.py` er i gang som en del af "Phase 1: Implement Core User Profile API" fra den overordnede backend strategi.*
 Definer JSON request/response strukturer for hver. Overvej om dele af forum/profil data kan flyttes til Firebase Firestore for nemmere realtid og skalerbarhed.
 ```markdown
 ### Forum API JSON Structures:
@@ -311,11 +332,11 @@ Definer JSON request/response strukturer for hver. Overvej om dele af forum/prof
         }
         ```
 ```
-[X] Implementer/Opdater API Endpoints i Flask: (Initial placeholders for Aktiedyst and refactoring for Sports Match API done. Forum API fully implemented.)
-  [X] Skriv/opdater Flask routes i [`apps/backend/routes/`](fattecentralen-monorepo/apps/backend/routes/) for at matche de designede endpoints. (Aktiedyst placeholders created in [`api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py), Sports match endpoint refactored in [`api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py). Forum API: `forum_api_bp` created and registered; `GET /categories`, `GET /categories/{catId}/threads`, `GET /threads/{threadId}/posts`, and `POST /threads/{threadId}/posts` (with Firebase Auth) implemented in [`forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py).)
-  [X] Brug SQLAlchemy til databaseinteraktion. (Done for Forum API)
-  [X] Implementer serialisering og korrekt HTTP statuskode/fejlhåndtering. (Done for Forum API)
-  [X] Sikre endpoints med den nye Firebase Auth token validering. (Done for Forum POST API)
+[X] Implementer/Opdater API Endpoints i Flask: (Initial placeholders for Aktiedyst and refactoring for Sports Match API done. Forum API and User Profile API fully implemented.)
+  [X] Skriv/opdater Flask routes i [`apps/backend/routes/`](fattecentralen-monorepo/apps/backend/routes/) for at matche de designede endpoints. (Aktiedyst placeholders created in [`api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py), Sports match endpoint refactored in [`api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py). Forum API: `forum_api_bp` created and registered; `GET /categories`, `GET /categories/{catId}/threads`, `GET /threads/{threadId}/posts`, and `POST /threads/{threadId}/posts` (with Firebase Auth) implemented in [`forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py). User Profile API: `user_profile_api_bp` created and registered with `GET` and `PUT` for `/users/me/profile` in [`fattecentralen-monorepo/apps/backend/routes/api_user_profile.py`](fattecentralen-monorepo/apps/backend/routes/api_user_profile.py:1).)
+  [X] Brug SQLAlchemy til databaseinteraktion. (Done for Forum API and User Profile API)
+  [X] Implementer serialisering og korrekt HTTP statuskode/fejlhåndtering. (Done for Forum API and User Profile API)
+  [X] Sikre endpoints med den nye Firebase Auth token validering. (Done for Forum POST API and User Profile API)
 [X] Real-time (Socket.IO) Forberedelse i Flask (apps/backend/sockets.py):
   [X] Gennemgå eksisterende Flask-SocketIO setup. (Reviewed existing setup in [`apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py))
   [X] Definer klare event-navne (live_score_update, stock_price_update, new_user_notification). (Defined `live_score_update` and `stock_price_update`)

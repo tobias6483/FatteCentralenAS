@@ -152,7 +152,7 @@ def create_app(config_class=Config):
     from .routes.auth import auth_bp as auth_json_bp
     from .routes.admin import admin_bp
     from .routes.forum import forum_bp, forum_api_bp
-    # from .routes.user_profile import user_profile_bp # File missing
+    from .routes.api_user_profile import user_profile_api_bp
     from .routes.stocks import stocks_bp as aktiedyst_bp
     # from .routes.api_general import api_general_bp # File missing
     # from .routes.api_forum import api_forum_bp # File missing
@@ -185,6 +185,7 @@ def create_app(config_class=Config):
     app.register_blueprint(messages_bp, url_prefix='/messages')
     app.register_blueprint(sessions_bp, url_prefix='/sessions')
     app.register_blueprint(forum_api_bp) # New V1 Forum API, prefix is in the blueprint
+    app.register_blueprint(user_profile_api_bp) # New User Profile API, prefix is in the blueprint
 
     @app.context_processor
     def inject_csrf_token_global(): return dict(csrf_token_value=generate_csrf())
