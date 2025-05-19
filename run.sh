@@ -18,9 +18,13 @@ fi
 echo "🐍 Aktiverer virtuelt miljø: $VENV_PATH"
 source "$VENV_PATH/bin/activate"
 
+# Add the monorepo subdirectory to PYTHONPATH so Python can find the 'apps' package
+export PYTHONPATH="$SCRIPT_DIR/fattecentralen-monorepo:$PYTHONPATH"
+echo "   PYTHONPATH = $PYTHONPATH"
+
 # Sæt Flask environment variabler (alternativt: brug en .flaskenv fil)
 # Sørg for at run:app passer med din run.py fil (eller hvis du har create_app i run.py)
-export FLASK_APP="run:app"
+export FLASK_APP="run:app" # This should now work as run.py can find apps.backend
 # Sæt til 'development' for at aktivere debug og auto-reload
 export FLASK_ENV="development"
 # Vis hvilke indstillinger der bruges

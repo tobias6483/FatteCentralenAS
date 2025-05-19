@@ -1,0 +1,219 @@
+Okay, lad os bryde "Fattecentralen Projekt"-moderniseringen ned i en struktureret plan, inspireret af dit billede, med klare faser og specifikke "Todos". Dette giver et godt overblik og gør det nemmere at tackle projektet bid for bid, samt at instruere en AI undervejs.
+
+Fattecentralen Projekt - Moderniseringsplan
+
+Overordnet Vision: Modernisere frontend til Next.js/React/TypeScript med en UI/UX inspireret af Bet365/FlashScore (Sport) og Nordnet/TradingView (Aktiedyst), koblet til den eksisterende Python/Flask backend via REST APIs og WebSockets.
+
+## Fase 0: Fundament og Setup (Frontend frontend_dashboard/)
+
+Mål: At have et kørende Next.js-projekt med grundlæggende struktur, styling, og tooling på plads.
+
+[ ] Initialiser Next.js Projekt:
+npx create-next-app@latest frontend_dashboard --typescript --tailwind --eslint --app
+Naviger ind i frontend_dashboard/.
+[ ] Installer Basis Afhængigheder:
+npm install @tanstack/react-query zustand jotai react-hook-form zod framer-motion socket.io-client recharts (eller Nivo)
+npm install -D @tanstack/eslint-plugin-query @testing-library/react @testing-library/jest-dom jest jest-environment-jsdom @types/jest prettier prettier-plugin-tailwindcss (Testing + Code Style)
+[ ] Opsæt Shadcn/ui:
+npx shadcn-ui@latest init (Konfigurer globals.css, tailwind.config.js, components.json osv.)
+Installer nødvendige basekomponenter: npx shadcn-ui@latest add button card input label table tabs dialog skeleton badge avatar dropdown-menu (Tilføj flere efter behov).
+[ ] Konfigurer Linting & Formatting:
+Sørg for at ESLint og Prettier (med Tailwind plugin) fungerer korrekt for konsistent kodestil. Tilpas regler i .eslintrc.json og .prettierrc.js efter behov.
+[ ] Etabler Grundlæggende Mappestruktur:
+src/app/ (Routing)
+src/components/ (Genbrugelige UI-komponenter - underopdel gerne, f.eks. ui/, layout/, features/)
+src/lib/ (Hjælpefunktioner, utils, constants)
+src/hooks/ (Custom React Hooks)
+src/context/ (React Context providers, hvis nødvendigt)
+src/store/ (Zustand/Jotai stores)
+src/styles/ (Evt. global eller specifik CSS udover Tailwind)
+src/types/ (Globale TypeScript interfaces/types)
+[ ] Implementer Grundlæggende Layout:
+Opret src/components/layout/MainLayout.tsx.
+Inkluder en Sidebar/Navbar (brug Shadcn Sheet eller lav en custom) for navigation.
+Definer hovedindholdsområdet.
+Brug layoutet i src/app/layout.tsx.
+[ ] Opsæt Basis Test Framework:
+Konfigurer Jest (jest.config.js) til at køre tests.
+Skriv en simpel test for en grundlæggende komponent for at verificere setup.
+## Fase 1: Backend API Klargøring (Python/Flask app/)
+
+Mål: At sikre at backend kan levere de nødvendige data via veldefinerede API'er og håndtere autentificering for den nye frontend.
+
+[ ] API Design - Autentificering:
+Definer/verificer JWT (eller anden token-baseret) login/signup endpoints (/api/v1/auth/login, /api/v1/auth/register).
+Sørg for et endpoint til at validere token / hente brugerinfo (/api/v1/auth/me).
+Definer request/response JSON-strukturer klart.
+[ ] API Design - Live Sports:
+Endpoint til at hente liste over sportsgrene/ligaer (/api/v1/sports).
+Endpoint til at hente kampe (live, kommende, afsluttede) for en sport/liga (/api/v1/sports/{sportId}/matches?status=live).
+Endpoint til at hente detaljer for en specifik kamp (/api/v1/matches/{matchId}).
+Definer JSON-struktur for data. Overvej data nødvendig for real-time updates.
+[ ] API Design - Aktiedyst:
+Endpoint til at hente brugerens portefølje (/api/v1/aktiedyst/portfolio).
+Endpoint til at hente transaktionshistorik (/api/v1/aktiedyst/transactions).
+Endpoint til at hente tilgængelige aktier/markeder (/api/v1/aktiedyst/markets).
+Endpoint til at hente historiske kursdata for en aktie (/api/v1/aktiedyst/markets/{symbol}/history?period=1m).
+Endpoint til at placere køb/salg ordre (POST /api/v1/aktiedyst/orders).
+Definer JSON-strukturer.
+[ ] API Design - Forum & Andre Features:
+Endpoints for forum kategorier, tråde, posts (hent, opret, rediger).
+Endpoints for brugerprofiler, indstillinger, beskeder, leaderboards.
+Definer JSON-strukturer.
+[ ] Implementer/Opdater API Endpoints:
+Kode de nødvendige Flask routes og funktioner i app/routes/ (eller en ny app/api/v1/ mappe).
+Sørg for at hente data fra databasen (via app/models.py / SQLAlchemy).
+Håndter fejl korrekt (f.eks. 404 Not Found, 401 Unauthorized).
+[ ] Real-time (Socket.IO) Forberedelse:
+Gennemgå app/sockets.py.
+Definer klare event navne (f.eks. live_score_update, stock_price_update, new_forum_post).
+Definer datastrukturen for data sendt med hvert event.
+Overvej brug af Socket.IO rooms/namespaces (f.eks. et rum for hver live kamp match_{matchId}).
+## Fase 2: Core Frontend Features - Statisk UI & Komponenter (frontend_dashboard/)
+
+Mål: At bygge de primære UI-elementer og sider med mock-data eller statisk indhold. Fokus på layout, look & feel med Shadcn/ui og Tailwind.
+
+[ ] Login/Signup Side (app/login, app/signup):
+Brug Shadcn Card, Input, Label, Button.
+Strukturér formularen (endnu uden React Hook Form logik).
+[ ] Brugerprofil Side (app/profile):
+Vis brugerinfo (avatar, navn etc.) - Brug Shadcn Avatar, Card.
+Lav sektioner for indstillinger, historik (statisk).
+[ ] Live Sports - Oversigt Side (app/live-sports):
+Implementer layout inspireret af Bet365/FlashScore.
+Brug Shadcn Tabs til at vælge sport/liga (statisk liste).
+Brug Shadcn Table til at vise en liste af kampe (mock data).
+Implementer LiveMatchRow komponenten (se tidl. prompt) med mock data.
+Brug Shadcn Badge til kampstatus (Live, FT, Upcoming).
+[ ] Aktiedyst - Dashboard Side (app/aktiedyst):
+Layout inspireret af Nordnet/TradingView.
+Brug Shadcn Card til at vise porteføljeværdi (mock data).
+Brug Shadcn Table til at vise beholdninger (mock data).
+Implementer statisk StockChart komponent (uden data fetching).
+Design handels-"widget" / knapper (uden dialog endnu).
+[ ] Forum - Oversigt Side (app/forum):
+Vis liste af kategorier (Shadcn Card eller Table).
+Vis liste af tråde i en kategori (Shadcn Table, mock data).
+[ ] Design System Komponenter:
+Identificer og byg genbrugelige småkomponenter i src/components/ui/ (f.eks. specifikke knapper, data-displays).
+(Valgfrit men Anbefalet): Opsæt Storybook (npx storybook@latest init) og tilføj de vigtigste UI-komponenter.
+## Fase 3: Frontend Data Integration - API Kommunikation (frontend_dashboard/)
+
+Mål: At forbinde den statiske UI til backend API'erne ved hjælp af React Query og implementere state management for brugerdata.
+
+[ ] Opsæt React Query Provider:
+Konfigurer QueryClient og QueryClientProvider i app/layout.tsx eller en dedikeret provider-fil.
+[ ] Implementer Autentificering Flow:
+Brug React Hook Form + Zod på Login/Signup siderne.
+Lav API-kald til backend login/signup endpoints (brug React Query useMutation).
+Gem auth token (f.eks. i localStorage eller httpOnly cookie via en API route).
+Opsæt global state (Zustand/Jotai) for brugerens auth-status og data.
+Implementer logik for at hente brugerdata (/api/v1/auth/me) efter login (brug React Query useQuery).
+Beskyt sider/routes baseret på auth-status.
+[ ] Hent Data til Live Sports:
+Brug useQuery til at hente sport/liga-liste.
+Brug useQuery (med parametre) til at hente kamp-liste baseret på valgt sport/status. Opdater Tabel med rigtige data.
+Implementer loading states (brug Shadcn Skeleton) og error handling.
+[ ] Hent Data til Aktiedyst:
+Brug useQuery til at hente portefølje, transaktioner, markeder.
+Brug useQuery til at hente historiske kursdata til StockChart. Opdater grafen.
+Implementer handelsformularen med React Hook Form + Zod i en Shadcn Dialog.
+Brug useMutation til at sende køb/salg ordrer til API'en. Invalider relevante useQuery data (f.eks. portefølje) ved succes.
+[ ] Hent Data til Forum & Andre Sider:
+Implementer useQuery for forumkategorier, tråde, posts osv.
+Integrer data i brugerprofil, leaderboards etc.
+[ ] API Error Handling:
+Implementer global eller lokal håndtering af API-fejl vist til brugeren (f.eks. med Shadcn Toast / Sonner).
+## Fase 4: Real-time Implementering (frontend_dashboard/)
+
+Mål: At bringe live-data ind i applikationen via WebSockets.
+
+[ ] Etabler WebSocket Forbindelse:
+Lav en service eller custom hook (useSocket) til at initialisere socket.io-client og håndtere forbindelse/genforbindelse. Forbind til din Flask-SocketIO backend.
+Overvej at sende auth token med forbindelsen for bruger-specifikke events.
+[ ] Live Sports Opdateringer:
+I LiveMatchRow eller en overordnet MatchList komponent: Lyt efter live_score_update events.
+Opdater den relevante kamp's data i React state eller direkte i React Query cachen (queryClient.setQueryData).
+Tilføj visuelle indikatorer ved opdatering (Framer Motion animation/blink).
+Håndter logik for at abonnere/afmelde events, når komponenter mounter/unmounter eller brugeren skifter side/filter.
+[ ] Aktiedyst Opdateringer (Hvis relevant):
+Lyt efter stock_price_update events.
+Opdater relevante aktiekurser i UI'en og potentielt i grafen (uden at gen-hente alt).
+Overvej realtids-opdatering af porteføljeværdi.
+[ ] Real-time Notifikationer (Forum, etc.):
+Lyt efter events som new_forum_post, new_message.
+Vis notifikationer til brugeren (f.eks. med Shadcn Toast/Sonner).
+[ ] Performance Optimering for Real-time:
+Sørg for kun at re-rendre de komponenter, der faktisk modtager nye data. Brug React.memo hvis nødvendigt.
+Vær opmærksom på mængden af data sendt over WebSockets.
+## Fase 5: Avancerede Features & UI/UX Polishing (frontend_dashboard/)
+
+Mål: At implementere mere komplekse features og forfine den overordnede brugeroplevelse.
+
+[ ] Avancerede Aktiedyst Features:
+Flere graf-typer/indikatorer i Recharts/Nivo.
+Avancerede ordretyper (hvis relevant).
+Watchlist funktionalitet.
+[ ] Avancerede Live Sports Features:
+Detaljeret kampvisning (app/live-sports/{matchId}).
+Statistikker, H2H, lineups (kræver API-support).
+Favoritmarkering af kampe/ligaer.
+[ ] Forum Implementering:
+Opret/rediger post funktionalitet.
+Brugerinteraktioner (upvotes, replies).
+[ ] Animationer & Overgange:
+Brug Framer Motion til subtile sideovergange.
+Tilføj micro-interaktioner (hover-effekter på knapper/links).
+Animerede loaders eller skeletons.
+[ ] Responsivt Design Finpudsning:
+Gennemgå og test alle sider på forskellige skærmstørrelser (mobil, tablet, desktop). Juster Tailwind klasser.
+[ ] Tilgængelighed (a11y):
+Gennemgå brug af semantisk HTML.
+Test med tastaturnavigation.
+Sørg for korrekte ARIA attributter (Shadcn/ui hjælper her).
+[ ] Dark Mode (Valgfrit):
+Implementer Dark Mode switch ved hjælp af Tailwind's dark: variant og evt. next-themes.
+## Fase 6: Testning & Deployment
+
+Mål: At sikre applikationens kvalitet og gøre den klar til lancering.
+
+[ ] Unit & Integration Tests:
+Skriv Jest/RTL tests for kritiske komponenter og hooks (især data-hentning, formularer, state logic).
+Mock API kald i tests.
+[ ] End-to-End (E2E) Tests (Valgfrit men Anbefalet):
+Opsæt Playwright eller Cypress.
+Skriv tests for de vigtigste bruger-flows (login, placere et bet/handel, se live score).
+[ ] Manuel Test & QA:
+Gennemgå alle features manuelt i forskellige browsere.
+Fiks fundne bugs.
+[ ] Performance Optimering:
+Analyser bundle size (Next.js build analyzer).
+Optimer billeder (Next.js <Image>).
+Check for unødvendige re-renders (React DevTools Profiler).
+[ ] Opsæt CI/CD Pipeline:
+Brug GitHub Actions (eller lignende).
+Pipeline steps: Install -> Lint -> Test -> Build.
+Automatisk deployment til Vercel (anbefalet for Next.js) eller anden platform ved push/merge til main branch.
+[ ] Konfigurer Miljøvariabler:
+Sørg for at API URL'er og andre hemmeligheder håndteres korrekt via .env filer for lokal udvikling og via platformens environment variable settings for deployment.
+## Fase 7: Launch & Vedligeholdelse
+
+Mål: At lancere den nye frontend og planlægge for fremtiden.
+
+[ ] Endelig Deployment til Produktion.
+[ ] Monitorering:
+Opsæt fejl-tracking (f.eks. Sentry).
+Opsæt performance monitorering (Vercel Analytics eller lignende).
+[ ] Indsaml Feedback:
+Få feedback fra dine venner/brugere.
+[ ] Iterér & Forbedr:
+Planlæg fremtidige features eller forbedringer baseret på feedback og data.
+Hold afhængigheder opdateret.
+Tips til Brug af Planen med AI:
+
+Fokuser på én [ ] ad gangen: Vær specifik. F.eks.: "Hjælp mig med at implementere [ ] Implementer Login Form (...) i Fase 2 ved hjælp af React Hook Form, Zod og Shadcn/ui komponenter i Next.js App Router."
+Giv Kontekst: Henvis til den relevante fase og det overordnede mål.
+Bed om Kodeeksempler: "Giv mig et TypeScript/TSX kodeeksempel for LiveMatchRow komponenten med mock data."
+Spørg om Alternativer: "Er der en bedre måde at strukturere min Zustand store til bruger-autentificering?"
+Bed om API Design Hjælp: "Hvordan bør JSON-strukturen se ud for POST /api/v1/aktiedyst/orders API endpointet i min Flask backend?"
+Denne plan er omfattende, men ved at bryde det ned kan du systematisk arbejde dig igennem moderniseringen og bygge en rigtig fed version af Fattecentralen! Held og lykke!

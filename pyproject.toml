@@ -21,5 +21,5 @@ exclude = '''
 
 [tool.pyright]
 exclude = ["**/templates/**/*.html"]
-venvPath = "/Users/tobias/Desktop/Fattecentralen/vs code exp/Fattecentralen Projekt/"
+venvPath = "/Users/tobias/Desktop/Fattecentralen/vs code exp/Fattecentralen Projekt/fattecentralen-monorepo/apps/backend/"
 venv = ".venv"

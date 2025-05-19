@@ -51,4 +51,4 @@ Sammensat Plan.rtf
 app/kom tilbage.txt
 app/plan.txt
 # Monorepo directory for the new version
-fattecentralen-monorepo/
+# fattecentralen-monorepo/ # Commented out to allow tracking files within the monorepo

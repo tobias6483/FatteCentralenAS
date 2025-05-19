@@ -1,0 +1,247 @@
+set category_name = getattr(category, 'name', 'Ukendt Kategori') %} {# Sikker adgang #}
+
+
+
+import os
+import logging
+import locale # *** TILFØJET: Nødvendig for format_currency ***
+from flask import Flask, session, render_template # Tilføj render_template hvis ikke allerede importeret andre steder
+from flask_socketio import SocketIO
+from flask_wtf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_login import LoginManager # *** TILFØJET: For bruger login håndtering ***
+from flask_bcrypt import Bcrypt # *** TILFØJET: For password hashing ***
+
+# ----- Vigtigt: Importer din konfiguration -----
+# Sørg for at Config importeres korrekt, afhængigt af din struktur.
+# Hvis __init__.py er i 'app' mappen og config.py også er i 'app':
+from .config import Config
+# Hvis config.py er udenfor 'app' mappen:
+#from config import Config
+
+
+# ----- Konfigurer Logging -----
+# Din nuværende opsætning er fin. Overvej evt. fil-logging senere.
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] %(message)s")
+
+
+# ----- Initialiser Flask Extensions -----
+# Disse initialiseres globalt, men bindes til app'en i create_app()
+csrf = CSRFProtect()
+
+# === OPDATERET LIMITER INITIALISERING ===
+# Henter nu konfiguration fra Config klassen
+limiter = Limiter(
+    key_func=get_remote_address,
+    # Tjekker om RATELIMIT_DEFAULT er sat i Config og splitter den ved semikolon
+    # Hvis den ikke er sat (None eller tom streng), sættes ingen default limits her.
+    default_limits=[limit.strip() for limit in Config.RATELIMIT_DEFAULT.split(';')] if Config.RATELIMIT_DEFAULT else [],
+    # Henter Redis URL fra Config - sikrere end hardcoding
+    storage_uri=Config.RATELIMIT_STORAGE_URL,
+    # storage_options={"socket_connect_timeout": 30}, # Valgfrit: Ekstra Redis options
+    strategy="fixed-window" # Standard strategy - kan justeres
+)
+
+socketio = SocketIO()
+login_manager = LoginManager()
+bcrypt = Bcrypt()
+
+# *** KORREKT KONFIGURATION for Flask-Login ***
+# Fortæller Flask-Login hvilken *GET* route (view function), der skal vises,
+# når en bruger skal logge ind via @login_required.
+login_manager.login_view = 'main.login_page'
+# Valgfri: Flash message kategori for @login_required beskeder
+login_manager.login_message_category = 'info'
+
+
+# ----- Bruger Loader Callback (KRITISK for Flask-Login) -----
+# Denne funktion fortæller Flask-Login, hvordan man henter et brugerobjekt
+# baseret på det bruger-ID, der gemmes i sessionen.
+# Selvom du bruger JSON, *skal* du have en måde at hente brugeren på!
+@login_manager.user_loader
+def load_user(user_id):
+    """Loads user object based on user_id from session."""
+    # VIGTIGT: Du skal implementere logikken her!
+    # Dette vil typisk involvere at læse fra din players.json
+    # og returnere et "bruger objekt".
+    # Fordi Flask-Login forventer et bestemt objekt, skal vi lave en
+    # simpel User klasse (se kommentarer senere).
+    try:
+        # Du skal oprette denne funktion/klasse et sted (f.eks. i utils.py)
+        # Den skal tage et ID og returnere et User-objekt (eller None)
+        from .utils import get_user_by_id # <-- FORUDSÆTTER DENNE FUNKTION/KLASSE FINDES
+        # get_user_by_id skal slå op i din players.json
+        user = get_user_by_id(user_id)
+        # Log for debugging:
+        # logging.debug(f"load_user called with ID: {user_id}, found user: {user}")
+        return user
+    except Exception as e:
+        logging.error(f"Error loading user {user_id}: {e}")
+        return None
+
+# ----- Custom Jinja Filter: format_currency -----
+# Defineres her, men registreres på app'en inde i create_app()
+def format_currency_filter(value):
+    """Format a number as DKK currency."""
+    try:
+        value_float = float(value)
+        # Prøv at sætte dansk locale
+        try:
+            locale.setlocale(locale.LC_ALL, 'da_DK.UTF-8')
+        except locale.Error:
+            try:
+                locale.setlocale(locale.LC_ALL, 'Danish_Denmark.1252')
+            except locale.Error:
+                try:
+                     locale.setlocale(locale.LC_ALL, '') # System default
+                except locale.Error:
+                     # Simpel fallback hvis locales fejler totalt
+                     return "{:,.2f} DKK".format(value_float).replace(",", "#").replace(".", ",").replace("#", ".")
+
+        # Brug locale.currency hvis locale blev sat korrekt
+        return locale.currency(value_float, grouping=True, symbol='DKK', international=False)
+
+    except (ValueError, TypeError, locale.Error):
+        # Returner original værdi hvis den ikke kan konverteres/formateres
+        return value
+    finally:
+         # Valgfrit: Nulstil locale til systemets default for at undgå sideeffekter
+         # Kan være nødvendigt hvis andre dele af din app forventer default locale.
+         try:
+             locale.setlocale(locale.LC_ALL, '')
+         except locale.Error:
+            pass
+
+# ----- Create App Factory Function -----
+def create_app(config_class=Config): # Tillader at passere en anden config til test f.eks.
+    """Creates and configures the Flask application."""
+    logging.info("Creating Flask app...")
+    # Bestem projektets rodmappe baseret på denne fils placering
+    basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
+    # Opret Flask-appen med angivne stier for templates og statiske filer
+    app = Flask(__name__,
+                template_folder=os.path.join(basedir, "templates"),
+                static_folder=os.path.join(basedir, "static"))
+    app.config.from_object(config_class) # Brug config klassen
+
+    # ----- Initialiser Extensions med App -----
+    logging.info("Initializing extensions...")
+    csrf.init_app(app)
+    limiter.init_app(app)
+    login_manager.init_app(app) # *** TILFØJET ***
+    bcrypt.init_app(app)       # *** TILFØJET ***
+    # Vigtigt: Sørg for at SocketIO initialiseres korrekt,
+    # overvej at sende CORS config hvis frontend/backend er adskilt
+    socketio.init_app(app, cors_allowed_origins=app.config.get('CORS_ALLOWED_ORIGINS', '*'))
+
+    # ----- Registrer Jinja Filter -----
+    # *** TILFØJET: Gør filteret tilgængeligt i templates ***
+    app.jinja_env.filters['format_currency'] = format_currency_filter
+
+    # ----- Opret Upload Folder -----
+    upload_folder = app.config.get("UPLOAD_FOLDER", os.path.join(basedir, "uploads")) # Få fra config eller sæt default
+    try:
+        os.makedirs(upload_folder, exist_ok=True)
+        app.config["UPLOAD_FOLDER"] = upload_folder # Gem den faktiske sti i config
+        logging.info(f"Upload folder set to: {upload_folder}")
+    except OSError as e:
+        logging.error(f"Error creating upload folder '{upload_folder}': {e}")
+        # Overvej om appen skal stoppe her, hvis upload er kritisk
+
+    # ----- Registrer Blueprints -----
+    logging.info("Registering blueprints...")
+    try:
+        # Sørg for at stierne er korrekte ift. din projektstruktur
+        from app.routes.auth import auth_bp
+        from app.routes.main import main_bp
+        from app.routes.sessions import sessions_bp
+        from app.routes.stocks import stocks_bp # Aktiedyst?
+        from app.routes.admin import admin_bp
+
+        app.register_blueprint(auth_bp)
+        app.register_blueprint(main_bp)
+        app.register_blueprint(sessions_bp, url_prefix="/sessions")
+        app.register_blueprint(stocks_bp, url_prefix="/stocks") # Giver mening at have prefix?
+        app.register_blueprint(admin_bp, url_prefix="/admin") # GOD IDE med prefix til admin!
+
+    except ImportError as e:
+        logging.error(f"Error importing or registering blueprints: {e}")
+        # Afhængigt af situationen vil du måske kaste fejlen videre her
+        # raise e
+    except Exception as e:
+        logging.error(f"Unexpected error during blueprint registration: {e}", exc_info=True)
+
+    # ----- Registrer Socket.IO Handlers -----
+    logging.info("Registering Socket.IO handlers...")
+    try:
+        from app.sockets import register_socketio_handlers # Antager du har denne struktur
+        register_socketio_handlers(socketio)
+    except ImportError as e:
+        logging.error(f"Could not import Socket.IO handlers: {e}")
+    except Exception as e:
+        logging.error(f"Error registering Socket.IO handlers: {e}", exc_info=True)
+
+
+    # ----- Request Hook -----
+    @app.before_request
+    def make_session_permanent():
+        # Gør sessionen permanent (bruger app.permanent_session_lifetime fra config)
+        session.permanent = True
+        # Man kan også logge request info her for debugging
+        # logging.debug(f"Request: {request.method} {request.path}")
+
+    # Log registrerede routes ved opstart (din kode er fin)
+    logging.info("Registered routes:")
+    # Brug app.logger for bedre integration med Flask logging
+    for rule in app.url_map.iter_rules():
+         app.logger.info(f"- {rule.endpoint}: {rule.rule} ({', '.join(rule.methods)})")
+
+
+    # ----- Global Error Handlers (Valgfrit men god praksis) -----
+    # @app.errorhandler(404)
+    # def page_not_found(e):
+    #     logging.warning(f"404 Not Found: {request.path}")
+    #     return render_template('errors/404.html'), 404
+
+    # @app.errorhandler(500)
+    # def internal_server_error(e):
+    #      logging.error(f"500 Internal Server Error: {e}", exc_info=True)
+    #      # Undgå at logge detaljeret fejl til brugeren i produktion
+    #      return render_template('errors/500.html'), 500
+
+    logging.info("Flask app creation complete.")
+    return app
+
+# ----- Næste Skridt / VIGTIGE PUNKTER -----
+# 1.  USER KLASSE: Du *skal* definere en simpel 'User' klasse et sted (f.eks.
+#     i utils.py eller en ny models.py). Den skal mindst have:
+#     -   `from flask_login import UserMixin`
+#     -   `class User(UserMixin):`
+#     -   `def __init__(self, user_id, username, ...):`
+#     -       `self.id = user_id` # Flask-Login bruger 'id' attributten
+#     -       `self.username = username`
+#     -       # ... andre nødvendige attributter
+#     Denne klasse er hvad `load_user`-funktionen skal returnere.
+
+# 2.  GET_USER_BY_ID: Implementer `get_user_by_id(user_id)` funktionen
+#     (f.eks. i utils.py) som kan:
+#     -   Læse din `players.json` fil.
+#     -   Finde bruger-data baseret på det `user_id`, der gives.
+#     -   Oprette et `User` objekt med dataene (som defineret i punkt 1).
+#     -   Returnere `User`-objektet (eller `None` hvis ikke fundet).
+#     Husk at håndtere fil-låsning eller genindlæsning, hvis filen kan ændres
+#     mens appen kører (endnu en grund til at skifte til DB!).
+
+# 3.  PASSWORD HASHING: Når du implementerer register/login i `auth.py`:
+#     -   Ved registrering: Brug `bcrypt.generate_password_hash(password).decode('utf-8')`
+#       til at hashe passwordet, før du gemmer det (i JSON eller DB).
+#     -   Ved login: Hent den gemte hash for brugeren og brug
+#       `bcrypt.check_password_hash(stored_hash, provided_password)` til at
+#       verificere.
+
+# 4.  LOCALE: Sørg for, at 'da_DK.UTF-8' eller en anden dansk locale er
+#     tilgængelig på dit system for at få `format_currency` til at virke optimalt.
+

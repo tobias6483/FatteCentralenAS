@@ -30,11 +30,13 @@ else:
 # --- NU importerer og starter vi appen ---
 # Importer først *efter* load_dotenv er kørt
 try:
-    # --- RETTELSE HER ---
-    from app import create_app           # Importer create_app fra app/__init__.py
-    from app.extensions import socketio  # Importer socketio fra app/extensions.py
+    # --- CORRECTED IMPORTS ---
+    # Assuming 'apps' is a package (has __init__.py) and 'backend' is a module within 'apps'
+    # that contains create_app and socketio (or they are accessible via apps.backend)
+    from apps.backend import create_app
+    from apps.backend.extensions import socketio
     # -------------------
-    log.info("--- Successfully imported create_app from 'app' and socketio from 'app.extensions' ---") # Opdateret logbesked
+    log.info("--- Successfully imported create_app from 'apps.backend' and socketio from 'apps.backend.extensions' ---")
 except ImportError as e:
     log.critical(f"--- CRITICAL ERROR: Failed importing core components. Error: {e} ---", exc_info=True)
     # Afslut hvis basis import fejler
@@ -65,7 +67,7 @@ def update_sports_command():
     # Need app context to access config and db
     with app.app_context():
         try:
-            from app.utils import update_sports_catalog_from_api
+            from apps.backend.utils import update_sports_catalog_from_api
             success = update_sports_catalog_from_api()
             if success:
                 log.info("CLI: Sports catalog update finished successfully.")
@@ -85,7 +87,7 @@ def update_events_command():
     log.info("CLI: Running 'update-events' command...")
     with app.app_context():
         try:
-            from app.utils import update_sport_events
+            from apps.backend.utils import update_sport_events
             success = update_sport_events()
             if success:
                 log.info("CLI: Sports events update finished successfully.")
