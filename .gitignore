@@ -52,3 +52,12 @@ app/kom tilbage.txt
 app/plan.txt
 # Monorepo directory for the new version
 # fattecentralen-monorepo/ # Commented out to allow tracking files within the monorepo
+
+# Node dependencies
+node_modules/
+apps/frontend/node_modules/
+fattecentralen-monorepo/apps/frontend/node_modules/
+fattecentralen-monorepo/node_modules/
+
+# Cache files for pre-commit
+.cache/
