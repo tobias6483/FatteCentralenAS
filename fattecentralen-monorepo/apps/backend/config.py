@@ -6,7 +6,8 @@ import secrets
 from datetime import timedelta
 from typing import Any, Dict, List, Optional, Set, Tuple, Union  # Tilføjet Union
 
-from dotenv import load_dotenv
+# Fjern den oprindelige import her, da den omdefineres nedenfor
+# from dotenv import load_dotenv
 
 # === Importer load_dotenv HELT FØRST ===
 load_dotenv = None  # Initialize to None

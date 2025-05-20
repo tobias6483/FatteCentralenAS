@@ -1,3 +1,6 @@
+async/await ikke endnu da redis client libary used is synchronus..
+from libraries like aioredis -> async!
+
 Absolut! Her er den samlede, detaljerede og forfinede projektplan for "Fattecentralen", der fusionerer alle input og tilføjer yderligere detaljer og kreative ideer, klar til at blive kopieret ind i Dillinger.io.
 
 ```markdown
@@ -1258,7 +1261,7 @@ At transformere det nuværende Fattecentralen-projekt (HTML, JavaScript, Python,
     *   Gennemgå alle eksisterende sider, sektioner og eventuelle design-templates.
     *   Identificer de 5-7 vigtigste/mest komplekse brugerflader, der skal transformeres først.
     *   **Prioriteringsliste (forslag baseret på planen):**
-        1.  Login/Signup sider/modals. 
+        1.  Login/Signup sider/modals.
         2.  Home / dashboard
         3.  Live Sports Oversigt (inkl. liste af sportsgrene, ligaer, kampe).
         4.  Aktiedyst Dashboard (inkl. portfolio-oversigt, markedsliste, basal graf).
