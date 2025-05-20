@@ -1,3 +1,5 @@
+'use client'; // Ensure this is a client component
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,12 +12,33 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'; // Added Sheet imports
-import { Bell, Gamepad2, Menu, Search } from 'lucide-react'; // Added Gamepad2 and Menu
+import { useAuthStore } from '@/stores/authStore'; // Import auth store
+import { Bell, Gamepad2, Menu, Search } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import React from 'react';
 
 const Header: React.FC = () => {
   const notificationsCount = 0; // Static for now
+  const { user, logout } = useAuthStore(); // Get user and logout function
+  const router = useRouter(); // Initialize router
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/auth/login'); // Redirect to login page after logout
+  };
+
+  // Determine Avatar Fallback based on user state
+  const getAvatarFallback = () => {
+    if (user?.displayName) {
+      const names = user.displayName.split(' ');
+      if (names.length > 1) {
+        return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+      }
+      return names[0].substring(0, 2).toUpperCase();
+    }
+    return 'FC'; // Default fallback
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -113,25 +136,27 @@ const Header: React.FC = () => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent hover:text-accent-foreground transition-colors duration-150 ease-in-out active:scale-95">
                 <Avatar>
-                  {/* <AvatarImage src="/placeholder-avatar.png" alt="User Avatar" /> */}
-                  <AvatarFallback>FC</AvatarFallback>
+                  {/* <AvatarImage src={user?.photoURL || "/placeholder-avatar.png"} alt="User Avatar" /> */}
+                  <AvatarFallback>{getAvatarFallback()}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Min Konto</DropdownMenuLabel>
+              <DropdownMenuLabel>{user?.displayName || 'Min Konto'}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/profile">Profil</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/badges">Badges</Link> {/* Added Badges Link */}
+                <Link href="/badges">Badges</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings">Indstillinger</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Log ud</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                Log ud
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -1,9 +1,9 @@
-import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app'; // Imported FirebaseApp
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getDatabase } from 'firebase/database';
-import { getStorage } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
+import { getApp, getApps, initializeApp, type FirebaseApp } from 'firebase/app'; // Imported FirebaseApp
+import { getAuth, GoogleAuthProvider } from 'firebase/auth'; // Added GoogleAuthProvider
+import { getDatabase } from 'firebase/database';
+import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -28,6 +28,7 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 const database = getDatabase(app); // Realtime Database
 const storage = getStorage(app);
+const googleProvider = new GoogleAuthProvider(); // Added googleProvider
 
 // Analytics (conditionally initialized)
 let analytics;
@@ -39,4 +40,4 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export { app, auth, firestore, database, storage, analytics };
+export { analytics, app, auth, database, firestore, googleProvider, storage }; // Added googleProvider to exports
