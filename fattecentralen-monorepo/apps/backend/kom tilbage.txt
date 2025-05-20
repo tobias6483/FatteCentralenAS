@@ -244,4 +244,3 @@ def create_app(config_class=Config): # Tillader at passere en anden config til t
 
 # 4.  LOCALE: Sørg for, at 'da_DK.UTF-8' eller en anden dansk locale er
 #     tilgængelig på dit system for at få `format_currency` til at virke optimalt.
-

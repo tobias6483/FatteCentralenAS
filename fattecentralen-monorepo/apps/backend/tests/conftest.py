@@ -4,102 +4,96 @@ This file contains shared fixtures for all tests.
 """
 
 import os
-import sys
 import tempfile
 
 import pytest
-from flask import Flask
+from fastapi.testclient import TestClient  # Keep for now
+from werkzeug.security import generate_password_hash
 
-# Add the parent directory to sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-from app import create_app
-from app.models import ForumCategory, ForumPost, ForumThread, User
-from app.models import db as _db
+# Corrected imports based on project structure
+from .. import create_app  # from backend/__init__.py
+from ..config import Config  # Import Config from backend/config.py
+from ..extensions import db as _db  # from backend/extensions.py
+from ..models import ForumCategory, ForumPost, ForumThread, PasswordResetRequest, User
 
 
 @pytest.fixture(scope="session")
-def app():
+def app_fixture():
     """Create and configure a Flask app for testing."""
-    # Create a temporary file for SQLite database
     db_fd, db_path = tempfile.mkstemp()
 
-    # Create the app with testing config
-    app = create_app(
-        test_config={
-            "TESTING": True,
-            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
-            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-            "SECRET_KEY": "test_secret_key",
-            "JWT_SECRET_KEY": "test_jwt_secret_key",
-            "WTF_CSRF_ENABLED": False,
-        }
-    )
+    class TestConfig(Config):
+        TESTING = True
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{db_path}"
+        SQLALCHEMY_TRACK_MODIFICATIONS = False
+        SECRET_KEY = "test_secret_key"
+        JWT_SECRET_KEY = "test_jwt_secret_key"
+        WTF_CSRF_ENABLED = False
+        # Ensure other necessary overrides from base Config are present or defaulted safely
+        # For example, if base Config relies on os.environ for paths not relevant for tests,
+        # ensure TestConfig provides static or test-specific values.
+        # Minimal example shown here.
 
-    # Create the application context
-    with app.app_context():
-        yield app
+    created_app = create_app(config_class=TestConfig)
 
-    # Clean up
+    with created_app.app_context():
+        _db.create_all()
+        yield created_app
+
+    with created_app.app_context():
+        _db.drop_all()
     os.close(db_fd)
     os.unlink(db_path)
 
 
 @pytest.fixture(scope="session")
-def db(app):
-    """Create and configure a database for testing."""
-    with app.app_context():
-        _db.create_all()
-        yield _db
-        _db.session.remove()
-        _db.drop_all()
+def db(app_fixture):
+    return _db
 
 
 @pytest.fixture(scope="function")
-def session(db):
-    """Create a new database session for a test."""
-    connection = db.engine.connect()
-    transaction = connection.begin()
-
-    session = db.create_scoped_session(options={"bind": connection, "binds": {}})
-
-    db.session = session
-
-    yield session
-
-    transaction.rollback()
-    connection.close()
-    session.remove()
+def session(db, app_fixture):
+    with app_fixture.app_context():
+        connection = db.engine.connect()
+        transaction = connection.begin()
+        sess = db.create_scoped_session(options={"bind": connection, "binds": {}})
+        db.session = sess
+        yield sess
+        sess.remove()
+        transaction.rollback()
+        connection.close()
 
 
 @pytest.fixture
-def client(app):
-    """A test client for the app."""
-    return app.test_client()
+def client(app_fixture):
+    return app_fixture.test_client()
 
 
 @pytest.fixture
 def auth_headers():
-    """Generate headers for authenticated requests."""
     return {"Authorization": "Bearer test_token", "Content-Type": "application/json"}
 
 
 @pytest.fixture
 def create_test_user(session):
-    """Create a test user in the database."""
-
     def _create_user(
         username="testuser",
         email="test@example.com",
         password="Password123",
         firebase_uid=None,
+        role="user",
+        **kwargs,
     ):
-        user = User(
-            username=username,
-            email=email,
-            firebase_uid=firebase_uid or f"firebase_{username}",
-        )
-        user.set_password(password)
+        user_data = {
+            "username": username,
+            "email": email,
+            "firebase_uid": firebase_uid or f"firebase_{username}",
+            "role": role,
+            **kwargs,
+        }
+        user = User(**user_data)
+        if password:
+            user.password_hash = generate_password_hash(password)
         session.add(user)
         session.commit()
         return user
@@ -109,11 +103,21 @@ def create_test_user(session):
 
 @pytest.fixture
 def create_forum_category(session):
-    """Create a test forum category."""
-
-    def _create_category(name="Test Category", description="Test Description"):
+    def _create_category(
+        name="Test Category",
+        description="Test Description",
+        icon=None,
+        sort_order=0,
+        **kwargs,
+    ):
+        # ForumCategory __init__ takes name, description, icon, sort_order.
+        # Slug is generated by generate_slug method called in __init__.
         category = ForumCategory(
-            name=name, description=description, slug=name.lower().replace(" ", "-")
+            name=name,
+            description=description,
+            icon=icon,  # Pass icon or let default in model handle it
+            sort_order=sort_order,  # Pass sort_order or let default handle it
+            **kwargs,  # Pass any other kwargs if model supports them
         )
         session.add(category)
         session.commit()
@@ -124,23 +128,37 @@ def create_forum_category(session):
 
 @pytest.fixture
 def create_forum_thread(session, create_test_user, create_forum_category):
-    """Create a test forum thread."""
-
     def _create_thread(
-        title="Test Thread", user=None, category=None, is_sticky=False, is_locked=False
+        title="Test Thread",
+        user=None,
+        category=None,
+        is_sticky=False,
+        is_locked=False,
+        author_username=None,
+        **kwargs,
     ):
-        if user is None:
+        actual_author_username = None
+        if user:
+            actual_author_username = user.username
+        elif author_username:
+            actual_author_username = author_username
+        else:  # Default case: create a new user
             user = create_test_user()
+            actual_author_username = user.username
+
         if category is None:
             category = create_forum_category()
 
-        thread = ForumThread(
-            title=title,
-            user_id=user.id,
-            category_id=category.id,
-            is_sticky=is_sticky,
-            is_locked=is_locked,
-        )
+        # Pass all relevant fields as keyword arguments directly to the constructor
+        thread_data = {
+            "title": title,
+            "author_username": actual_author_username,
+            "category_id": category.id,
+            "is_sticky": is_sticky,
+            "is_locked": is_locked,
+            **kwargs,  # Include any additional kwargs passed to the fixture
+        }
+        thread = ForumThread(**thread_data)
         session.add(thread)
         session.commit()
         return thread
@@ -150,17 +168,46 @@ def create_forum_thread(session, create_test_user, create_forum_category):
 
 @pytest.fixture
 def create_forum_post(session, create_test_user, create_forum_thread):
-    """Create a test forum post."""
-
-    def _create_post(body="Test post content", user=None, thread=None):
-        if user is None:
+    def _create_post(
+        body="Test post content", user=None, thread=None, author_username=None, **kwargs
+    ):
+        actual_author_username = None
+        if user:
+            actual_author_username = user.username
+        elif author_username:
+            actual_author_username = author_username
+        else:  # Default case: create a new user for the post
             user = create_test_user()
-        if thread is None:
-            thread = create_forum_thread()
+            actual_author_username = user.username
 
-        post = ForumPost(body=body, user_id=user.id, thread_id=thread.id)
+        if thread is None:
+            thread = create_forum_thread(author_username=actual_author_username)
+
+        # Pass all relevant fields as keyword arguments directly to the constructor
+        post_data = {
+            "body": body,
+            "author_username": actual_author_username,
+            "thread_id": thread.id,
+            **kwargs,  # Include any additional kwargs passed to the fixture
+        }
+        post = ForumPost(**post_data)
         session.add(post)
         session.commit()
         return post
 
     return _create_post
+
+
+@pytest.fixture
+def create_password_reset_request(session, create_test_user):
+    def _create_request(user=None, token="test_reset_token", expires_in_hours=24):
+        if user is None:
+            user = create_test_user()
+        req = PasswordResetRequest(
+            user_id=user.id, token=token, expires_in_hours=expires_in_hours
+        )
+        session.add(req)
+        session.commit()
+        return req
+
+    return _create_request

@@ -3,24 +3,25 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 
-import requests # For actual API calls
-from flask import current_app # If running within Flask app context for config
+import requests  # For actual API calls
+from flask import current_app  # If running within Flask app context for config
 
 # Assuming your extensions and models are accessible like this
 # You might need to adjust imports based on your project structure if this is run
 # completely outside the Flask app context by a separate scheduler process.
 try:
-    from .extensions import socketio, db
-    from .models import SportEvent, League # Added League
+    from .extensions import db, socketio
+    from .models import League, SportEvent  # Added League
 except ImportError:
     # This fallback might be needed if the script is run directly by some schedulers
     # without the full Flask app context being immediately available.
     # However, for Flask-APScheduler, running within app_context is typical.
-    from extensions import socketio, db
-    from models import SportEvent, League # Added League
+    from extensions import db, socketio
+    from models import League, SportEvent  # Added League
 
 
 logger = logging.getLogger(__name__)
+
 
 # Dummy score fetcher - replace with actual API call logic
 def fetch_score_from_external_api(sport_key, event_id):
@@ -29,7 +30,7 @@ def fetch_score_from_external_api(sport_key, event_id):
     try:
         # This assumes your Flask app is running and accessible at this URL
         # You might need to adjust the base URL depending on your setup
-        api_url = f"http://127.0.0.1:5000/api/live_score/{sport_key}/{event_id}" # Adjust port if needed
+        api_url = f"http://127.0.0.1:5000/api/live_score/{sport_key}/{event_id}"  # Adjust port if needed
         response = requests.get(api_url, timeout=5)
         response.raise_for_status()
         return response.json()
@@ -37,7 +38,9 @@ def fetch_score_from_external_api(sport_key, event_id):
         logger.error(f"Dummy API call failed for {sport_key}/{event_id}: {e}")
         return None
     except Exception as e:
-        logger.error(f"Unexpected error in dummy score fetch for {sport_key}/{event_id}: {e}")
+        logger.error(
+            f"Unexpected error in dummy score fetch for {sport_key}/{event_id}: {e}"
+        )
         return None
 
 
@@ -49,10 +52,12 @@ def periodically_check_and_emit_scores():
     # This task needs to run within an application context to access `current_app`, `db`, etc.
     # If using Flask-APScheduler, it usually handles this.
     # If using an external scheduler, you might need to create an app context manually.
-    
+
     # Check if current_app is available (might not be if run by a simple external scheduler without app context)
     if not current_app:
-        logger.error("Cannot run periodically_check_and_emit_scores: Flask current_app is not available.")
+        logger.error(
+            "Cannot run periodically_check_and_emit_scores: Flask current_app is not available."
+        )
         # Depending on your scheduler, you might need to create an app instance and context here.
         # from app import create_app
         # app = create_app()
@@ -63,17 +68,18 @@ def periodically_check_and_emit_scores():
     with current_app.app_context():
         _execute_score_check()
 
+
 def _execute_score_check():
     """The actual logic for checking and emitting scores, to be run within an app context."""
     logger.info("Background task: Checking for live score updates...")
-    
+
     # Fetch events that are potentially live (e.g., started recently, not marked 'ended')
     # This query needs to be adjusted if your SportEvent model has a 'status' field.
     # For now, it fetches events that started in the last 4 hours.
     try:
         potentially_live_events = SportEvent.query.filter(
-            SportEvent.commence_time <= datetime.now(timezone.utc), # type: ignore[arg-type]
-            SportEvent.commence_time >= datetime.now(timezone.utc) - timedelta(hours=4) # type: ignore[arg-type]
+            SportEvent.commence_time <= datetime.now(timezone.utc),  # type: ignore[arg-type]
+            SportEvent.commence_time >= datetime.now(timezone.utc) - timedelta(hours=4),  # type: ignore[arg-type]
             # TODO: Add a filter for SportEvent.status != 'ended' if you implement such a field
         ).all()
 
@@ -83,7 +89,7 @@ def _execute_score_check():
 
         for event in potentially_live_events:
             room_name = f"event_score_{event.id}"
-            
+
             # More robust check for active subscriptions:
             # This is a simplified check. For multiple Socket.IO server instances,
             # you'd typically use a message queue (e.g., Redis pub/sub) for inter-process communication
@@ -93,30 +99,36 @@ def _execute_score_check():
             # across all setups, especially with multiple workers.
             # A truly robust solution often involves clients re-subscribing on reconnect
             # and the server perhaps periodically cleaning up "dead" rooms if no heartbeats.
-            
+
             # For now, we'll proceed if the event is potentially live.
             # The client-side handles not finding the score cell if the event is no longer displayed.
 
             if not event.league:
-                logger.warning(f"Event {event.id} is missing league information. Skipping score check.")
+                logger.warning(
+                    f"Event {event.id} is missing league information. Skipping score check."
+                )
                 continue
-            logger.debug(f"Checking score for event {event.id} (League: {event.league.slug})")
+            logger.debug(
+                f"Checking score for event {event.id} (League: {event.league.slug})"
+            )
             score_data = fetch_score_from_external_api(event.league.slug, event.id)
 
             if score_data:
-                logger.info(f"Score data fetched for {event.id}: {score_data}. Emitting to room {room_name}")
+                logger.info(
+                    f"Score data fetched for {event.id}: {score_data}. Emitting to room {room_name}"
+                )
                 payload = {
-                    'event_id': event.id,
-                    'league_slug': event.league.slug, # Changed from sport_key
-                    'score': score_data.get('score'),
-                    'status': score_data.get('status'),
-                    'minute': score_data.get('minute'),
-                    'completed': score_data.get('completed', False)
+                    "event_id": event.id,
+                    "league_slug": event.league.slug,  # Changed from sport_key
+                    "score": score_data.get("score"),
+                    "status": score_data.get("status"),
+                    "minute": score_data.get("minute"),
+                    "completed": score_data.get("completed", False),
                 }
-                socketio.emit('live_score_update', payload, room=room_name) # type: ignore[call-arg]
+                socketio.emit("live_score_update", payload, room=room_name)  # type: ignore[call-arg]
             else:
                 logger.debug(f"No score update or error for event {event.id}.")
-        
+
         logger.info("Background task: Finished checking scores.")
 
     except Exception as e:
