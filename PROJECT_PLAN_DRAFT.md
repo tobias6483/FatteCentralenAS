@@ -1,4 +1,4 @@
-Gider du skrive følgemde markdown format?  så jeg kan bruge https://dillinger.io.. 
+Gider du skrive følgemde markdown format?  så jeg kan bruge https://dillinger.io..
 
 Sørg for vi har alt med fra alle versioner ( version 1, 2, 3 og 4)! Hvis der er noget som er bedre og mere detaljeret, beskrivende osv osv osv i den ene version fremfor den anden så behold det og vice versa. vi skal bare have alt med!!! DU SKAL SKRIVE DET HELE TIL MIG SÅ JEG KAN COPY PASTE IND I MIT DOKUMENT! Vær gerne kreativ og kom med nye ideer hvis du finder nogle !! Men alt fra begge version skal være med.. vi skal bare have den bedste, kreative, oragniseret, struktureret, kloge, smarte, detaljeret, bemærkningsfyldte osv osv osv projekt plan!
 

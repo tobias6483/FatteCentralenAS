@@ -898,6 +898,3 @@ document.addEventListener("DOMContentLoaded", () => {
      // Fjern data-placeholder rækker hvis data hentes successfuldt
      // Ellers vis fejlmeddelelse
   // });
-
-
-

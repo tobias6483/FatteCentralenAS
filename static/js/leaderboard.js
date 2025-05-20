@@ -137,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const apiUrl = `/api/leaderboard?sort_by=${currentSort}`;
             console.log(`[Leaderboard] Fetching data from: ${apiUrl}`);
             const response = await utils.getData(apiUrl); // Expecting { leaderboard: [], sorted_by: '...' }
-            
+
             if (response && response.leaderboard) {
                  currentSort = response.sorted_by || currentSort; // Update sort state if API confirms it
                  renderLeaderboard(response.leaderboard);

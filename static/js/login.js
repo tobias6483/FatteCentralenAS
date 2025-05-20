@@ -9,15 +9,15 @@ document.addEventListener("DOMContentLoaded", () => {
         typeof window.utils.showToast !== 'function' ||
         typeof window.utils.postData !== 'function' ||
         typeof window.utils.displayFlashes !== 'function' ||
-        typeof window.utils.escapeHtml !== 'function' || 
-        typeof window.utils.getCsrfToken !== 'function') { 
+        typeof window.utils.escapeHtml !== 'function' ||
+        typeof window.utils.getCsrfToken !== 'function') {
         console.error("[login.js] CRITICAL: utils.js object or required functions missing!");
         const errorTarget = document.getElementById("loginMessage") || document.getElementById("loginForm") || document.body;
         if (errorTarget) {
             errorTarget.innerHTML = '<div class="alert alert-danger" role="alert">Kritisk sidefejl: Nødvendige JavaScript funktioner mangler. Prøv at genindlæse siden eller kontakt support.</div>';
         }
         document.querySelectorAll('button').forEach(btn => btn.disabled = true);
-        return; 
+        return;
     } else {
         console.log("[login.js] window.utils object and functions verified.");
     }
@@ -40,7 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
         twofa: twofaSectionContainer,
         admin: adminLoginForm,
         register: registerForm,
-        reset: resetPasswordForm, 
+        reset: resetPasswordForm,
     };
 
     // Interne 2FA Sektioner
@@ -82,9 +82,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const registerMessageDiv = getElement("registerMessage");
 
     // Reset Password Form Elements
-    const resetPasswordButton = resetPasswordForm ? resetPasswordForm.querySelector('button[type="submit"]') : null; 
-    const resetPasswordMessageDiv = getElement("resetPasswordMessage"); 
-    const backToLoginFromResetBtn = getElement("backToLoginFromResetBtn"); 
+    const resetPasswordButton = resetPasswordForm ? resetPasswordForm.querySelector('button[type="submit"]') : null;
+    const resetPasswordMessageDiv = getElement("resetPasswordMessage");
+    const backToLoginFromResetBtn = getElement("backToLoginFromResetBtn");
 
     // Globale Form Switching Buttons ( Bruges til at *kalde* showForm )
     const showRegisterBtn = getElement("showRegisterBtn");
@@ -112,13 +112,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!input && (fieldName === 'password' || fieldName === 'confirm_password')) {
                      input = containerElement.querySelector(`#${fieldName === 'password' ? 'resetPassword' : 'resetConfirmPassword'}`);
                 }
-                
+
                 if (input) {
                     input.classList.add('is-invalid');
                     const feedbackDiv = input.parentElement?.querySelector('.invalid-feedback');
                     if (feedbackDiv) {
                          const errorMessage = Array.isArray(errorData.errors[fieldName])
-                            ? errorData.errors[fieldName].join(' ') 
+                            ? errorData.errors[fieldName].join(' ')
                             : String(errorData.errors[fieldName]);
                         feedbackDiv.textContent = errorMessage;
                         feedbackDiv.style.display = 'block';
@@ -158,16 +158,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!allFormsAndSections.hasOwnProperty(formKey) || !allFormsAndSections[formKey]) {
             console.error(`[login.js:effectiveShowForm] Invalid or missing form key: '${formKey}'. Defaulting to 'login'.`);
-            formKey = 'login'; 
+            formKey = 'login';
             if (!allFormsAndSections.login) {
                  console.error("[login.js:effectiveShowForm] FATAL: Login form element not found. Cannot display default.");
                  showToast("Sidefejl: Kunne ikke vise login formularen.", "danger", 10000);
-                 return; 
+                 return;
             }
         }
 
         // 1. Ryd fejl/status fra ALLE feedback-områder
-        [loginMessageDiv, twofaMessageDiv, twofaBackupMessageDiv, adminLoginMessageDiv, registerMessageDiv, resetPasswordMessageDiv] 
+        [loginMessageDiv, twofaMessageDiv, twofaBackupMessageDiv, adminLoginMessageDiv, registerMessageDiv, resetPasswordMessageDiv]
             .forEach(div => { if (div) div.innerHTML = ''; });
 
         // 2. Skjul alle hoved-sektioner og ryd '.is-invalid'
@@ -217,9 +217,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // --- Event Listeners for GLOBALE Form Switching Knapper ---
     if (showRegisterBtn) showRegisterBtn.addEventListener("click", () => window.showForm('register'));
     if (showAdminLoginBtn) showAdminLoginBtn.addEventListener("click", () => window.showForm('admin'));
-    if (showUserLoginBtn) showUserLoginBtn.addEventListener("click", () => window.showForm('login')); 
-    if (backToLoginBtn) backToLoginBtn.addEventListener("click", () => window.showForm('login')); 
-    if (backToLoginFromResetBtn) backToLoginFromResetBtn.addEventListener("click", () => window.showForm('login')); 
+    if (showUserLoginBtn) showUserLoginBtn.addEventListener("click", () => window.showForm('login'));
+    if (backToLoginBtn) backToLoginBtn.addEventListener("click", () => window.showForm('login'));
+    if (backToLoginFromResetBtn) backToLoginFromResetBtn.addEventListener("click", () => window.showForm('login'));
 
     // --- Event Listeners for INTERNE 2FA Switching Knapper ---
     if (showBackupBtn && twofaOtpSection && backupCodeSection) {
@@ -304,16 +304,16 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (error) {
                 console.error("[login.js] 2FA OTP Verify error:", error);
                 displayValidationErrors(twofaOtpSection, error.data, twofaMessageDiv);
-                if (twofaCodeInput) twofaCodeInput.value = ''; 
-                if (twofaCodeInput) setTimeout(() => { try { twofaCodeInput.focus(); } catch(e){} }, 50); 
+                if (twofaCodeInput) twofaCodeInput.value = '';
+                if (twofaCodeInput) setTimeout(() => { try { twofaCodeInput.focus(); } catch(e){} }, 50);
             } finally {
                 toggleButtonLoading(twofaVerifyBtn, false);
             }
         });
          twofaCodeInput.addEventListener('keypress', (e) => {
              if (e.key === 'Enter') {
-                 e.preventDefault(); 
-                 twofaVerifyBtn.click(); 
+                 e.preventDefault();
+                 twofaVerifyBtn.click();
              }
          });
 
@@ -337,8 +337,8 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (error) {
                 console.error("[login.js] 2FA Backup Verify error:", error);
                 displayValidationErrors(backupCodeSection, error.data, twofaBackupMessageDiv);
-                if (twofaBackupCodeInput) twofaBackupCodeInput.value = ''; 
-                if (twofaBackupCodeInput) setTimeout(() => { try { twofaBackupCodeInput.focus(); } catch(e){} }, 50); 
+                if (twofaBackupCodeInput) twofaBackupCodeInput.value = '';
+                if (twofaBackupCodeInput) setTimeout(() => { try { twofaBackupCodeInput.focus(); } catch(e){} }, 50);
             } finally {
                 toggleButtonLoading(twofaVerifyBackupBtn, false);
             }
@@ -389,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let errors = {};
             if (!username) errors.username = 'Brugernavn påkrævet.';
             if (!password) errors.password = 'Password påkrævet.';
-            if (!inviteCode) errors.invite_code = 'Invite Kode påkrævet.'; 
+            if (!inviteCode) errors.invite_code = 'Invite Kode påkrævet.';
 
             if (Object.keys(errors).length > 0) {
                 return displayValidationErrors(registerForm, { errors }, registerMessageDiv);
@@ -403,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 setTimeout(() => {
                     registerForm.reset();
-                    window.showForm('login'); 
+                    window.showForm('login');
                 }, 1500);
             } catch (error) {
                 console.error("[login.js] Register error:", error);
@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
         resetPasswordForm.addEventListener('submit', async (event) => {
             event.preventDefault();
             displayValidationErrors(resetPasswordForm, null, resetPasswordMessageDiv);
-            
+
             const passwordInput = resetPasswordForm.querySelector('#resetPassword');
             const confirmPasswordInput = resetPasswordForm.querySelector('#resetConfirmPassword');
 
@@ -444,19 +444,19 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const actionUrl = resetPasswordForm.getAttribute('action');
                 // Send field names matching the form definition expected by the backend
-                const data = await postData(actionUrl, { password: password, confirm_password: confirm_password }); 
-                
+                const data = await postData(actionUrl, { password: password, confirm_password: confirm_password });
+
                 showToast(data.message || "Password nulstillet! Du kan nu logge ind.", "success");
                 if (data.flashes) displayFlashes(data.flashes);
 
                 setTimeout(() => {
                     resetPasswordForm.reset();
-                    window.showForm('login'); 
+                    window.showForm('login');
                 }, 1500);
             } catch (error) {
                 console.error("[login.js] Reset Password error:", error);
                 // Pass field names matching the form definition for error display
-                displayValidationErrors(resetPasswordForm, error.data, resetPasswordMessageDiv); 
+                displayValidationErrors(resetPasswordForm, error.data, resetPasswordMessageDiv);
             } finally {
                 toggleButtonLoading(resetPasswordButton, false);
             }
@@ -495,7 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.showForm('login');
         } else {
             console.error("[login.js] CRITICAL: window.showForm not available for fallback initial display!");
-             if (loginForm) loginForm.classList.remove('hidden'); 
+             if (loginForm) loginForm.classList.remove('hidden');
              else showToast("Kritisk fejl under sideindlæsning.", "danger", 10000);
         }
     }

@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  // Succes
                  const newAvatarUrlWithCacheBuster = result.new_avatar_url + '?t=' + Date.now();
                  if(profileAvatarImage) profileAvatarImage.src = newAvatarUrlWithCacheBuster; // Update main profile image
-                 
+
                  // Update topbar and sidebar avatars as well
                  const topbarAvatar = document.getElementById('topbarAvatarImg');
                  const sidebarAvatar = document.getElementById('sidebarAvatarImg');
@@ -355,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatElement('stat-won', stats.total_won, utils.formatCurrency);
             updateStatElement('stat-lost', stats.total_lost, utils.formatCurrency);
             updateStatElement('stat-winslosses', `${stats.wins ?? 0} / ${stats.losses ?? 0}`);
-            
+
             // --- Update NEW stats elements ---
             updateStatElement('stat-total-bets', stats.total_bets_placed ?? 0); // Use the field name from backend context
             updateStatElement('stat-winrate', `${stats.win_rate ?? 0}%`); // Assuming win_rate is pre-calculated %

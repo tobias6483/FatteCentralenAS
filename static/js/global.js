@@ -163,7 +163,7 @@ const updateCommonUserDataUI = async () => {
         // window.utils.showToast("Kunne ikke opdatere brugerinfo.", "warning", 3000);
     }
 };
- 
+
     // --- Notification Dropdown Logic ---
     const notificationDropdownContainer = document.getElementById('notificationDropdownContainer');
     const notificationDropdownToggle = document.getElementById('notificationDropdownToggle');
@@ -191,7 +191,7 @@ const updateCommonUserDataUI = async () => {
 
         a.innerHTML = `${iconHtml}${window.utils.escapeHtml(notification.message)}
                        <small class="d-block text-muted mt-1">${window.utils.formatDateTime(notification.created_at, true)}</small>`;
-        
+
         // If there's a link and it's not just '#', open in current tab
         if (notification.link && notification.link !== '#') {
             a.addEventListener('click', (e) => {
@@ -218,7 +218,7 @@ const updateCommonUserDataUI = async () => {
         notificationNoDataItem.style.display = 'none';
         // Clear old notifications except loading/no-data
         notificationDropdownList.querySelectorAll('li:not(#notificationLoadingItem):not(#notificationNoDataItem):not(.dropdown-header):not(.dropdown-divider)').forEach(item => item.remove());
-        
+
         let unreadCount = 0;
 
         try {
@@ -242,7 +242,7 @@ const updateCommonUserDataUI = async () => {
             } else {
                 notificationNoDataItem.style.display = 'block';
             }
-            
+
             updateUnreadCount(data.unread_total || unreadCount); // Use total from API if available
 
         } catch (error) {
@@ -270,7 +270,7 @@ const updateCommonUserDataUI = async () => {
             console.log("New notification received via WebSocket:", notification);
             if (notificationLoadingItem) notificationLoadingItem.style.display = 'none';
             if (notificationNoDataItem) notificationNoDataItem.style.display = 'none';
-            
+
             const newItem = renderNotificationItem(notification);
             // Insert after the header and divider
             const firstRealItem = notificationDropdownList.querySelector('li:not(.dropdown-header):not(.dropdown-divider)');
@@ -284,7 +284,7 @@ const updateCommonUserDataUI = async () => {
                     notificationDropdownList.appendChild(newItem);
                  }
             }
-            
+
             // Update unread count
             const currentCount = parseInt(notificationUnreadCount.textContent || '0', 10);
             updateUnreadCount(currentCount + 1);
@@ -296,7 +296,7 @@ const updateCommonUserDataUI = async () => {
         notificationDropdownToggle.addEventListener('show.bs.dropdown', async () => {
             // Fetch fresh notifications when dropdown is opened
             await fetchAndDisplayNotifications();
-            
+
             // Mark all as read when dropdown is opened if there are unread ones
             const currentUnread = parseInt(notificationUnreadCount.textContent || '0', 10);
             if (currentUnread > 0) {

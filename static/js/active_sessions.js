@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Standard name display
                 sessionNameDisplay = window.utils.escapeHtml(session.session_name ?? "Unavngivet");
             }
-            
+
             const sessionId = session.session_id ?? "-";
             const sessionIdShort = window.utils.escapeHtml(sessionId.substring(0, 8));
             const createdAt = window.utils.formatDateTime(session.created_at, 'da-DK', { dateStyle: 'short', timeStyle: 'short' }) ?? "-";

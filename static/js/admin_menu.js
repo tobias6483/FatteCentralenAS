@@ -796,7 +796,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             used_by_display_text = String(invite.used_by);
                         }
                         used_by_info = `af ${used_by_display_text}`;
-                        
+
                         if (invite.used_at) {
                             // *** OPDATERET: Brug utils.formatDateTime (kun dato) ***
                             used_by_info += ` (${utils.formatDateTime(invite.used_at, { dateStyle: 'short', timeStyle: undefined }) || 'ukendt dato'})`;
@@ -1041,7 +1041,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         </li>`;
                 }
                 resultHtml += '</ul>';
-                
+
                 if (serverHealthResultDiv) {
                     serverHealthResultDiv.innerHTML = resultHtml;
                     showFeedback(maintenanceActionMsg.id, `Helbredstjek ${data.overall_status === 'ok' ? 'fuldført' : 'fuldført med bemærkninger'}.`, data.overall_status === 'error' ? 'danger' : (data.overall_status === 'warning' ? 'warning' : 'success'));
@@ -1277,7 +1277,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 clientErrors.push("Max bet skal være et positivt tal.");
                 settingMaxBetInput?.classList.add('is-invalid');
             } else { settingMaxBetInput?.classList.remove('is-invalid'); }
-            
+
             if (payload.max_bet_amount !== null && payload.min_bet_amount !== null && payload.max_bet_amount < payload.min_bet_amount) {
                 clientErrors.push("Max bet kan ikke være mindre end min bet.");
                 settingMaxBetInput?.classList.add('is-invalid');
@@ -1646,7 +1646,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         statusIcon = "bi-person-check";
                     }
                     const statusBadge = `<span class="badge ${statusBadgeClass}"><i class="bi ${statusIcon} me-1"></i>${statusText}</span>`;
-                    
+
                     // Placeholder for token display - might be sensitive
                     const tokenDisplay = req.token ? `${req.token.substring(0, 8)}...` : 'N/A';
 
@@ -1790,7 +1790,7 @@ utils.initializeTooltips(passwordRequestsTableBody); // Initialize tooltips AFTE
                     generateBtn.disabled = true; // Disable after use
                     generateBtn.innerHTML = '<i class="bi bi-check-lg"></i> Link Sendt';
                     generateBtn.setAttribute('title', 'Link er blevet genereret.');
-                    
+
                     // Mark the request as having a link generated locally in our JS data
                     // This helps keep the UI consistent until the next full refresh
                     const requests = passwordRequestsTableBody.requestsData || []; // Assuming data is stored on tbody
@@ -1832,7 +1832,7 @@ utils.initializeTooltips(passwordRequestsTableBody); // Initialize tooltips AFTE
                  try {
                      const result = await utils.deleteData(`/admin/api/password_reset_requests/${requestId}`);
                      utils.showToast(result.message || `Anmodning #${requestId} afvist.`, 'success');
-                     
+
                      // Update UI: Remove row or mark as rejected visually
                      const row = rejectBtn.closest('tr');
                      if (row) {
@@ -2030,4 +2030,3 @@ utils.initializeTooltips(passwordRequestsTableBody); // Initialize tooltips AFTE
 }); // Close addEventListener call
 } // Add missing closing brace for the 'if (savePasswordComplexityBtn && ...)' block
 }); // --- End DOMContentLoaded ---
-

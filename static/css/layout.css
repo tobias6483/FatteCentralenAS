@@ -131,7 +131,7 @@ body {
   flex-grow: 1;        /* Tillad dette element at tage ledig plads */
   margin-left: 27rem;   /* Eksperimenter med denne værdi (fx 1rem, 3rem, 5vw) */
   margin-right: 2rem;  /* Eksperimenter med denne værdi (fx 1rem, 3rem, 5vw) */
-  
+
 }
 
 

@@ -133,7 +133,7 @@
         <div class="card-body">
             <form method="POST" action="{{ url_for('main.settings') }}" id="privacySettingsForm"> {# Ensure action points to the correct settings update route #}
                 {{ form.hidden_tag() if form.hidden_tag }} {# Include CSRF token if form has it #}
-                
+
                 <div class="form-check mb-2">
                     {{ form.privacy_profile_public(class="form-check-input") }}
                     {{ form.privacy_profile_public.label(class="form-check-label") }}
@@ -157,7 +157,7 @@
                     {{ form.privacy_show_online_status.label(class="form-check-label") }}
                     <small class="form-text text-muted d-block">Vis din online status (grøn prik) til andre brugere på siden (f.eks. i forum, beskeder).</small>
                 </div>
-                
+
                 {# Submit button for privacy settings - could be combined with other settings forms if desired #}
                 {# For now, assuming it's part of a larger settings form or handled by a general save button #}
                 {# If this form is separate, add its own submit button: #}

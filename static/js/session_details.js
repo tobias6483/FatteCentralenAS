@@ -434,7 +434,7 @@ document.addEventListener("DOMContentLoaded", () => {
      } else {
          console.warn("Place bet form ('#placeBetForm') not found. Betting disabled.");
      } // End of placeBetForm listener attachment
- 
+
     // --- Helper til at vise fejl/feedback (specifikt for denne side) ---
     // Modified to accept an optional target feedback div
     function showErrorFeedback(message, type = 'danger', targetDiv = feedbackDiv) {
@@ -459,7 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     } // End of showErrorFeedback function
- 
+
     // -------------------------------------------------------------------------
     // 9. FORM SUBMISSION (COUPON BET)
     // -------------------------------------------------------------------------
@@ -531,7 +531,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // This is expected if it's not a coupon session, so no warning needed unless debugging
         // console.log("Place coupon bet form ('#placeCouponBetForm') not found. This is normal for non-coupon sessions.");
     } // End of placeCouponBetForm listener attachment
- 
+
 // --- Listener for final coupon settlement event from server ---
     if (socket) {
         socket.on("coupon_settled", (data) => {
@@ -557,10 +557,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 message = `Desværre, din kupon tabte. Bedre held næste gang!`;
                 messageType = 'warning';
             }
-            
+
             // Display a prominent message, perhaps using the main feedbackDiv
             showErrorFeedback(message, messageType, feedbackDiv); // Use the main feedback div for this important message
-            
+
             // The session_update event (which should also be triggered by backend) will refresh leg statuses.
             // We might want to disable betting forms or show a "Settled" banner.
             if (placeBetForm) placeBetForm.style.display = 'none';
@@ -603,11 +603,11 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             // Construct the full URL
             const inviteUrl = `${window.location.origin}/sessions/join/invite/${inviteCode}`;
-            
+
             try {
                 await navigator.clipboard.writeText(inviteUrl);
                 utils.showToast("Invite link kopieret til udklipsholder!", "success");
-                
+
                 // Optional: Change button text/icon temporarily
                 const originalIcon = copyInviteBtn.innerHTML;
                 copyInviteBtn.innerHTML = '<i class="bi bi-check-lg"></i>';
@@ -668,25 +668,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('chat-message', 'mb-2', 'p-2', 'rounded');
-        
+
         const isOwnMessage = msgData.user_id === String(currentUser); // Compare as strings if needed
 
-        if (isOwnMessage) { 
-            msgDiv.classList.add('bg-primary', 'text-white', 'ms-auto'); 
+        if (isOwnMessage) {
+            msgDiv.classList.add('bg-primary', 'text-white', 'ms-auto');
             msgDiv.style.maxWidth = '75%';
             msgDiv.style.textAlign = 'right';
         } else {
-            msgDiv.classList.add('bg-light', 'text-dark', 'me-auto'); 
+            msgDiv.classList.add('bg-light', 'text-dark', 'me-auto');
             msgDiv.style.maxWidth = '75%';
         }
 
-        const avatarSize = '24px'; 
-        const avatarHtml = msgData.avatar_url 
+        const avatarSize = '24px';
+        const avatarHtml = msgData.avatar_url
             ? `<img src="${utils.escapeHtml(msgData.avatar_url)}" alt="${utils.escapeHtml(msgData.username)}'s avatar" class="rounded-circle me-2" style="width:${avatarSize}; height:${avatarSize}; object-fit:cover; vertical-align: middle;">`
             : `<i class="bi bi-person-circle me-2" style="font-size: ${avatarSize}; vertical-align: middle;"></i>`;
 
         const timestamp = msgData.timestamp ? new Date(msgData.timestamp).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }) : '';
-        
+
         let messageHeaderHtml = '';
         let badgeHtml = '';
 
@@ -722,12 +722,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // Assemble the message structure safely
         msgDiv.innerHTML = messageHeaderHtml; // Header HTML is considered safe here
         msgDiv.appendChild(messageTextDiv); // Append the text content safely
-        
+
         chatMessagesArea.appendChild(msgDiv);
         // Scroll only if the user isn't scrolled up looking at history
         const isScrolledToBottom = chatMessagesArea.scrollHeight - chatMessagesArea.clientHeight <= chatMessagesArea.scrollTop + 1; // +1 for tolerance
         if(isScrolledToBottom) {
-            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight; 
+            chatMessagesArea.scrollTop = chatMessagesArea.scrollHeight;
         }
     }
 
