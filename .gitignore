@@ -10,8 +10,8 @@ __pycache__/
 # env/
 # virtualenv/
 
-# Instance folder 
-instance/ 
+# Instance folder
+instance/
 
 # IDE / Editor / OS specific files
 .vscode/
@@ -21,7 +21,7 @@ instance/
 .DS_Store
 
 # Environment variables file
-.env  
+.env
 
 # Logs
 *.log
