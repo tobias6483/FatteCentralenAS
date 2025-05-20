@@ -1,247 +1,147 @@
-## Recent Development Updates
+# CHANGELOG - Fattecentralen Modernisering
 
-### May 19, 2025: Backend Phase 2: Forum API CRUD Operations Completed &amp; Pylance Fixes
+## Maj 19, 2025: Projektplan Statusopdatering & Konsolidering af Fremskridt
 
-**Objective**: Document the completion of "Backend Phase 2: Solidify Forum APIs", including full CRUD operations for forum threads and posts, and detail recent Pylance fixes in [`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py:0).
-
-**Key Achievements &amp; Remarks**:
-
-*   **Forum API CRUD Implementation (Backend Phase 2 Complete)**:
-    *   Reviewed existing GET endpoints:
-        *   `GET /api/v1/forum/categories` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L91`](fattecentralen-monorepo/apps/backend/routes/forum.py:91))
-        *   `GET /api/v1/forum/categories/{categoryId}/threads` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L184`](fattecentralen-monorepo/apps/backend/routes/forum.py:184))
-        *   `GET /api/v1/forum/threads/{threadId}/posts` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L253`](fattecentralen-monorepo/apps/backend/routes/forum.py:253))
-    *   Implemented and confirmed full CRUD operations for Forum Threads:
-        *   Create: `POST /api/v1/forum/categories/{categoryId}/threads` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L403`](fattecentralen-monorepo/apps/backend/routes/forum.py:403))
-        *   Update: `PUT /api/v1/forum/threads/{threadId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L493`](fattecentralen-monorepo/apps/backend/routes/forum.py:493))
-        *   Delete: `DELETE /api/v1/forum/threads/{threadId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L573`](fattecentralen-monorepo/apps/backend/routes/forum.py:573))
-    *   Implemented and confirmed full CRUD operations for Forum Posts:
-        *   Create: `POST /api/v1/forum/threads/{threadId}/posts` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L320`](fattecentralen-monorepo/apps/backend/routes/forum.py:320))
-        *   Update: `PUT /api/v1/forum/threads/{threadId}/posts/{postId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L646`](fattecentralen-monorepo/apps/backend/routes/forum.py:646))
-        *   Delete: `DELETE /api/v1/forum/threads/{threadId}/posts/{postId}` ([`fattecentralen-monorepo/apps/backend/routes/forum.py#L739`](fattecentralen-monorepo/apps/backend/routes/forum.py:739))
-*   **Pylance Fixes in [`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py:0)**:
-    *   Addressed `reportUndefinedVariable` for `fetch_user_details`: Replaced calls with `get_user_data_batch_func` in [`api_get_forum_categories`](fattecentralen-monorepo/apps/backend/routes/forum.py:139) (line 139) and [`api_get_thread_posts`](fattecentralen-monorepo/apps/backend/routes/forum.py:281) (line 281).
-    *   Corrected syntax error in `jsonify` call within [`api_create_category_thread`](fattecentralen-monorepo/apps/backend/routes/forum.py:479) (around lines 479-483), ensuring the dictionary literal was properly closed.
-    *   Resolved `Try statement must have at least one except or finally clause` in [`api_create_category_thread`](fattecentralen-monorepo/apps/backend/routes/forum.py:408) (try block starting line 408): Added `except SQLAlchemyError as e:` (line 484) and `except Exception as e:` (line 488) blocks.
-    *   Fixed `reportCallIssue` and `reportArgumentType` for `select(User)` in [`api_update_thread`](fattecentralen-monorepo/apps/backend/routes/forum.py:517) (around line 505): Added an `if User is None:` check (line 513) before the database call using `select(User)` (line 517).
-    *   Rectified syntax errors in dummy functions [`_dummy_get_user_data_batch`](fattecentralen-monorepo/apps/backend/routes/forum.py:34) and [`_dummy_dt_filter_func`](fattecentralen-monorepo/apps/backend/routes/forum.py:42): Added `pass` statements to empty `try` (line 38) / `except` (line 39) blocks and `try` (line 45) / `except` (line 46) blocks respectively.
-
-**Next Steps**:
-*   Proceed to "Fase 2: Core Frontend Features - UI Transformation &amp; Statiske Komponenter" as detailed in [`PROJECT_PLAN.md`](PROJECT_PLAN.md:350).
-
----
-### May 19, 2025: Backend Development Plan & Ongoing Work
-
-**Objective**: Outline the broader backend development strategy and note current progress and considerations.
-
-**Overall Backend Development Plan**:
-The backend development will proceed in the following phases:
-1.  **Phase 1: Implement Core User Profile API**:
-    *   Focus: Creating `api_user_profile.py`, implementing `GET` and `PUT` for `/api/v1/users/me/profile`, and registering the blueprint.
-    *   *Status*: **Completed**. `api_user_profile.py` has been created and basic endpoints are implemented.
-2.  **Phase 2: Solidify Forum APIs**:
-    *   Focus: Reviewing existing GET endpoints, implementing full CRUD (Create, Read, Update, Delete) operations for forum threads and posts.
-    *   *Status*: **Completed**. All CRUD operations for forum threads and posts are implemented in [`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py:0).
-3.  **Phase 3: Review and Complete Sports & Aktiedyst APIs**:
-    *   Focus: Reviewing existing endpoints for Live Sports and Aktiedyst, identifying and implementing any missing functionality to ensure comprehensive API coverage.
-4.  **Phase 4: Develop Admin API**:
-    *   Focus: Defining the scope for admin-specific functionalities and implementing the necessary API endpoints.
-
-**Key Considerations & Remarks**:
-*   **User Profile API (`api_user_profile.py`)**: Work on Phase 1 is underway.
-*   **Local Flask JWTs vs. Firebase ID Tokens**:
-    *   There's an ongoing consideration to potentially phase out local Flask JWTs (access/refresh tokens) generated by the backend for API authentication.
-    *   The aim would be for the frontend to rely exclusively on Firebase ID tokens for all API requests to streamline authentication. This is still under discussion and the current local JWT generation remains in place for now.
-*   **Ongoing**: Error handling, security enhancements, database migrations, and comprehensive testing will be continuous efforts throughout all phases.
+**Overordnet Status**:
+*   **Fase 0: Monorepo & Grundlæggende Frontend Setup er FULDFØRT.** ✅
+    *   Alle opgaver i Fase 0, inklusiv Shadcn/ui dokumentation, Python linter/formatter konfiguration, VS Code integration, statisk navigation i DashboardLayout og basistests for testmiljøet er gennemført.
+*   **Fase 1: Backend API Klargøring & Grundlæggende Autentificering er FULDFØRT.** ✅
+    *   Alle API endpoints for Live Sports (F1.4.1-7) og Aktiedyst (F1.5.1-11) er implementeret.
+    *   Database review for Sports & Aktiedyst modeller (F1.3.8) er gennemført.
+    *   Plan for udfasning af lokal JWT-generering og -validering (F1.2.8) er på plads.
+    *   Event broadcasting via Socket.IO (F1.7.8) for forumopdateringer, aktiedyst prisændringer, sport scoreopdateringer og ordre statusændringer er implementeret.
+    *   `new_user_notification` event og datastruktur (F1.7.4) er defineret.
 
 ---
 
-### May 19, 2025: Core User Profile API Implementation
+### May 19, 2025: Backend Phase 2: Forum API CRUD Operations Completed & Pylance Fixes (Fuldført som del af Fase 1)
 
-**Objective**: Implement Phase 1 of the backend development plan: Core User Profile API.
-
-**Key Achievements & Remarks**:
-
-*   **User Profile API Created ([`fattecentralen-monorepo/apps/backend/routes/api_user_profile.py`](fattecentralen-monorepo/apps/backend/routes/api_user_profile.py:1))**:
-    *   Created a new file `api_user_profile.py` to house the User Profile API endpoints.
-    *   Defined a new Flask Blueprint `user_profile_api_bp` with the URL prefix `/api/v1/users/me`.
-    *   Implemented the `GET /api/v1/users/me/profile` endpoint to retrieve authenticated user's profile data.
-    *   Implemented the `PUT /api/v1/users/me/profile` endpoint to allow authenticated users to update their profile information (e.g., `about_me`, `settings`, `privacy_settings`).
-*   **Backend Integration ([`fattecentralen-monorepo/apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py:1))**:
-    *   Imported and registered the `user_profile_api_bp` in the main Flask application factory.
-*   **Adherence to Plan**: All changes align with the "Phase 1: Implement Core User Profile API" as outlined in [`PROJECT_PLAN.md`](./PROJECT_PLAN.md:108).
-
-**Next Steps**:
-*   Proceed to Phase 2: Solidify Forum APIs (reviewing existing GET endpoints, implementing CRUD for threads and posts).
-
-### May 19, 2025: Forum API Development (Initial Stages)
-
-**Objective**: Begin implementation of the Forum API endpoints as defined in the project plan.
+**Objective**: Dokumentere fuldførelsen af Forum API'er (tidligere betegnet som "Backend Phase 2", nu konsolideret under den overordnede "Fase 1: Backend API Klargøring"), inklusive fuld CRUD for forum tråde og posts, samt Pylance rettelser.
 
 **Key Achievements & Remarks**:
 
-*   **API Design Finalized ([`PROJECT_PLAN.md`](./PROJECT_PLAN.md))**:
-    *   Completed the JSON request/response structure definitions for all planned Forum API endpoints:
+*   **Forum API CRUD Implementation (Nu en del af den fuldførte Fase 1)**:
+    *   Gennemgået eksisterende GET endpoints:
         *   `GET /api/v1/forum/categories`
         *   `GET /api/v1/forum/categories/{categoryId}/threads`
         *   `GET /api/v1/forum/threads/{threadId}/posts`
-        *   `POST /api/v1/forum/threads/{threadId}/posts`
-    *   Also defined structures for User Profile API endpoints:
-        *   `GET /api/v1/users/me/profile`
-        *   `PUT /api/v1/users/me/profile`
-*   **Backend Forum API Blueprint & Initial Endpoints ([`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py))**:
-    *   Created a new Flask Blueprint `forum_api_bp` with the URL prefix `/api/v1/forum`.
-    *   Registered `forum_api_bp` in the main Flask application factory ([`fattecentralen-monorepo/apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py)).
-    *   Implemented the `GET /api/v1/forum/categories` endpoint to fetch and return all forum categories with last activity details.
-    *   Partially implemented the `GET /api/v1/forum/categories/{categoryId}/threads` endpoint.
-    *   **UPDATE**: The file `fattecentralen-monorepo/apps/backend/routes/forum.py` which was previously in a broken state, has now been **fixed**. The syntax errors in `api_get_category_threads` and `api_get_thread_posts` have been resolved.
-    *   Implemented `POST /api/v1/forum/threads/{threadId}/posts` endpoint, including Firebase authentication, request validation, and creation of new `ForumPost` records.
-    *   Enhanced `GET /api/v1/forum/threads/{threadId}/posts` to include `user_avatar_url` by fetching author details.
-    *   Added `__init__` method to `ForumPost` model in `models.py` to resolve Pylance errors during instantiation.
-*   **Pylance Type Hinting**: Addressed several Pylance type-checking warnings in the new API code and models using `type: ignore` comments where Pylance's inference struggled with SQLAlchemy constructs or conditional imports.
+    *   Implementeret og bekræftet fuld CRUD operationer for Forum Tråde:
+        *   Create: `POST /api/v1/forum/categories/{categoryId}/threads`
+        *   Update: `PUT /api/v1/forum/threads/{threadId}`
+        *   Delete: `DELETE /api/v1/forum/threads/{threadId}`
+    *   Implementeret og bekræftet fuld CRUD operationer for Forum Posts:
+        *   Create: `POST /api/v1/forum/threads/{threadId}/posts`
+        *   Update: `PUT /api/v1/forum/threads/{threadId}/posts/{postId}`
+        *   Delete: `DELETE /api/v1/forum/threads/{threadId}/posts/{postId}`
+*   **Pylance Fixes i [`fattecentralen-monorepo/apps/backend/routes/forum.py`](fattecentralen-monorepo/apps/backend/routes/forum.py:0)**:
+    *   Adresseret `reportUndefinedVariable` for `fetch_user_details`: Erstattet kald med `get_user_data_batch_func`.
+    *   Korrigeret syntaksfejl i `jsonify` kald i `api_create_category_thread`.
+    *   Løst `Try statement must have at least one except or finally clause` i `api_create_category_thread` ved at tilføje `except` blokke.
+    *   Rettet `reportCallIssue` og `reportArgumentType` for `select(User)` i `api_update_thread`.
+    *   Korrigeret syntaksfejl i dummy funktioner ved at tilføje `pass` statements.
 
-**Next Steps**:
-*   All planned Forum API endpoints for Phase 1 are now complete.
-*   Proceed to Phase 2: Core Frontend Features - UI Transformation & Statiske Komponenter.
-### May 19, 2025: Socket.IO Enhancements
+---
 
-**Objective**: Improve Socket.IO setup for real-time features, focusing on authentication and room management.
+### May 19, 2025: Backend Development Plan & Ongoing Work (Status Opdateret)
 
-**Key Achievements & Remarks**:
+**Objective**: Skitsere den bredere backend udviklingsstrategi og notere nuværende fremskridt.
 
-*   **Socket.IO Firebase Authentication ([`fattecentralen-monorepo/apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:83)):**
-    *   Modified the `on_connect` event handler to verify a Firebase ID token.
-    *   The token is expected as a query parameter (`token`) during the Socket.IO connection.
-    *   Connections with invalid or missing tokens are rejected.
-    *   Resolved Pylance "possibly unbound" and "attribute of None" errors for `decoded_token` in exception handling.
-    *   *Comment*: This enhances security by ensuring only authenticated users can establish a persistent Socket.IO connection and improves code robustness.
-*   **Socket.IO Room Refactoring for Live Sports ([`fattecentralen-monorepo/apps/backend/sockets.py`](fattecentralen-monorepo/apps/backend/sockets.py:931)):**
-    *   Updated the `handle_subscribe_to_live_scores` function to use `match_{matchId}` for room names.
-    *   *Comment*: This aligns the Socket.IO room naming with the Live Sports API endpoint structure (`GET /api/v1/matches/{match_id}`), improving consistency.
-*   **Defined New Socket.IO Events and Data Structures:**
-    *   `live_score_update`: For broadcasting sports match score changes. Room: `match_{matchId}`.
-    *   `stock_price_update`: For broadcasting Aktiedyst stock price changes. Room: `aktiedyst_market_{symbol}`.
-    *   *Comment*: These definitions provide a clear structure for future real-time data transmission.
+**Overall Backend Development Plan (Revideret status)**:
+1.  **Phase 1: Implement Core User Profile API**: *Status*: ✅ **Fuldført**. (Konsolideret under overordnet Fase 1)
+2.  **Phase 2 (Tidl. Plan): Solidify Forum APIs**: *Status*: ✅ **Fuldført**. (Konsolideret under overordnet Fase 1)
+3.  **Phase 3 (Tidl. Plan): Review and Complete Sports & Aktiedyst APIs**: *Status*: ✅ **Fuldført**. (Konsolideret under overordnet Fase 1)
+4.  **Phase 4 (Tidl. Plan): Develop Admin API**: *Status*: ⏳ **Afventer** (Nu en del af Projektplan Fase 5: Avancerede Features)
 
-These changes address key items in Phase 1 of the [`PROJECT_PLAN.md`](./PROJECT_PLAN.md) concerning real-time communication.
-### May 19, 2025: Focused API Development Sprint
+**Key Considerations & Remarks**:
+*   **User Profile API (`api_user_profile.py`)**: Fuldført.
+*   **Lokal Flask JWTs vs. Firebase ID Tokens**: Plan for fuld udfasning er på plads (F1.2.8).
+*   **Ongoing**: Fejlhåndtering, sikkerhedsforbedringer, databasemigreringer og omfattende testning vil være kontinuerlige indsatser gennem alle faser (nu specifikt i Fase 7 og 8 af den samlede projektplan).
 
-**Objective**: Advance core API functionalities for Live Sports and Aktiedyst.
+---
+
+### May 19, 2025: Core User Profile API Implementation (Fuldført som del af Fase 1)
+
+**Objective**: Implementere Core User Profile API.
 
 **Key Achievements & Remarks**:
+*   User Profile API (`api_user_profile.py`) oprettet med `GET` og `PUT` endpoints for `/api/v1/users/me/profile`.
+*   Blueprint `user_profile_api_bp` registreret i Flask app.
 
-*   **Live Sports API Enhancement ([`apps/backend/routes/api_sports.py`](fattecentralen-monorepo/apps/backend/routes/api_sports.py)):**
-    *   Refactored the event details endpoint to `GET /api/v1/matches/{match_id}`.
-    *   *Comment*: This change streamlines access to specific match data and improves the overall organization of sports-related API routes by utilizing a dedicated blueprint (`matches_api_bp`).
-*   **Aktiedyst API V1 Initialization ([`apps/backend/routes/api_aktiedyst.py`](fattecentralen-monorepo/apps/backend/routes/api_aktiedyst.py)):**
-    *   Successfully created the foundational scaffolding for the Aktiedyst API (V1).
-    *   Placeholder endpoints for key operations (e.g., portfolio, transactions, market data, order placement) are now in place.
-    *   *Comment*: This establishes the basic structure, allowing for iterative development of the Aktiedyst features. Mock data is returned by placeholders for initial frontend integration testing.
-*   **Backend Integration ([`apps/backend/__init__.py`](fattecentralen-monorepo/apps/backend/__init__.py)):**
-    *   Updated to register the newly created blueprints for both the refined Live Sports matches endpoint and the new Aktiedyst V1 API.
-    *   *Comment*: Ensures that these new API segments are correctly wired into the Flask application and accessible.
+---
 
-These updates represent significant progress in Phase 1 of the project plan, specifically targeting API definition and implementation.
-### May 19, 2025 (Live Sports & Aktiedyst API Scaffolding)
+### May 19, 2025: Forum API Development (Initial Stages - Nu Fuldført som del af Fase 1)
 
-*   **Live Sports API Refinements (`apps/backend/routes/api_sports.py`):**
-    *   Refactored the endpoint for fetching specific event/match details to `GET /api/v1/matches/{match_id}`.
-    *   This involved creating a new Flask Blueprint `matches_api_bp` specifically for match-related routes, improving organization.
-    *   The new `matches_api_bp` was registered in `apps/backend/__init__.py`.
-*   **Aktiedyst API V1 Scaffolding (`apps/backend/routes/api_aktiedyst.py`):**
-    *   Created a new file `api_aktiedyst.py` to house the V1 Aktiedyst API endpoints.
-    *   Defined a new Flask Blueprint `aktiedyst_api_bp` (aliased as `new_aktiedyst_v1_api_bp` in `__init__.py`) with the prefix `/api/v1/aktiedyst`.
-    *   Registered the `new_aktiedyst_v1_api_bp` in `apps/backend/__init__.py`.
-    *   Added placeholder implementations for the following Aktiedyst API V1 endpoints as per `PROJECT_PLAN.md`:
-        *   `GET /api/v1/aktiedyst/ping` (basic test endpoint)
-        *   `GET /api/v1/aktiedyst/portfolio`
-        *   `GET /api/v1/aktiedyst/transactions`
-        *   `GET /api/v1/aktiedyst/markets`
-        *   `GET /api/v1/aktiedyst/markets/{symbol}/history`
-        *   `POST /api/v1/aktiedyst/orders`
-    *   These placeholders include mock data responses and are ready for further implementation of business logic and database integration.
-*   **Backend Initialization (`apps/backend/__init__.py`):**
-    *   Resolved a Pylance import error related to `api_aktiedyst` by ensuring the file was created before uncommenting its import and registration.
+**Objective**: Påbegynde og færdiggøre implementering af Forum API endpoints.
 
-### May 19, 2025 (Model Cleanup & Pylance Fixes)
+**Key Achievements & Remarks**:
+*   JSON request/response strukturer for Forum API og User Profile API er defineret (se `PROJECT_PLAN.md`).
+*   `forum_api_bp` oprettet og registreret.
+*   Implementeret:
+    *   `GET /api/v1/forum/categories`
+    *   `GET /api/v1/forum/categories/{categoryId}/threads` (fuldt implementeret)
+    *   `GET /api/v1/forum/threads/{threadId}/posts` (fuldt implementeret, inkl. `user_avatar_url`)
+    *   `POST /api/v1/forum/threads/{threadId}/posts` (inkl. Firebase auth, validering, `ForumPost` oprettelse)
+*   `__init__` metode tilføjet til `ForumPost` model.
+*   Pylance type-hinting advarsler adresseret.
 
-*   **Backend Model Cleanup & Refinements:**
-    *   Removed the unused `JsonUserWrapper` class from `apps/backend/models.py`. This class was a remnant from a previous JSON-based user store and is no longer needed with the SQLAlchemy `User` model.
-    *   Removed the corresponding import of `JsonUserWrapper` from `apps/backend/__init__.py`.
-    *   Added a generic `__init__(self, **kwargs)` method to the SQLAlchemy `User` model (`apps/backend/models.py`). This resolves Pylance `reportGeneralTypeIssues` (specifically "No parameter named '...'") when instantiating `User` objects with keyword arguments in `apps/backend/routes/auth.py`.
+---
+### May 19, 2025: Socket.IO Enhancements (Fuldført som del af Fase 1)
 
-### May 19, 2025 (Pylance and Backend Firebase Authentication)
+**Objective**: Forbedre Socket.IO setup for real-time features.
 
-*   **Resolved Pylance `firebase_admin` Import Resolution Issue:**
-    *   Successfully fixed the `reportMissingImports` error for `firebase_admin` in `fattecentralen-monorepo/apps/backend/routes/auth.py`.
-    *   **Key Fixes:**
-        1.  **VS Code Interpreter Configuration:** Set the `python.defaultInterpreterPath` in `.vscode/settings.json` to the absolute path of the backend's virtual environment interpreter:
-            ```json
-            {
-                "python.defaultInterpreterPath": "/Users/tobias/Desktop/Fattecentralen/vs code exp/Fattecentralen Projekt/fattecentralen-monorepo/apps/backend/.venv/bin/python"
-            }
-            ```
-        2.  **Pyright Configuration:** Corrected `pyproject.toml` to accurately point Pyright to the virtual environment:
-            *   Set `tool.pyright.venvPath` to `/Users/tobias/Desktop/Fattecentralen/vs code exp/Fattecentralen Projekt/fattecentralen-monorepo/apps/backend/`.
-            *   Ensured `tool.pyright.venv` was set to `.venv`.
-        3.  **Virtual Environment Recreation:** The virtual environment at `fattecentralen-monorepo/apps/backend/.venv/` was previously recreated using the `--copies` flag, which is crucial for environments where symlinks might cause issues with path resolution by tools like Pylance.
-            ```bash
-            # Example command used for venv recreation
-            /path/to/python3.13 -m venv .venv --copies
-            source .venv/bin/activate
-            pip install -r requirements.txt
-            ```
-    *   These changes ensured that Pylance could correctly locate and resolve the `firebase_admin` package and its modules.
+**Key Achievements & Remarks**:
+*   **Socket.IO Firebase Authentication**: Implementeret token-verifikation på `on_connect`.
+*   **Socket.IO Room Refactoring for Live Sports**: Opdateret `handle_subscribe_to_live_scores` til at bruge `match_{matchId}`.
+*   **Definerede Nye Socket.IO Events og Datastrukturer**:
+    *   `live_score_update` (Room: `match_{matchId}`)
+    *   `stock_price_update` (Room: `aktiedyst_market_{symbol}`)
+    *   `user_notification` (Data: `{ type: '...', message: '...', link: '...', timestamp_utc: '...' }`) (F1.7.4)
+*   **Implementeret Event Broadcasting (F1.7.8)** for:
+    *   Forumopdateringer
+    *   Aktiedyst prisændringer
+    *   Sport scoreopdateringer
+    *   Ordre status ændringer
 
-*   **Firebase Authentication Integration in Backend API Routes (`apps/backend/routes/auth.py`):**
+---
+### May 19, 2025: Focused API Development Sprint & Scaffolding (Fuldført som del af Fase 1)
 
-*   **Firebase Authentication Integration in Backend API Routes (`apps/backend/routes/auth.py`):**
-    *   **`@firebase_token_required` Decorator Utilized**: Leveraged the existing decorator from `apps/backend/utils.py` to protect routes requiring Firebase authentication. This decorator verifies the Firebase ID token from the `Authorization: Bearer` header and makes decoded token info available via `flask_g.firebase_user`.
-    *   **`/api/v1/auth/me` Route Refactor**:
-        *   Changed protection from local JWT (`@jwt_required()`) to `@firebase_token_required`.
-        *   User is now identified and fetched from the local database using `firebase_uid` (obtained from the verified Firebase ID token) instead of a local JWT identity.
-    *   **`/api/v1/auth/register` Route Repurposed to `register_or_sync_firebase_user`**:
-        *   This route now serves as the primary endpoint for synchronizing a Firebase-authenticated user with the local backend database.
-        *   Protected by `@firebase_token_required`.
-        *   **Existing Firebase User Sync**: If a local user record with the provided `firebase_uid` already exists, the route updates their `last_login` time and potentially syncs email (if changed in Firebase and `email_verified`). It returns user details and local JWTs (though the necessity of local JWTs is under review).
-        *   **New Firebase User Local Profile Creation**: If no local user exists for the `firebase_uid`:
-            *   The route expects an `invite_code` in the JSON payload for new local profile creation.
-            *   A local `username` is either taken from the JSON payload or derived from the Firebase user's display name or email.
-            *   The new local `DBUser` record is created with the `firebase_uid`, email from the token, the chosen/derived username, and a `NULL` `password_hash`.
-            *   The invite code is validated and consumed.
-        *   Local password creation/validation logic has been removed from this flow, as Firebase now manages primary authentication.
-    *   **Local JWTs Removed**: Stopped generating local Flask JWTs (access/refresh tokens) in the `register_or_sync_firebase_user` route. The frontend will rely on the Firebase ID token for authenticating API requests.
-    *   **New Firebase Account Linking Endpoint**:
-        *   Added `POST /api/v1/auth/link-firebase` to `apps/backend/routes/auth.py`.
-        *   This endpoint allows a user authenticated via a traditional local Flask session (using `@login_required`) to link their local account to a Firebase account.
-        *   It expects a Firebase ID token in the JSON payload, verifies it, and if valid, stores the `firebase_uid` on the local user's record.
-        *   Includes checks to prevent linking if the Firebase account is already associated with another local user or if the current user is already linked to a different Firebase account.
-    *   **Enhanced Traditional Login Flow (`/auth/login`, `/verify_2fa_login`, `/verify_backup_code` - JSON API parts)**:
-        *   Modified the JSON responses for successful local username/password logins.
-        *   If the logged-in user's account is **not yet linked** to Firebase (`firebase_uid` is `None`), the response now includes:
-            *   `"needs_firebase_link": true`
-            *   A message encouraging the user to link their account for enhanced security.
-        *   If the logged-in user's account **is already linked** to Firebase, the response now includes:
-            *   `"prompt_firebase_login": true`
-            *   A message gently nudging the user to use the Firebase login method next time.
-        *   This aims to guide users towards the new Firebase authentication system as part of a phased migration.
-    *   **Code Cleanup**: Corrected a minor issue in the traditional form-based login part of the `login_route` to safely handle `form.username.data` potentially being `None` before calling `.strip()`.
-    *   **Password Reset Flow Update for Firebase Users**: Modified the `request_password_reset` function in `apps/backend/routes/auth.py`. If a user requesting a password reset is already linked to a Firebase account (i.e., `user.firebase_uid` is set), they are now shown a message guiding them to use Firebase's password reset mechanism instead of initiating a local password reset. The local reset process remains for users not linked to Firebase.
+**Objective**: Fremme kerne API funktionaliteter for Live Sports og Aktiedyst.
 
-### May 18, 2025 (Backend & Firebase Integration Setup)
+**Key Achievements & Remarks**:
+*   **Live Sports API (F1.4.1-7)**: Alle endpoints fuldt implementeret, inklusiv:
+    *   `GET /api/v1/matches/{match_id}` (refaktoreret)
+    *   Sports liste, liga detaljer, stilling, hold i liga, hold detaljer, holdets kampe.
+*   **Aktiedyst API V1 (F1.5.1-11)**: Alle endpoints fuldt implementeret, inklusiv:
+    *   Portfolio, transaktioner, markedsliste, symbolhistorik, ordreafgivelse, symbol detaljer, ordrer liste/detalje, annuller ordre, leaderboard.
+*   **Backend Integration**: Blueprints for Live Sports og Aktiedyst V1 API'er er registreret.
 
-*   **User Model Enhancements for Firebase Auth:**
-    *   Modified `apps/backend/models.py`: Added a `firebase_uid` field (String, unique, nullable, indexed) to the `User` model to store Firebase User UIDs.
-    *   Changed the `password_hash` field in the `User` model to be `nullable=True` to accommodate users authenticating primarily via Firebase.
-*   **Database Migration:**
-    *   Successfully generated and applied a new database migration (`fb4133b9be65_add_firebase_uid_to_user_model_and_make_.py`) to reflect the User model changes.
-*   **Project Structure and Import Path Corrections (Backend):**
-    *   Refactored `run.py` (at project root) to correctly import `create_app` and `socketio` from the `apps.backend` package.
-    *   Updated `run.sh` to set the `PYTHONPATH` environment variable, ensuring that `run.py` can locate the `apps` package within the `fattecentralen-monorepo` subdirectory. This resolved module import issues when running Flask commands from the project root.
-    *   Standardized import paths within several backend route files (e.g., `apps/backend/routes/api_dashboard.py`, `apps/backend/routes/messages.py`) to use the `apps.backend.` prefix, ensuring consistency and resolving `ModuleNotFoundError` issues during application startup.
-*   **Firebase Admin SDK Integration (Backend):**
-    *   Verified and ensured the `firebase-admin` Python package is correctly installed and accessible within the backend's virtual environment.
-    *   Confirmed that the Firebase Admin SDK initializes successfully within the Flask application (`apps/backend/__init__.py`) at startup.
-*   **Build/Environment Fixes:**
-    *   Addressed various `ModuleNotFoundError` issues encountered during `flask db migrate` and application startup by correcting Python import paths and ensuring the correct virtual environment and `PYTHONPATH` were used.
-    *   Ensured all existing database migrations were applied (`flask db upgrade`) before generating new ones.
+---
+### May 19, 2025 (Model Cleanup & Pylance Fixes) (Fuldført)
+
+*   **Backend Model Cleanup & Refinements**:
+    *   Fjernet ubrugt `JsonUserWrapper`.
+    *   Tilføjet `__init__(self, **kwargs)` til SQLAlchemy `User` model for at løse Pylance-fejl.
+
+---
+### May 19, 2025 (Pylance and Backend Firebase Authentication) (Fuldført)
+
+*   **Pylance `firebase_admin` Import Resolution Issue**: Løst via VS Code interpreter konfiguration, Pyright konfiguration og korrekt venv setup.
+*   **Firebase Authentication Integration i Backend API Routes (`apps/backend/routes/auth.py`)**:
+    *   `@firebase_token_required` decorator benyttet.
+    *   `/api/v1/auth/me` refaktoreret til Firebase auth.
+    *   `/api/v1/auth/register` genanvendt som `register_or_sync_firebase_user` med Firebase auth, fjerner lokal JWT generering for dette flow. Plan for fuld JWT udfasning er på plads.
+    *   `POST /api/v1/auth/link-firebase` tilføjet.
+    *   Forbedret traditionel login flow til at guide brugere mod Firebase.
+    *   Password reset flow opdateret for Firebase-brugere.
+
+---
+### May 18, 2025 (Backend & Firebase Integration Setup) (Fuldført)
+
+*   **User Model Enhancements**: `firebase_uid` tilføjet, `password_hash` gjort nullable.
+*   **Database Migration**: Anvendt migration for User model ændringer.
+*   **Project Structure og Import Path Rettelser**: Løst diverse importfejl.
+*   **Firebase Admin SDK Integration**: Verificeret og sikret.
+*   **Build/Environment Fixes**: Løst diverse `ModuleNotFoundError`.
+
+**Næste Skridt**:
+*   Fortsæt til "Fase 2: Core Frontend Features - UI Transformation & Statiske Komponenter" som detaljeret i `PROJECT_PLAN.md`.

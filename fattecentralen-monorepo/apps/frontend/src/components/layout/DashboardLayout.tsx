@@ -1,4 +1,7 @@
 import React from 'react';
+// import Footer from './Footer'; // Updated import
+import Header from './Header'; // Updated import
+import Sidebar from './Sidebar'; // Updated import
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -7,25 +10,15 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="bg-gray-800 text-white p-4">
-        {/* Placeholder for Header content */}
-        <p>Header</p>
-      </header>
-      <nav className="bg-gray-200 p-4">
-        {/* Static Navigation Links */}
-        <ul className="flex space-x-4">
-          <li><a href="/" className="hover:text-gray-700">Home</a></li>
-          <li><a href="/live-sports" className="hover:text-gray-700">Live Sports</a></li>
-          <li><a href="/aktiedyst" className="hover:text-gray-700">Aktiedyst</a></li>
-          <li><a href="/forum" className="hover:text-gray-700">Forum</a></li>
-          <li><a href="/profile" className="hover:text-gray-700">Profile</a></li>
-        </ul>
-      </nav>
-      <main className="flex-grow p-4">{children}</main>
-      <footer className="bg-gray-800 text-white p-4 text-center">
-        {/* Placeholder for Footer content */}
-        <p>Footer</p>
-      </footer>
+      <Header />
+      <div className="flex flex-1">
+        <Sidebar />
+        <main className="flex-1 p-4 lg:ml-64 lg:pt-20">
+          {/* Main content goes here */}
+          {children}
+        </main>
+      </div>
+      {/* <Footer /> */}
     </div>
   );
 };
