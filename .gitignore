@@ -50,6 +50,16 @@ Plan.rtf
 Sammensat Plan.rtf
 app/kom tilbage.txt
 app/plan.txt
+
+# Internal documentation
+INTERN DOCS/
+
+# Specific local scripts
+jinja_test.py
+migrate_json_to_db.py
+seed_badges.py
+run.sh
+
 # Monorepo directory for the new version
 # fattecentralen-monorepo/ # Commented out to allow tracking files within the monorepo
 
