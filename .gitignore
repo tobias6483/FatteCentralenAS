@@ -43,7 +43,7 @@ dist/
 # Andre filer du vil ignorere
 gammel app.txt
 Fattecentralen Projekt ny.xcodeproj/
-Fattecentralen Projekt ny.xcodeproj
+Fattecentralen Projekt ny.xcodeproj/xcuserdata/ # Tilføjet for at ignorere bruger-specifikke Xcode indstillinger
 
 # Personal planning/note files
 Plan.rtf
