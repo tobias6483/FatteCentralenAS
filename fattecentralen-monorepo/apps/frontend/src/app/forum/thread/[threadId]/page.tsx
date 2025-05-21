@@ -79,7 +79,7 @@ export default function ForumThreadPage({ params }: ForumThreadPageProps) {
                                 <AvatarImage src={post.author.avatarUrl} alt={post.author.username} />
                                 <AvatarFallback>{post.author.username.substring(0, 2).toUpperCase()}</AvatarFallback>
                             </Avatar>
-                            <div className="flex-grow">
+                            <div className="grow">
                                 <p className="font-semibold">{post.author.username}</p>
                                 <p className="text-xs text-muted-foreground">{post.createdAt}</p>
                             </div>

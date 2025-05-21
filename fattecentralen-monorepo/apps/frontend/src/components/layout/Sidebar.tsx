@@ -95,7 +95,7 @@ const Sidebar = () => {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-grow">
+      <nav className="grow">
         <ul className="space-y-1">
           {mainNavLinks.map((link) => (
             <li key={link.id}>
@@ -149,7 +149,7 @@ const Sidebar = () => {
         <hr className="my-3 border-border" />
         <Button
           variant="ghost"
-          className="w-full justify-start text-red-500 hover:!text-red-600 hover:!bg-red-500/10"
+          className="w-full justify-start text-red-500 hover:text-red-600! hover:bg-red-500/10!"
           data-testid="sidebar-logout-button"
           onClick={handleLogout} // Add onClick handler
         >

@@ -1,4 +1,5 @@
-import { Toaster } from "@/components/ui/sonner"; // Import Toaster
+import { ThemeProvider } from "@/components/theme-provider"; // Restored ThemeProvider import
+import { Toaster } from "@/components/ui/sonner"; // Restored Toaster import
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fattecentralen", // Updated title
-  description: "Modernized Fattecentralen Application", // Updated description
+  title: "Fattecentralen",
+  description: "Modernized Fattecentralen Application",
 };
 
 export default function RootLayout({
@@ -24,12 +25,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children} {/* Render children directly */}
-        <Toaster /> {/* Add Toaster here */}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="dark" // Changed from "system" to "dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children} {/* Restored children */}
+          <Toaster /> {/* Restored Toaster */}
+        </ThemeProvider>
       </body>
     </html>
   );

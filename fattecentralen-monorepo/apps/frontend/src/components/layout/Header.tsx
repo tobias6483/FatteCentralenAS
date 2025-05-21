@@ -1,5 +1,6 @@
 'use client'; // Ensure this is a client component
 
+import { ThemeToggleButton } from '@/components/ThemeToggleButton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'; // Added Sheet imports
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'; // Updated Sheet imports
 import { useAuthStore } from '@/stores/authStore'; // Import auth store
 import { Bell, Gamepad2, Menu, Search } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +20,7 @@ import { useRouter } from 'next/navigation'; // Import useRouter
 import React from 'react';
 
 const Header: React.FC = () => {
-  const notificationsCount = 0; // Static for now
+  const notificationsCount = 0; // This was correctly defined here already
   const { user, logout } = useAuthStore(); // Get user and logout function
   const router = useRouter(); // Initialize router
 
@@ -41,9 +42,9 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       {/* The main container now handles horizontal padding (px-4 md:px-6) */}
-      <div className="container mx-auto flex h-16 max-w-screen-2xl items-center justify-between px-4 md:px-6">
+      <div className="container mx-auto flex h-16 max-w-(--breakpoint-2xl) items-center justify-between px-4 md:px-6">
         {/* Left group */}
         <div className="flex items-center mr-auto"> {/* Added mr-auto to push this group left */}
           {/* Wrap Sheet component in a div that is hidden on medium screens and up - RESTORED */}
@@ -57,6 +58,9 @@ const Header: React.FC = () => {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-full max-w-xs">
+                <SheetHeader>
+                  <SheetTitle className="sr-only">Menu</SheetTitle>
+                </SheetHeader>
                 {/* Mobile Navigation Links */}
                 <nav className="grid gap-4 p-4">
                   <Link href="/" className="text-lg font-medium hover:text-primary">Dashboard</Link>
@@ -90,6 +94,9 @@ const Header: React.FC = () => {
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
           </Button>
+
+          {/* Theme Toggle Button - ADDED HERE */}
+          <ThemeToggleButton />
 
           {/* Notifications Dropdown */}
           <DropdownMenu>

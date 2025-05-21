@@ -1,0 +1,152 @@
+'use client'; // Ensure this is a client component
+
+import { Button } from '@/components/ui/button'; // Antager vi har en Button komponent
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver'; // Importer vores nye hook
+import { useAuthStore } from '@/stores/authStore'; // Import the auth store
+import { motion } from 'framer-motion'; // Importer Framer Motion
+import Link from 'next/link'; // Importer Link for navigation
+import { redirect } from 'next/navigation';
+import { useEffect } from 'react';
+
+export default function HomePage() {
+  const { isAuthenticated, isLoading } = useAuthStore();
+
+  // Refs til animation
+  const { ref: h1Ref } = useIntersectionObserver<HTMLHeadingElement>('animate-fade-in-up', { threshold: 0.1, triggerOnce: true });
+  const { ref: p1Ref } = useIntersectionObserver<HTMLParagraphElement>('animate-fade-in-up', { threshold: 0.1, triggerOnce: true });
+  const { ref: p2Ref } = useIntersectionObserver<HTMLParagraphElement>('animate-fade-in-up', { threshold: 0.1, triggerOnce: true });
+
+  // Framer Motion varianter
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: 0.2,
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 },
+  };
+
+  const ctaItems = [
+    {
+      title: "Udforsk Funktioner",
+      description: "Oplev de kraftfulde værktøjer FatteCentralen tilbyder.",
+      icon: "🚀", // Placeholder icon
+    },
+    {
+      title: "Tilmeld Dig Nu",
+      description: "Bliv en del af fællesskabet og optimer din hverdag.",
+      icon: "✨", // Placeholder icon
+      href: "/auth/register", // Tilføjet href for navigation
+    },
+    {
+      title: "Lær Mere",
+      description: "Dyk ned i vores dokumentation og guides.",
+      icon: "📚", // Placeholder icon
+    },
+  ];
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      redirect('/dashboard');
+    }
+  }, [isAuthenticated, isLoading]);
+
+  // Optional: Show a loading state while auth is being checked
+  if (isLoading) {
+    return (
+      <div className="container mx-auto py-10 text-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // If not loading and not authenticated, show the homepage content
+  if (!isAuthenticated) {
+    return (
+      <div className="container mx-auto py-10">
+        <h1
+          ref={h1Ref}
+          className="text-3xl font-bold mb-6 bg-pink-500 text-yellow-300 border-8 border-green-600 animate-on-scroll"
+        >
+          Velkommen til FatteCentralen
+        </h1>
+        <p
+          ref={p1Ref}
+          className="mb-4 animate-on-scroll stagger-delay-200ms" // Brugt stagger-klasse
+        >
+          Dette er startsiden for FatteCentralen. Herfra kan du navigere til de
+          forskellige sektioner af platformen.
+        </p>
+        <p
+          ref={p2Ref}
+          className="animate-on-scroll stagger-delay-400ms mb-12" // Brugt stagger-klasse og tilføjet margin-bottom
+        >
+          Brug sidebaren til venstre (eller menuen på mobile enheder) for at komme
+          i gang.
+        </p>
+        {/* TODO: Add more specific content for the main page based on index.html or other requirements */}
+
+        {/* CTA Sektion med Framer Motion */}
+        <motion.section
+          className="py-12 bg-background-muted rounded-lg shadow-lg" // Brugt CSS variabel for baggrund
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <div className="container mx-auto px-4">
+            <motion.h2
+              className="text-3xl font-bold text-center mb-10 text-foreground" // Brugt CSS variabel for tekstfarve
+              variants={itemVariants}
+            >
+              Klar til at komme i gang?
+            </motion.h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {ctaItems.map((item, index) => (
+                <motion.div
+                  key={index}
+                  className="bg-card p-6 rounded-md shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col" // Tilføjet flex flex-col for at justere indhold
+                  variants={itemVariants}
+                >
+                  <div className="text-4xl mb-4 text-primary">{item.icon}</div> {/* Brugt CSS variabel for primær farve */}
+                  <h3 className="text-xl font-semibold mb-2 text-card-foreground">{item.title}</h3> {/* Brugt CSS variabel for korttekstfarve */}
+                  <p className="text-muted-foreground flex-grow">{item.description}</p> {/* Tilføjet flex-grow for at skubbe knap ned hvis item.href findes */}
+                  {item.href && (
+                    <Link href={item.href} passHref className="mt-4">
+                      <Button variant="default" className="w-full">
+                        {item.title}
+                      </Button>
+                    </Link>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+            {/* Login Knap */}
+            <motion.div className="text-center mt-12" variants={itemVariants}>
+              {/* TODO: Integrer logo her, når vi ved hvor det er fra */}
+              <p className="mb-4 text-muted-foreground">
+                Har du allerede en konto?
+              </p>
+              <Link href="/auth/login" passHref>
+                <Button variant="outline" size="lg">
+                  Log ind her
+                </Button>
+              </Link>
+            </motion.div>
+          </div>
+        </motion.section>
+      </div>
+    );
+  }
+
+  // Fallback, though the redirect should have happened
+  return null;
+}
