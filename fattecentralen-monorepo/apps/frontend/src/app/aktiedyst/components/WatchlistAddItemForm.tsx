@@ -29,9 +29,9 @@ export function WatchlistAddItemForm({ onAddItem }: WatchlistAddItemFormProps) {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end p-4 bg-card border border-border rounded-lg">
             <div className="md:col-span-5">
-                <Label htmlFor="watchlist-symbol" className="sr-only">
+                <Label htmlFor="watchlist-symbol" className="text-foreground mb-1 block">
                     Symbol
                 </Label>
                 <Input
@@ -41,10 +41,11 @@ export function WatchlistAddItemForm({ onAddItem }: WatchlistAddItemFormProps) {
                     onChange={(e) => setSymbol(e.target.value)}
                     placeholder="F.eks. AAPL, NOVO B"
                     aria-label="Symbol for watchlist"
+                    className="bg-input text-foreground border-border placeholder:text-muted-foreground"
                 />
             </div>
             <div className="md:col-span-5">
-                <Label htmlFor="watchlist-note" className="sr-only">
+                <Label htmlFor="watchlist-note" className="text-foreground mb-1 block">
                     Notat (valgfri)
                 </Label>
                 <Input
@@ -54,14 +55,15 @@ export function WatchlistAddItemForm({ onAddItem }: WatchlistAddItemFormProps) {
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Notat (valgfri)"
                     aria-label="Notat til watchlist item"
+                    className="bg-input text-foreground border-border placeholder:text-muted-foreground"
                 />
             </div>
             <div className="md:col-span-2">
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full bg-tyrkisk-gron text-tyrkisk-gron-foreground hover:bg-tyrkisk-gron/90">
                     <PlusCircle className="mr-2 h-4 w-4" /> Tilføj
                 </Button>
             </div>
-            {error && <p className="md:col-span-12 text-sm text-red-500 mt-1">{error}</p>}
+            {error && <p className="md:col-span-12 text-sm text-red-accent mt-1">{error}</p>}
         </form>
     );
 }

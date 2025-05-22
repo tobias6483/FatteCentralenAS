@@ -1,12 +1,11 @@
 // /app/(dashboard)/messages/thread/[threadId]/page.tsx
 "use client";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Message, MessageParticipant } from '@/types/messages'; // Importer UserReference
-import { ArrowLeft, Paperclip, Send, UserCircle } from 'lucide-react';
+import { ArrowLeft, Paperclip, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
@@ -119,8 +118,8 @@ const MessageThreadPage = () => {
         return (
             <div className="container mx-auto py-8 px-4 md:px-6 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
                 <p className="text-xl text-muted-foreground">Indlæser beskedtråd...</p>
-                <Link href="/messages" className="mt-4">
-                    <Button variant="outline"><ArrowLeft className="mr-2 h-4 w-4" /> Tilbage til Indbakke</Button>
+                <Link href="/messages" className="mt-6">
+                    <Button variant="outline" size="lg"><ArrowLeft className="mr-2 h-5 w-5" /> Tilbage til Indbakke</Button>
                 </Link>
             </div>
         );
@@ -129,75 +128,69 @@ const MessageThreadPage = () => {
     const { messages, otherParticipant } = threadData;
 
     return (
-        <div className="container mx-auto py-8 px-4 md:px-6 flex flex-col h-[calc(100vh-100px)] max-h-[800px]">
-            <Card className="flex flex-col grow shadow-lg">
-                <CardHeader className="border-b p-4">
+        <div className="container mx-auto px-4 md:px-6 flex flex-col h-[calc(100vh-80px)] max-h-[900px]"> {/* Removed py-6 */}
+            <Card className="flex flex-col grow shadow-xl rounded-lg overflow-hidden">
+                <CardHeader className="border-b p-4 sticky top-0 bg-card z-10 rounded-t-lg">
                     <div className="flex items-center space-x-3">
-                        <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-2">
-                            <ArrowLeft className="h-5 w-5" />
+                        <Button variant="ghost" size="icon" onClick={() => router.back()} className="mr-1 text-muted-foreground hover:text-foreground">
+                            <ArrowLeft className="h-6 w-6" />
                         </Button>
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage src={otherParticipant.avatarUrl} alt={otherParticipant.username} />
-                            <AvatarFallback>{otherParticipant.username.substring(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
                         <div>
                             <CardTitle className="text-lg font-semibold">{otherParticipant.username}</CardTitle>
+                            {/* Optional: Add a subtitle for online status or last seen */}
+                            {/* <p className="text-xs text-muted-foreground">Online</p> */}
                         </div>
                     </div>
                 </CardHeader>
 
-                <CardContent className="grow overflow-y-auto p-4 space-y-4 bg-slate-50">
+                <CardContent className="flex-grow overflow-y-auto p-3 md:p-4 space-y-4 bg-white"> {/* Reduced padding */}
                     {messages.map((msg) => {
-                        const isCurrentUserSender = msg.sender.id === dummyCurrentUserId; // Sammenlign med sender.id
-                        const senderDisplay = isCurrentUserSender ? { username: "Dig", avatarUrl: "/placeholder-avatar.png" } : msg.sender;
+                        const isCurrentUserSender = msg.sender.id === dummyCurrentUserId;
 
                         return (
                             <div
                                 key={msg.id}
-                                className={`flex items-end space-x-2 ${isCurrentUserSender ? 'justify-end' : 'justify-start'}`}>
-                                {!isCurrentUserSender && (
-                                    <Avatar className="h-8 w-8 self-start">
-                                        <AvatarImage src={senderDisplay.avatarUrl} alt={senderDisplay.username} />
-                                        <AvatarFallback>{senderDisplay.username.substring(0, 1)}</AvatarFallback>
-                                    </Avatar>
-                                )}
+                                className={`flex items-end space-x-2 ${isCurrentUserSender ? 'justify-end ml-auto' : 'justify-start mr-auto'}`}
+                                style={{ maxWidth: '75%' }}
+                            >
                                 <div
-                                    className={`max-w-[70%] p-3 rounded-lg shadow-sm ${isCurrentUserSender ? 'bg-sky-500 text-white rounded-br-none' : 'bg-white text-gray-800 border border-gray-200 rounded-bl-none'}`}>
-                                    <p className="text-sm">{msg.body}</p>
-                                    <p className={`text-xs mt-1 ${isCurrentUserSender ? 'text-sky-100' : 'text-gray-500'} text-right`}>
+                                    className={`flex flex-col ${isCurrentUserSender ? 'items-end' : 'items-start'}`}
+                                >
+                                    <div
+                                        className={`py-2 px-3.5 shadow-sm ${isCurrentUserSender ? 'bg-blue-500 text-white rounded-[22px] rounded-br-lg' : 'bg-gray-200 text-gray-800 rounded-[22px] rounded-bl-lg'}`} /* Adjusted rounding */
+                                    >
+                                        <p className="text-sm whitespace-pre-wrap">{msg.body}</p>
+                                    </div>
+                                    <p className={`text-xs mt-1 px-1 ${isCurrentUserSender ? 'text-gray-500' : 'text-gray-500'}`}>
                                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </p>
                                 </div>
-                                {isCurrentUserSender && (
-                                    <Avatar className="h-8 w-8 self-start">
-                                        <AvatarFallback><UserCircle size={24} /></AvatarFallback>
-                                    </Avatar>
-                                )}
+                                {/* Avatar removed from here */}
                             </div>
                         );
                     })}
                 </CardContent>
 
-                <CardFooter className="border-t p-4 bg-white">
+                <CardFooter className="border-t p-3 md:p-4 bg-card sticky bottom-0 z-10 rounded-b-lg">
                     <form onSubmit={handleReplySubmit} className="flex w-full items-center space-x-2">
-                        <Button variant="ghost" size="icon" type="button" disabled>
-                            <Paperclip className="h-5 w-5 text-gray-500" />
+                        <Button variant="ghost" size="icon" type="button" className="text-white hover:text-gray-300" disabled> {/* Changed text color for paperclip icon */}
+                            <Paperclip className="h-5 w-5" />
                         </Button>
                         <Textarea
                             value={newMessageBody}
                             onChange={(e) => setNewMessageBody(e.target.value)}
                             placeholder="Skriv en besked..."
-                            className="grow resize-none border-gray-300 focus:ring-sky-500 focus:border-sky-500"
+                            className="grow resize-none rounded-full py-2.5 px-4 border-gray-300 focus-visible:ring-1 focus-visible:ring-blue-500 focus-visible:border-blue-500 focus-visible:ring-offset-0"
                             rows={1}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' && !e.shiftKey) {
                                     e.preventDefault();
-                                    handleReplySubmit(e as any);
+                                    handleReplySubmit(e as any); // Consider a cleaner way to handle form submission
                                 }
                             }}
                             disabled={isSending}
                         />
-                        <Button type="submit" size="icon" disabled={isSending || !newMessageBody.trim()} className="bg-sky-600 hover:bg-sky-700">
+                        <Button type="submit" size="icon" disabled={isSending || !newMessageBody.trim()} className="rounded-full bg-blue-500 hover:bg-blue-600 text-white shrink-0 w-10 h-10 flex items-center justify-center">
                             <Send className="h-5 w-5" />
                         </Button>
                     </form>

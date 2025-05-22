@@ -47,19 +47,26 @@ export function PortfolioFilterDropdown({
     onSelectPortfolio,
 }: PortfolioFilterDropdownProps) {
     return (
-        <div className="mb-4">
-            <Label htmlFor="portfolio-filter" className="sr-only">Filtrer beholdning efter portefølje</Label>
+        <div className="mb-4 p-4 bg-card text-foreground rounded-lg shadow-md border border-border">
+            <Label htmlFor="portfolio-filter" className="text-sm font-medium text-muted-foreground mb-2 block">Filtrer beholdning efter portefølje</Label>
             <Select
                 value={selectedPortfolioId || ""} // Handle null case for Select value
                 onValueChange={(value) => onSelectPortfolio(value === "all" || value === "" ? null : value)}
             >
-                <SelectTrigger id="portfolio-filter" className="w-full md:w-[300px]">
+                <SelectTrigger
+                    id="portfolio-filter"
+                    className="w-full md:w-[300px] bg-input border-border text-foreground placeholder:text-muted-foreground focus:ring-primary focus:border-primary"
+                >
                     <SelectValue placeholder="Vælg portefølje at vise" />
                 </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Alle Porteføljer</SelectItem>
+                <SelectContent className="bg-popover border-border text-popover-foreground">
+                    <SelectItem value="all" className="hover:bg-muted/50 focus:bg-muted/50">Alle Porteføljer</SelectItem>
                     {portfolios.map((portfolio) => (
-                        <SelectItem key={portfolio.id} value={portfolio.id}>
+                        <SelectItem
+                            key={portfolio.id}
+                            value={portfolio.id}
+                            className="hover:bg-muted/50 focus:bg-muted/50"
+                        >
                             {portfolio.name}
                         </SelectItem>
                     ))}

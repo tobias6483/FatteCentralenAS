@@ -1,3 +1,5 @@
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,16 +8,31 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, Send } from 'lucide-react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation'; // Added for reading search params
+import { useEffect, useState } from 'react'; // Added for managing selected category
 
-// Mock data - erstat med data fra API senere
+// Updated mock data with slugs
 const forumCategories = [
-    { id: '1', name: 'Generel Diskussion' },
-    { id: '2', name: 'Live Sports Betting' },
-    { id: '3', name: 'Aktiedysten' },
-    { id: '4', name: 'Teknisk Support' },
+    { id: '1', slug: 'generel-diskussion', name: 'Generel Diskussion' },
+    { id: '2', slug: 'live-sports-betting', name: 'Live Sports Betting' },
+    { id: '3', slug: 'aktiedysten', name: 'Aktiedysten' },
+    { id: '4', slug: 'teknisk-support', name: 'Teknisk Support' },
 ];
 
 export default function NewForumThreadPage() {
+    const searchParams = useSearchParams();
+    const initialCategorySlug = searchParams.get('category');
+    const [selectedCategoryId, setSelectedCategoryId] = useState<string | undefined>(undefined);
+
+    useEffect(() => {
+        if (initialCategorySlug) {
+            const category = forumCategories.find(c => c.slug === initialCategorySlug);
+            if (category) {
+                setSelectedCategoryId(category.id);
+            }
+        }
+    }, [initialCategorySlug]);
+
     return (
         <div className="container mx-auto py-8 px-4 md:px-6">
             <div className="mb-6">
@@ -41,7 +58,7 @@ export default function NewForumThreadPage() {
 
                     <div className="space-y-2">
                         <Label htmlFor="thread-category">Kategori</Label>
-                        <Select>
+                        <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
                             <SelectTrigger id="thread-category">
                                 <SelectValue placeholder="Vælg en kategori" />
                             </SelectTrigger>
@@ -55,15 +72,19 @@ export default function NewForumThreadPage() {
 
                     <div className="space-y-2">
                         <Label htmlFor="thread-content">Indhold</Label>
-                        <Textarea id="thread-content" placeholder="Skriv din besked her...
-Understøtter grundlæggende Markdown." rows={10} />
+                        <Textarea
+                            id="thread-content"
+                            placeholder="Skriv din besked her...
+Understøtter grundlæggende Markdown."
+                            rows={10}
+                        />
                         <p className="text-xs text-muted-foreground">
                             Du kan bruge Markdown til at formatere din tekst (f.eks. **fed**, *kursiv*, [links](url)).
                         </p>
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                    <Button type="submit">
+                    <Button type="submit"> {/* Form submission logic to be added later */}
                         <Send className="mr-2 h-4 w-4" /> Opret Tråd
                     </Button>
                 </CardFooter>

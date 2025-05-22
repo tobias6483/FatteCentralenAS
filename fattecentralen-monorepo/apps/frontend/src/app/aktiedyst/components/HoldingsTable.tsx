@@ -87,64 +87,61 @@ export function HoldingsTable({ holdings = mockHoldings, isLoading = false }: Ho
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center py-10">
-                <ArrowUpWideNarrow className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex items-center justify-center py-10 bg-card text-foreground rounded-lg shadow-md">
+                <ArrowUpWideNarrow className="h-8 w-8 animate-spin text-tyrkisk-gron" />
                 <p className="ml-2 text-muted-foreground">Henter beholdning...</p>
             </div>
         );
     }
 
     if (holdings.length === 0) {
-        return <p className="text-muted-foreground py-4 text-center">Ingen beholdning fundet for valgte portefølje.</p>;
+        return <p className="text-muted-foreground py-4 text-center bg-card rounded-lg shadow-md">Ingen beholdning fundet for valgte portefølje.</p>;
     }
 
     return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto bg-card text-foreground rounded-lg shadow-md border border-border">
             <Table>
-                <TableCaption className="mt-4">Din detaljerede beholdning. Kurser opdateres periodisk. Gevinst/tab er urealiseret.</TableCaption>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Symbol</TableHead>
-                        <TableHead>Navn</TableHead>
-                        <TableHead className="text-right">Antal</TableHead>
-                        <TableHead className="text-right">Gns. Købspris</TableHead>
-                        <TableHead className="text-right">Nuv. Kurs</TableHead>
-                        <TableHead className="text-right">Markedsværdi</TableHead>
-                        <TableHead className="text-right">Gevinst/Tab (%)</TableHead>
-                        <TableHead className="text-center">Handlinger</TableHead>
+                <TableCaption className="mt-4 text-muted-foreground">Din detaljerede beholdning. Kurser opdateres periodisk. Gevinst/tab er urealiseret.</TableCaption>
+                <TableHeader className="border-b border-border">
+                    <TableRow className="hover:bg-muted/20">
+                        <TableHead className="text-tyrkisk-gron">Type</TableHead>
+                        <TableHead className="text-tyrkisk-gron">Symbol</TableHead>
+                        <TableHead className="text-tyrkisk-gron">Navn</TableHead>
+                        <TableHead className="text-right text-tyrkisk-gron">Antal</TableHead>
+                        <TableHead className="text-right text-tyrkisk-gron">Gns. Købspris</TableHead>
+                        <TableHead className="text-right text-tyrkisk-gron">Nuv. Kurs</TableHead>
+                        <TableHead className="text-right text-tyrkisk-gron">Markedsværdi</TableHead>
+                        <TableHead className="text-right text-tyrkisk-gron">Gevinst/Tab (%)</TableHead>
+                        <TableHead className="text-center text-tyrkisk-gron">Handlinger</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {holdings.map((holding) => (
-                        <TableRow key={holding.id}>
-                            <TableCell><Badge variant="outline">{holding.type}</Badge></TableCell>
-                            <TableCell className="font-medium">{holding.symbol}</TableCell>
-                            <TableCell>{holding.name}</TableCell>
-                            <TableCell className="text-right">{holding.quantity.toLocaleString("da-DK")}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(holding.avgBuyPrice, holding.currency)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(holding.currentPrice, holding.currency)}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(holding.marketValue, holding.currency)}</TableCell>
+                        <TableRow key={holding.id} className="border-b border-border hover:bg-muted/20">
+                            <TableCell><Badge variant="outline" className="border-border text-foreground bg-background hover:bg-muted/30">{holding.type}</Badge></TableCell>
+                            <TableCell className="font-medium text-foreground">{holding.symbol}</TableCell>
+                            <TableCell className="text-muted-foreground">{holding.name}</TableCell>
+                            <TableCell className="text-right text-foreground">{holding.quantity.toLocaleString("da-DK")}</TableCell>
+                            <TableCell className="text-right text-foreground">{formatCurrency(holding.avgBuyPrice, holding.currency)}</TableCell>
+                            <TableCell className="text-right text-foreground">{formatCurrency(holding.currentPrice, holding.currency)}</TableCell>
+                            <TableCell className="text-right text-foreground">{formatCurrency(holding.marketValue, holding.currency)}</TableCell>
                             <TableCell className={cn("text-right font-semibold", holding.profitOrLoss >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
                                 {formatCurrency(holding.profitOrLoss, holding.currency)} ({holding.profitOrLossPercentage.toFixed(2)}%)
-                                {holding.profitOrLoss >= 0 ? <TrendingUp className="inline-block ml-1 h-4 w-4" /> : <TrendingDown className="inline-block ml-1 h-4 w-4" />}
+                                {holding.profitOrLoss >= 0 ? <TrendingUp className="inline-block ml-1 h-4 w-4 text-green-600 dark:text-green-400" /> : <TrendingDown className="inline-block ml-1 h-4 w-4 text-red-600 dark:text-red-400" />}
                             </TableCell>
                             <TableCell className="text-center">
-                                <Button variant="outline" size="sm" className="mr-2">
+                                <Button variant="outline" size="sm" className="mr-2 border-primary text-primary hover:bg-primary hover:text-primary-foreground">
                                     <Edit className="h-3 w-3 mr-1" /> Info/Sælg
                                 </Button>
-                                {/* <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700">
-                  <Trash2 className="h-4 w-4" />
-                  <span className="sr-only">Slet post (ikke handel)</span>
-                </Button> */}
+                                {/* <Button variant="ghost" size="icon" className="text-red-accent hover:text-red-accent/80">\n                  <Trash2 className="h-4 w-4" />\n                  <span className="sr-only">Slet post (ikke handel)</span>\n                </Button> */}
                             </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
-                <TableFooter>
+                <TableFooter className="border-t border-border">
                     <TableRow className="bg-muted/50 hover:bg-muted/70">
-                        <TableCell colSpan={6} className="text-right font-bold">Total Værdi (DKK estimat):</TableCell>
-                        <TableCell className="text-right font-bold">{formatCurrency(totalMarketValue, "DKK")}</TableCell>
+                        <TableCell colSpan={6} className="text-right font-bold text-foreground">Total Værdi (DKK estimat):</TableCell>
+                        <TableCell className="text-right font-bold text-foreground">{formatCurrency(totalMarketValue, "DKK")}</TableCell>
                         <TableCell className={cn("text-right font-bold", totalProfitOrLoss >= 0 ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400")}>
                             {formatCurrency(totalProfitOrLoss, "DKK")}
                         </TableCell>

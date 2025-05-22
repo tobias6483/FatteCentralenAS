@@ -4,8 +4,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, Briefcase, History, Info, ListChecks, PlusCircle, Search as SearchIcon, Star, TrendingUp, Trophy, UserCheck } from 'lucide-react';
-import Link from 'next/link';
+import { ArrowDown, ArrowUp, BarChart3, Briefcase, CalendarClock, DollarSign, History, Info, ListChecks, PlusCircle, SearchIcon, Star, TrendingUp, Trophy, UserCheck, Wallet } from "lucide-react";
+import Link from "next/link";
 import { useState } from 'react';
 import ActiveAdvancedOrdersTable from './components/ActiveAdvancedOrdersTable';
 import AdvancedOrderForm from './components/AdvancedOrderForm';
@@ -21,7 +21,7 @@ import { PortfolioList } from './components/PortfolioList';
 import { QuickTradeForm } from './components/QuickTradeForm';
 import { WatchlistAddItemForm } from './components/WatchlistAddItemForm';
 import { WatchlistTable } from './components/WatchlistTable';
-import { AdvancedOrder, AdvancedOrderFormData, AktiedystData, AnalysisData, AnalysisFormData, ChartDataPoint, Competition, Holding, Portfolio, WatchlistItem } from './types';
+import { AdvancedOrder, AdvancedOrderFormData, AktiedystData, AnalysisData, AnalysisFormData, ChartDataPoint, Competition, Dividend, Holding, Portfolio, WatchlistItem } from './types';
 
 const mockAktiedystData: AktiedystData = {
     ongoingCompetitions: [
@@ -113,7 +113,13 @@ const mockAktiedystData: AktiedystData = {
             { date: '2024-07-18', value: 178 },
             { date: '2024-07-19', value: 180 },
         ]
-    }
+    },
+    dividends: [
+        { id: 'div1', date: '2024-07-15', symbol: 'AAPL', name: 'Apple Inc.', amount: 50.00, currency: 'USD', perShare: 0.25, quantity: 200, portfolioId: 'pf2' },
+        { id: 'div2', date: '2024-07-20', symbol: 'MSFT', name: 'Microsoft Corp.', amount: 75.00, currency: 'USD', perShare: 0.50, quantity: 150, portfolioId: 'pf2' },
+        { id: 'div3', date: '2024-06-10', symbol: 'NVO.CO', name: 'Novo Nordisk A/S', amount: 120.00, currency: 'DKK', perShare: 2.00, quantity: 60, portfolioId: 'pf1' },
+        { id: 'div4', date: '2024-05-05', symbol: 'VEST.CO', name: 'Vestas Wind Systems', amount: 200.00, currency: 'DKK', perShare: 1.00, quantity: 200, portfolioId: 'pf1' },
+    ]
 };
 
 export default function AktiedystPage() {
@@ -153,6 +159,20 @@ export default function AktiedystPage() {
             : null
     );
     const [isFetchingChartData, setIsFetchingChartData] = useState(false);
+
+    const [dividends, setDividends] = useState<Dividend[]>(mockAktiedystData.dividends || []);
+
+    // Calculate dividend summaries
+    const dividendSummary = dividends.reduce((acc, dividend) => {
+        if (!acc[dividend.currency]) {
+            acc[dividend.currency] = { totalAmount: 0, count: 0 };
+        }
+        acc[dividend.currency].totalAmount += dividend.amount;
+        acc[dividend.currency].count += 1;
+        return acc;
+    }, {} as Record<string, { totalAmount: number; count: number }>);
+
+    const grandTotalDividends = Object.values(dividendSummary).reduce((sum, curr) => sum + curr.totalAmount, 0); // Note: This assumes all are convertible or for display purposes only.
 
     const availableSymbolsForAnalysis = Array.from(new Set([
         ...(mockAktiedystData.holdings?.map(h => h.symbol) || []),
@@ -241,43 +261,55 @@ export default function AktiedystPage() {
             const trendStrength = (Math.random() - 0.5) * 5;
             const volatility = 0.5 + Math.random() * 2;
 
+            const today = new Date(); // Define 'today' once, outside the loop
+
             const newDataPoints: ChartDataPoint[] = Array.from({ length: 30 }, (_, i) => {
-                const date = new Date();
-                // Adjust date based on interval - remove '1W' as it's not in TimeInterval
-                if (data.interval === '1D') date.setDate(date.getDate() - (29 - i));
-                // else if (data.interval === '1W') date.setDate(date.getDate() - (29 - i) * 7); // Removed 1W
-                else if (data.interval === '5D') date.setDate(date.getDate() - (29 - i)); // Treat 5D similar to 1D for now, adjust if specific logic needed
-                else if (data.interval === '1M') {
-                    const newDate = new Date(date);
-                    newDate.setMonth(date.getMonth() - (29 - i));
-                    // Check if day changed due to month length, reset to last day of month if so
-                    if (newDate.getMonth() === (date.getMonth() - (29 - i) + 12) % 12) {
-                        // all good
-                    } else {
-                        newDate.setDate(0); // last day of previous month
+                const pointDate = new Date(today); // Create a new Date object for each point, initialized to 'today'
+
+                if (data.interval === 'YTD') {
+                    const yearStartDate = new Date(today.getFullYear(), 0, 1);
+                    const totalDaysInYTD = Math.floor((today.getTime() - yearStartDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                    // Distribute 30 points (i from 0 to 29) across totalDaysInYTD.
+                    // Point i=0 is yearStartDate, point i=29 is today.
+                    const dayOffsetForPoint = Math.round((i / 29) * (totalDaysInYTD - 1));
+                    pointDate.setTime(yearStartDate.getTime());
+                    pointDate.setDate(yearStartDate.getDate() + dayOffsetForPoint);
+                } else {
+                    let spanInDays;
+                    switch (data.interval) {
+                        case '1D': spanInDays = 1; break;
+                        case '5D': spanInDays = 5; break;
+                        case '1M': spanInDays = 30; break;
+                        case '3M': spanInDays = 90; break;
+                        case '1Y': spanInDays = 365; break;
+                        default:
+                            console.warn(`Unknown interval: ${data.interval}, defaulting to 30 days span.`);
+                            spanInDays = 30;
                     }
-                    date.setTime(newDate.getTime());
+                    // For point i (0=oldest, 29=newest), calculate how many days back from 'today' it is.
+                    // (29-i) is index from newest (0 for i=29) to oldest (29 for i=0)
+                    // Proportion into the past is ((29-i) / 29)
+                    const daysToSubtract = Math.round(spanInDays * ((29 - i) / 29));
+                    pointDate.setDate(today.getDate() - daysToSubtract);
                 }
-                // Simplified 1Y: 30 points over the last year (approx. every 12 days)
-                else if (data.interval === '1Y') date.setDate(date.getDate() - (29 - i) * 12);
 
                 let value = baseValue + i * trendStrength + (Math.random() - 0.5) * 10 * volatility;
-                // Apply indicator-based modification (very simplified) - remove SMA and EMA as they are not in AnalysisFormData['indicator']
-                // if (data.indicator === 'SMA' || data.indicator === 'EMA') value += Math.sin(i / 5) * 5 * volatility;
-                if (data.indicator === 'price') value += Math.sin(i / 5) * 5 * volatility; // Example for price
-                if (data.indicator === 'rsi') value = 50 + Math.sin(i / 3) * 20 * volatility;
-                if (data.indicator === 'macd') value += Math.cos(i / 6) * 7 * volatility - Math.sin(i / 3) * 3 * volatility;
-                if (data.indicator === 'bollinger') value += Math.cos(i / 4) * 8 * volatility; // Example for bollinger
+                // Apply indicator-based modification (simplified)
+                if (data.indicator === 'price') value += Math.sin(i / 5) * 5 * volatility;
+                else if (data.indicator === 'rsi') value = 50 + Math.sin(i / 3) * 20 * volatility;
+                else if (data.indicator === 'macd') value += Math.cos(i / 6) * 7 * volatility - Math.sin(i / 3) * 3 * volatility;
+                else if (data.indicator === 'bollinger') value += Math.cos(i / 4) * 8 * volatility;
+                // Note: 'sma' and 'ema' indicators are typed but not implemented in this mock logic
 
                 return {
-                    date: date.toISOString().split('T')[0], // Format as YYYY-MM-DD
-                    value: Math.max(10, parseFloat(value.toFixed(2))), // Ensure positive and two decimal places
+                    date: pointDate.toISOString().split('T')[0],
+                    value: Math.max(10, parseFloat(value.toFixed(2))),
                 };
             });
 
             const newChartData: AnalysisData = {
                 symbol: data.symbol,
-                indicator: data.indicator,
+                indicator: data.indicator as AnalysisData['indicator'], // Cast to ensure type compatibility
                 interval: data.interval,
                 data: newDataPoints,
             };
@@ -306,62 +338,86 @@ export default function AktiedystPage() {
                 </div>
 
                 <Tabs defaultValue="overview" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-8 mb-6">
-                        <TabsTrigger value="overview"><Trophy className="mr-2 h-4 w-4" /> Oversigt</TabsTrigger>
-                        <TabsTrigger value="portfolios-holdings"><Briefcase className="mr-2 h-4 w-4" /> Porteføljer</TabsTrigger> {/* Shortened for space */}
-                        <TabsTrigger value="watchlist"><Star className="mr-2 h-4 w-4" /> Watchlist</TabsTrigger>
-                        <TabsTrigger value="advanced-orders"><ListChecks className="mr-2 h-4 w-4" /> Ordrer</TabsTrigger> {/* Shortened for space */}
-                        <TabsTrigger value="analysis-charts"><BarChart3 className="mr-2 h-4 w-4" /> Analyse</TabsTrigger> {/* New Tab + Icon, Shortened */}
-                        <TabsTrigger value="my-competitions"><UserCheck className="mr-2 h-4 w-4" /> Mine Dyster</TabsTrigger>
-                        <TabsTrigger value="open-competitions"><ListChecks className="mr-2 h-4 w-4" /> Åbne Dyster</TabsTrigger>
-                        <TabsTrigger value="results"><History className="mr-2 h-4 w-4" /> Resultater</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-9 mb-6 bg-card border border-border rounded-md p-1">
+                        <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><Trophy className="mr-1.5 h-4 w-4" /> Oversigt</TabsTrigger>
+                        <TabsTrigger value="portfolios-holdings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><Briefcase className="mr-1.5 h-4 w-4" /> Porteføljer</TabsTrigger>
+                        <TabsTrigger value="watchlist" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><Star className="mr-1.5 h-4 w-4" /> Watchlist</TabsTrigger>
+                        <TabsTrigger value="advanced-orders" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><ListChecks className="mr-1.5 h-4 w-4" /> Ordrer</TabsTrigger>
+                        <TabsTrigger value="analysis-charts" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><BarChart3 className="mr-1.5 h-4 w-4" /> Analyse</TabsTrigger>
+                        <TabsTrigger value="dividends" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><DollarSign className="mr-1.5 h-4 w-4" /> Dividender</TabsTrigger>
+                        <TabsTrigger value="my-competitions" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><UserCheck className="mr-1.5 h-4 w-4" /> Mine Dyster</TabsTrigger>
+                        <TabsTrigger value="open-competitions" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><ListChecks className="mr-1.5 h-4 w-4" /> Åbne Dyster</TabsTrigger>
+                        <TabsTrigger value="results" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground hover:bg-muted/50 rounded-sm text-xs sm:text-sm px-2 py-1.5 sm:px-3 sm:py-2"><History className="mr-1.5 h-4 w-4" /> Resultater</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="overview">
                         <div className="grid md:grid-cols-3 gap-6 mb-8">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Kontant Saldo</CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                                        Kontant Saldo
+                                    </CardTitle>
+                                    <Wallet className="h-5 w-5 text-primary" />
                                 </CardHeader>
-                                <CardContent>
-                                    <p className="text-3xl font-bold">
+                                <CardContent className="px-4 pb-4">
+                                    <p className="text-3xl font-bold text-foreground">
                                         {mockAktiedystData.cashBalance?.toLocaleString('da-DK', { style: 'currency', currency: 'DKK' }) || 'N/A'}
                                     </p>
+                                    <p className="text-xs text-muted-foreground pt-1">
+                                        Tilgængelig for handel
+                                    </p>
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Total Porteføljeværdi</CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                                        Total Porteføljeværdi
+                                    </CardTitle>
+                                    <Briefcase className="h-5 w-5 text-primary" />
                                 </CardHeader>
-                                <CardContent>
-                                    <p className="text-3xl font-bold text-green-500">
+                                <CardContent className="px-4 pb-4">
+                                    <p className="text-3xl font-bold text-primary">
                                         {mockAktiedystData.userPortfolioValue.toLocaleString('da-DK', { style: 'currency', currency: 'DKK' })}
                                     </p>
-                                    <p className="text-sm text-muted-foreground">Din nuværende placering: #{mockAktiedystData.userRank}</p>
+                                    <p className="text-xs text-muted-foreground pt-1">
+                                        Din nuværende placering: #{mockAktiedystData.userRank}
+                                    </p>
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="text-lg">Samlet Resultat (I Dag)</CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 px-4 pt-4">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground">
+                                        Samlet Resultat (I Dag)
+                                    </CardTitle>
+                                    {mockAktiedystData.todaysProfitLoss && mockAktiedystData.todaysProfitLoss >= 0 ? (
+                                        <TrendingUp className="h-5 w-5 text-primary" />
+                                    ) : (
+                                        <TrendingUp className="h-5 w-5 text-destructive" /> // Could be TrendingDown if you prefer
+                                    )}
                                 </CardHeader>
-                                <CardContent>
-                                    <p className={`text-3xl font-bold ${mockAktiedystData.todaysProfitLoss && mockAktiedystData.todaysProfitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                                <CardContent className="px-4 pb-4">
+                                    <p className={`text-3xl font-bold ${mockAktiedystData.todaysProfitLoss && mockAktiedystData.todaysProfitLoss >= 0 ? 'text-primary' : 'text-destructive'}`}>
                                         {mockAktiedystData.todaysProfitLoss?.toLocaleString('da-DK', { style: 'currency', currency: 'DKK' }) || 'N/A'}
                                     </p>
-                                    <p className={`text-sm ${mockAktiedystData.todaysProfitLoss && mockAktiedystData.todaysProfitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                        {mockAktiedystData.todaysProfitLossPercentage?.toFixed(2) || '0.00'}%
-                                    </p>
+                                    <div className={`flex items-center text-xs ${mockAktiedystData.todaysProfitLoss && mockAktiedystData.todaysProfitLoss >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                                        {mockAktiedystData.todaysProfitLoss && mockAktiedystData.todaysProfitLoss >= 0 ? (
+                                            <ArrowUp className="h-3 w-3 mr-1" />
+                                        ) : (
+                                            <ArrowDown className="h-3 w-3 mr-1" />
+                                        )}
+                                        {mockAktiedystData.todaysProfitLossPercentage?.toFixed(2) || '0.00'}% i dag
+                                    </div>
                                 </CardContent>
                             </Card>
                         </div>
 
-                        <Card className="mb-8">
-                            <CardHeader>
-                                <CardTitle className="flex items-center">
-                                    <SearchIcon className="mr-2 h-5 w-5" /> Hurtig Søgning & Handel
+                        <Card className="mb-8 bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                            <CardHeader className="px-4 pt-4 pb-3">
+                                <CardTitle className="flex items-center text-lg font-semibold text-foreground">
+                                    <SearchIcon className="mr-2 h-5 w-5 text-primary" /> Hurtig Søgning & Handel
                                 </CardTitle>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent className="px-4 pb-4">
                                 <AssetSearchForm />
                                 <AssetInfoDisplay isVisible={isAssetDetailsVisible} />
                                 {isAssetDetailsVisible && <QuickTradeForm />}
@@ -369,35 +425,39 @@ export default function AktiedystPage() {
                         </Card>
 
                         <section className="mb-10">
-                            <h3 className="text-xl font-semibold mb-3">Hurtig adgang til dyster</h3>
-                            <div className="grid md:grid-cols-2 gap-4">
+                            <h3 className="text-xl font-semibold mb-4 text-foreground">Hurtig adgang til dyster</h3>
+                            <div className="grid md:grid-cols-2 gap-6">
                                 <div>
-                                    <h4 className="text-lg font-medium mb-2">Igangværende</h4>
+                                    <h4 className="text-lg font-semibold text-foreground mb-3">Igangværende</h4>
                                     {ongoingCompetitions.slice(0, 2).map((comp: Competition) => (
                                         <CompetitionCard key={comp.id} competition={comp} type="open-ongoing" />
                                     ))}
-                                    {ongoingCompetitions.length === 0 && <p className="text-sm text-muted-foreground">Ingen lige nu.</p>}
+                                    {ongoingCompetitions.length === 0 && <p className="text-sm text-muted-foreground p-4 bg-card border rounded-lg text-center">Ingen igangværende dyster lige nu.</p>}
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-medium mb-2">Kommende</h4>
+                                    <h4 className="text-lg font-semibold text-foreground mb-3">Kommende</h4>
                                     {upcomingCompetitions.slice(0, 2).map((comp: Competition) => (
                                         <CompetitionCard key={comp.id} competition={comp} type="open-upcoming" />
                                     ))}
-                                    {upcomingCompetitions.length === 0 && <p className="text-sm text-muted-foreground">Ingen annonceret.</p>}
+                                    {upcomingCompetitions.length === 0 && <p className="text-sm text-muted-foreground p-4 bg-card border rounded-lg text-center">Ingen kommende dyster annonceret.</p>}
                                 </div>
                             </div>
                         </section>
 
-                        <Card className="mt-8 bg-muted/50">
-                            <CardHeader>
-                                <CardTitle className="flex items-center"><Info className="mr-2 h-5 w-5" />Hvordan Virker Aktiedysten?</CardTitle>
+                        <Card className="mt-8 bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                            <CardHeader className="px-4 pt-4 pb-3">
+                                <CardTitle className="flex items-center text-lg font-semibold text-foreground">
+                                    <Info className="mr-2 h-5 w-5 text-primary" />Hvordan Virker Aktiedysten?
+                                </CardTitle>
                             </CardHeader>
-                            <CardContent className="text-sm space-y-2">
-                                <p>1. Du starter med en fiktiv kapital (f.eks. 100.000 kr.) i starten af hver dyst.</p>
-                                <p>2. Køb og sælg aktier (baseret på realtidsdata med en lille forsinkelse) for at øge værdien af din portefølje.</p>
-                                <p>3. Den deltager med den højeste porteføljeværdi ved dystens afslutning vinder.</p>
-                                <p>4. Nogle dyster kan have specifikke regler eller temaer (f.eks. kun grønne aktier).</p>
-                                <Link href="/aktiedyst/rules" className="text-primary hover:underline">Læs fulde regler og FAQ</Link>
+                            <CardContent className="text-sm space-y-3 text-muted-foreground px-4 pb-4">
+                                <p><span className="font-semibold text-foreground">1. Startkapital:</span> Du starter med en fiktiv kapital (f.eks. 100.000 kr.) i starten af hver dyst.</p>
+                                <p><span className="font-semibold text-foreground">2. Handel:</span> Køb og sælg aktier (baseret på realtidsdata med en lille forsinkelse) for at øge værdien af din portefølje.</p>
+                                <p><span className="font-semibold text-foreground">3. Mål:</span> Den deltager med den højeste porteføljeværdi ved dystens afslutning vinder.</p>
+                                <p><span className="font-semibold text-foreground">4. Variation:</span> Nogle dyster kan have specifikke regler eller temaer (f.eks. kun grønne aktier).</p>
+                                <Link href="/aktiedyst/rules" className="text-primary hover:underline font-medium block pt-2">
+                                    Læs fulde regler og FAQ
+                                </Link>
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -406,17 +466,17 @@ export default function AktiedystPage() {
                     <TabsContent value="portfolios-holdings">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="md:col-span-1 space-y-6">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>Opret Ny Portefølje</CardTitle>
+                                <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                    <CardHeader className="px-4 pt-4 pb-3">
+                                        <CardTitle className="text-lg font-semibold text-foreground">Opret Ny Portefølje</CardTitle>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="px-4 pb-4">
                                         <CreatePortfolioForm />
                                     </CardContent>
                                 </Card>
-                                <Card>
-                                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                        <CardTitle>Mine Porteføljer</CardTitle>
+                                <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                    <CardHeader className="flex flex-row items-center justify-between pb-2 px-4 pt-4">
+                                        <CardTitle className="text-lg font-semibold text-foreground">Mine Porteføljer</CardTitle>
                                         {currentPortfolios.length > 1 && (
                                             <PortfolioFilterDropdown
                                                 portfolios={currentPortfolios}
@@ -425,32 +485,32 @@ export default function AktiedystPage() {
                                             />
                                         )}
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="px-4 pb-4">
                                         <PortfolioList
                                             portfolios={currentPortfolios}
                                             selectedPortfolioId={selectedPortfolioId}
                                             onSelectPortfolio={setSelectedPortfolioId}
                                         />
                                         {currentPortfolios.length === 0 && (
-                                            <p className="text-sm text-muted-foreground">Du har ingen porteføljer endnu. Opret en for at starte!</p>
+                                            <p className="text-sm text-muted-foreground p-4 bg-muted border rounded-lg text-center">Du har ingen porteføljer endnu. Opret en for at starte!</p>
                                         )}
                                     </CardContent>
                                 </Card>
                             </div>
                             <div className="md:col-span-2">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle>
+                                <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                    <CardHeader className="px-4 pt-4 pb-3">
+                                        <CardTitle className="text-lg font-semibold text-foreground">
                                             Beholdning for {selectedPortfolioId ? currentPortfolios.find((p: Portfolio) => p.id === selectedPortfolioId)?.name : 'Valgt Portefølje'}
                                         </CardTitle>
                                     </CardHeader>
-                                    <CardContent>
+                                    <CardContent className="px-4 pb-4">
                                         {selectedPortfolioId && filteredHoldings.length > 0 ? (
                                             <HoldingsTable holdings={filteredHoldings} />
                                         ) : selectedPortfolioId && filteredHoldings.length === 0 ? (
-                                            <p className="text-muted-foreground">Denne portefølje har ingen beholdninger endnu.</p>
+                                            <p className="text-muted-foreground p-4 bg-muted border rounded-lg text-center">Denne portefølje har ingen beholdninger endnu.</p>
                                         ) : (
-                                            <p className="text-muted-foreground">Vælg en portefølje for at se beholdningen.</p>
+                                            <p className="text-muted-foreground p-4 bg-muted border rounded-lg text-center">Vælg en portefølje for at se beholdningen.</p>
                                         )}
                                     </CardContent>
                                 </Card>
@@ -461,25 +521,29 @@ export default function AktiedystPage() {
                     {/* Watchlist Tab Content */}
                     <TabsContent value="watchlist">
                         <div className="space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Tilføj til Watchlist</CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground">Tilføj til Watchlist</CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="px-4 pb-4">
                                     <WatchlistAddItemForm onAddItem={handleAddToWatchlist} />
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Min Watchlist</CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground">Min Watchlist</CardTitle>
                                 </CardHeader>
-                                <CardContent>
-                                    <WatchlistTable
-                                        items={watchlistItems}
-                                        onRemoveItem={handleRemoveFromWatchlist}
-                                        onTradeItem={handleTradeWatchlistItem}
-                                        onViewChart={handleViewChartWatchlistItem}
-                                    />
+                                <CardContent className="px-4 pb-4">
+                                    {watchlistItems.length > 0 ? (
+                                        <WatchlistTable
+                                            items={watchlistItems}
+                                            onRemoveItem={handleRemoveFromWatchlist}
+                                            onTradeItem={handleTradeWatchlistItem}
+                                            onViewChart={handleViewChartWatchlistItem}
+                                        />
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground p-4 bg-muted border rounded-lg text-center">Din watchlist er tom. Tilføj aktiver for at følge dem.</p>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>
@@ -488,16 +552,23 @@ export default function AktiedystPage() {
                     {/* Advanced Orders Tab Content */}
                     <TabsContent value="advanced-orders">
                         <div className="space-y-6">
-                            <AdvancedOrderForm
-                                ownedSymbols={ownedSymbolsForOrders}
-                                onSubmit={handleCreateAdvancedOrder}
-                                isLoading={isSubmittingOrder}
-                            />
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Aktive Avancerede Ordrer</CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground">Opret Avanceret Ordre</CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="px-4 pb-4">
+                                    <AdvancedOrderForm
+                                        ownedSymbols={ownedSymbolsForOrders}
+                                        onSubmit={handleCreateAdvancedOrder}
+                                        isLoading={isSubmittingOrder}
+                                    />
+                                </CardContent>
+                            </Card>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground">Aktive Avancerede Ordrer</CardTitle>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4">
                                     <ActiveAdvancedOrdersTable
                                         orders={advancedOrders.filter(o => o.status === 'active' || o.status === 'pending')}
                                         onCancelOrder={handleCancelAdvancedOrder}
@@ -511,11 +582,11 @@ export default function AktiedystPage() {
                     {/* New Tab Content for Analysis & Charts */}
                     <TabsContent value="analysis-charts">
                         <div className="space-y-6">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Vælg Analyseparametre</CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground">Vælg Analyseparametre</CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="px-4 pb-4">
                                     <AnalysisSelectionForm
                                         allSymbols={availableSymbolsForAnalysis} // Changed from availableSymbols to allSymbols
                                         formData={analysisFormData} // Changed from initialData to formData
@@ -525,15 +596,15 @@ export default function AktiedystPage() {
                                     />
                                 </CardContent>
                             </Card>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground">
                                         Analyse for {chartData?.symbol || analysisFormData.symbol}
                                         {chartData?.indicator ? ` (${chartData.indicator})` : analysisFormData.indicator ? ` (${analysisFormData.indicator})` : ''}
                                         {chartData?.interval ? ` - ${chartData.interval}` : analysisFormData.interval ? ` - ${analysisFormData.interval}` : ''}
                                     </CardTitle>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="px-4 pb-4">
                                     <ChartDisplay
                                         selectedAnalysis={analysisFormData} // Pass analysisFormData as selectedAnalysis
                                         analysisData={chartData}
@@ -544,57 +615,160 @@ export default function AktiedystPage() {
                         </div>
                     </TabsContent>
 
+                    {/* Dividends Tab Content */}
+                    <TabsContent value="dividends">
+                        <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                            <CardHeader className="px-4 pt-4 pb-3 border-b border-border">
+                                <div className="flex flex-col sm:flex-row justify-between sm:items-center">
+                                    <CardTitle className="text-lg font-semibold text-foreground flex items-center mb-2 sm:mb-0">
+                                        <DollarSign className="mr-2 h-5 w-5 text-primary" /> Modtagne Dividender
+                                    </CardTitle>
+                                    {dividends.length > 0 && (
+                                        <div className="text-sm text-muted-foreground">
+                                            Total: <span className="font-semibold text-tyrkisk-gron">{grandTotalDividends.toLocaleString('da-DK', { style: 'currency', currency: 'DKK', minimumFractionDigits: 2, maximumFractionDigits: 2 })} (DKK ækvivalent - fordel på valuta nedenfor)</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardHeader>
+                            <CardContent className="px-4 py-4">
+                                {dividends.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {Object.keys(dividendSummary).length > 0 && (
+                                            <Card className="bg-muted/30 p-4 rounded-lg border border-border">
+                                                <h4 className="text-md font-semibold text-foreground mb-2">Resumé pr. Valuta</h4>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                    {Object.entries(dividendSummary).map(([currency, summary]) => (
+                                                        <div key={currency} className="p-3 bg-card border border-border rounded-md">
+                                                            <p className="text-xs text-muted-foreground">{currency}</p>
+                                                            <p className="font-semibold text-tyrkisk-gron text-lg">
+                                                                {summary.totalAmount.toLocaleString('da-DK', { style: 'currency', currency: currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                            </p>
+                                                            <p className="text-xs text-muted-foreground">({summary.count} udbetalinger)</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </Card>
+                                        )}
+
+                                        <div className="space-y-4">
+                                            {dividends.map((dividend) => {
+                                                const portfolio = currentPortfolios.find(p => p.id === dividend.portfolioId);
+                                                return (
+                                                    <div key={dividend.id} className="p-4 bg-card border border-border rounded-lg shadow-sm hover:shadow-md transition-shadow duration-150 ease-in-out">
+                                                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-2">
+                                                            <div>
+                                                                <p className="font-semibold text-lg text-foreground">{dividend.symbol} - {dividend.name}</p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    Modtaget: {new Date(dividend.date).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                                </p>
+                                                            </div>
+                                                            <div className="mt-2 sm:mt-0 text-left sm:text-right">
+                                                                <p className="font-bold text-xl text-tyrkisk-gron">
+                                                                    +{dividend.amount.toLocaleString('da-DK', { style: 'currency', currency: dividend.currency, minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-sm text-muted-foreground border-t border-border pt-2 mt-2">
+                                                            <p>Detaljer: {dividend.quantity} aktier @ {dividend.perShare.toLocaleString('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {dividend.currency}/aktie</p>
+                                                            {portfolio && (
+                                                                <p>Portefølje: <span className="font-medium text-foreground">{portfolio.name}</span></p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground p-4 bg-muted border rounded-lg text-center">
+                                        Du har endnu ikke modtaget dividender i denne dyst, eller denne funktion er under udvikling.
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
                     <TabsContent value="my-competitions">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center"><UserCheck className="mr-2 h-6 w-6 text-primary" /> Mine Igangværende Dyster</h2>
-                        {myCompetitions.length > 0 ? (
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {myCompetitions.map((comp: Competition) => (
-                                    <CompetitionCard key={comp.id} competition={comp} type="my-competition" />
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-muted-foreground">Du deltager ikke i nogen dyster i øjeblikket.</p>
-                        )}
+                        <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                            <CardHeader className="px-4 pt-4 pb-3">
+                                <CardTitle className="text-lg font-semibold text-foreground flex items-center">
+                                    <UserCheck className="mr-2 h-5 w-5 text-primary" /> Mine Igangværende Dyster
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4">
+                                {myCompetitions.length > 0 ? (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {myCompetitions.map((comp: Competition) => (
+                                            <CompetitionCard key={comp.id} competition={comp} type="my-competition" />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground p-4 bg-muted border rounded-lg text-center">Du deltager ikke i nogen dyster i øjeblikket.</p>
+                                )}
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     <TabsContent value="open-competitions">
-                        <section id="ongoing-competitions-tab" className="mb-10">
-                            <h2 className="text-2xl font-semibold mb-4 flex items-center"><TrendingUp className="mr-2 h-6 w-6 text-primary" /> Igangværende Dyster</h2>
-                            {ongoingCompetitions.length > 0 ? (
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {ongoingCompetitions.map((comp: Competition) => (
-                                        <CompetitionCard key={comp.id} competition={comp} type="open-ongoing" />
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-muted-foreground">Ingen igangværende dyster i øjeblikket.</p>
-                            )}
-                        </section>
-                        <section id="upcoming-competitions-tab">
-                            <h2 className="text-2xl font-semibold mb-4">Kommende Dyster</h2>
-                            {upcomingCompetitions.length > 0 ? (
-                                <div className="grid md:grid-cols-2 gap-4">
-                                    {upcomingCompetitions.map((comp: Competition) => (
-                                        <CompetitionCard key={comp.id} competition={comp} type="open-upcoming" />
-                                    ))}
-                                </div>
-                            ) : (
-                                <p className="text-muted-foreground">Ingen kommende dyster annonceret endnu.</p>
-                            )}
-                        </section>
+                        <div className="space-y-6">
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground flex items-center">
+                                        <TrendingUp className="mr-2 h-5 w-5 text-primary" /> Igangværende Dyster
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4">
+                                    {ongoingCompetitions.length > 0 ? (
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            {ongoingCompetitions.map((comp: Competition) => (
+                                                <CompetitionCard key={comp.id} competition={comp} type="open-ongoing" />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground p-4 bg-muted border rounded-lg text-center">Ingen igangværende dyster i øjeblikket.</p>
+                                    )}
+                                </CardContent>
+                            </Card>
+                            <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                                <CardHeader className="px-4 pt-4 pb-3">
+                                    <CardTitle className="text-lg font-semibold text-foreground flex items-center">
+                                        <CalendarClock className="mr-2 h-5 w-5 text-primary" /> Kommende Dyster
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4">
+                                    {upcomingCompetitions.length > 0 ? (
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            {upcomingCompetitions.map((comp: Competition) => (
+                                                <CompetitionCard key={comp.id} competition={comp} type="open-upcoming" />
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm text-muted-foreground p-4 bg-muted border rounded-lg text-center">Ingen kommende dyster annonceret endnu.</p>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
                     </TabsContent>
 
                     <TabsContent value="results">
-                        <h2 className="text-2xl font-semibold mb-4 flex items-center"><History className="mr-2 h-6 w-6 text-primary" /> Afsluttede Dyster</h2>
-                        {pastCompetitions.length > 0 ? (
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {pastCompetitions.map((comp: Competition) => (
-                                    <CompetitionCard key={comp.id} competition={comp} type="result" />
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-muted-foreground">Ingen afsluttede dyster at vise.</p>
-                        )}
+                        <Card className="bg-card hover:shadow-lg transition-shadow duration-200 ease-in-out rounded-lg border">
+                            <CardHeader className="px-4 pt-4 pb-3">
+                                <CardTitle className="text-lg font-semibold text-foreground flex items-center">
+                                    <History className="mr-2 h-5 w-5 text-primary" /> Afsluttede Dyster
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4">
+                                {pastCompetitions.length > 0 ? (
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        {pastCompetitions.map((comp: Competition) => (
+                                            <CompetitionCard key={comp.id} competition={comp} type="result" />
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-muted-foreground p-4 bg-muted border rounded-lg text-center">Ingen afsluttede dyster at vise.</p>
+                                )}
+                            </CardContent>
+                        </Card>
                     </TabsContent>
                 </Tabs>
             </div>

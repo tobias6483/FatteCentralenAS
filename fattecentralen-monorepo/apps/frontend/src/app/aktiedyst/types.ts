@@ -26,6 +26,7 @@ export interface AktiedystData {
     watchlist?: WatchlistItem[]; // Added for watchlist
     advancedOrders?: AdvancedOrder[]; // Added for advanced orders
     analysis?: AnalysisData; // Added for analysis and charts
+    dividends?: Dividend[]; // Added for dividend tracking
 }
 
 // New interface for Portfolio
@@ -87,12 +88,12 @@ export interface AdvancedOrder {
 
 export interface AnalysisFormData {
     symbol: string;
-    indicator: 'price' | 'rsi' | 'macd' | 'bollinger' | 'sma' | ''; // Added 'sma'
+    indicator: 'price' | 'rsi' | 'macd' | 'bollinger' | 'sma' | 'ema' | ''; // Added 'ema' to match component
     interval: TimeInterval; // Using the new TimeInterval type
     // Potentially add: dateRangeStart, dateRangeEnd
 }
 
-export type TimeInterval = '1D' | '5D' | '1M' | '6M' | '1Y' | 'MAX'; // Defined TimeInterval
+export type TimeInterval = '1D' | '5D' | '1M' | '3M' | '6M' | '1Y' | 'YTD' | 'MAX'; // Added '3M' and 'YTD'
 
 export interface ChartDataPoint {
     date: string; // or Date object
@@ -106,4 +107,17 @@ export interface AnalysisData {
     interval?: TimeInterval;
     data: ChartDataPoint[];
     // Potentially add: analysisSummary, buySellSignals
+}
+
+// New interface for Dividend
+export interface Dividend {
+    id: string;
+    date: string; // ISO date string for when the dividend was received
+    symbol: string;
+    name: string; // Name of the asset
+    amount: number; // Total dividend amount received
+    currency: string;
+    perShare: number; // Dividend amount per share
+    quantity: number; // Number of shares held that paid dividend
+    portfolioId?: string; // Optional: if dividends are tied to a specific portfolio
 }

@@ -45,11 +45,11 @@ export function PortfolioList({
 }: PortfolioListProps) {
     if (portfolios.length === 0) {
         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center"><FolderOpen className="mr-2 h-5 w-5 text-primary" />Eksisterende Porteføljer</CardTitle>
+            <Card className="bg-card border-border text-foreground shadow-md">
+                <CardHeader className="border-b border-border">
+                    <CardTitle className="flex items-center text-tyrkisk-gron"><FolderOpen className="mr-2 h-5 w-5 text-tyrkisk-gron" />Eksisterende Porteføljer</CardTitle>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="pt-4">
                     <p className="text-muted-foreground">Du har ingen porteføljer endnu. Opret en ovenfor.</p>
                 </CardContent>
             </Card>
@@ -61,21 +61,22 @@ export function PortfolioList({
             {portfolios.map((portfolio) => (
                 <Card
                     key={portfolio.id}
-                    className={`cursor-pointer hover:shadow-md transition-shadow ${selectedPortfolioId === portfolio.id ? "border-primary ring-2 ring-primary" : ""
-                        }`}
+                    className={`cursor-pointer hover:shadow-lg transition-shadow bg-card border border-border text-foreground
+                        ${selectedPortfolioId === portfolio.id ? "border-tyrkisk-gron ring-2 ring-tyrkisk-gron" : "hover:border-muted-foreground/50"}
+                        `}
                     onClick={() => onSelectPortfolio(portfolio.id)}
                 >
                     <CardHeader className="pb-2 pt-4 px-4">
                         <div className="flex justify-between items-start">
-                            <CardTitle className="text-base font-semibold leading-tight">
+                            <CardTitle className="text-base font-semibold leading-tight text-foreground">
                                 {portfolio.name}
                             </CardTitle>
                             <div className="flex space-x-1">
-                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); /* onEditPortfolio(portfolio.id); */ console.log('Edit:', portfolio.id); }}>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-tyrkisk-gron hover:bg-muted/50" onClick={(e) => { e.stopPropagation(); /* onEditPortfolio(portfolio.id); */ console.log('Edit:', portfolio.id); }}>
                                     <Edit3 className="h-4 w-4" />
                                 </Button>
-                                <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); /* onDeletePortfolio(portfolio.id); */ console.log('Delete:', portfolio.id); }}>
-                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-red-accent hover:bg-muted/50" onClick={(e) => { e.stopPropagation(); /* onDeletePortfolio(portfolio.id); */ console.log('Delete:', portfolio.id); }}>
+                                    <Trash2 className="h-4 w-4" />
                                 </Button>
                             </div>
                         </div>
