@@ -75,7 +75,7 @@ const Header: React.FC = () => {
           {/* Logo Link - should now be the first visible element in this div on md+ screens */}
           <Link href="/" className="flex items-center space-x-2"> {/* Removed blue outline */}
             <Gamepad2 className="h-6 w-6" />
-            <span className="font-bold sm:inline-block">FatteCentralen</span>
+            <span className="font-bold sm:inline-block text-foreground">FatteCentralen A/S</span>
           </Link>
           {/* Desktop Navigation Links - REMOVED as per request */}
           {/* <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
@@ -90,7 +90,7 @@ const Header: React.FC = () => {
             space-x-4 is for internal spacing of icons and is fine. */}
         <div className="flex items-center space-x-4">
           {/* Search Button */}
-          <Button variant="ghost" size="icon" className="hover:bg-accent hover:text-accent-foreground transition-colors duration-150 ease-in-out active:scale-95">
+          <Button variant="ghost" size="icon" className="hover:bg-primary/20 hover:text-primary transition-colors duration-150 ease-in-out active:scale-95">
             <Search className="h-5 w-5" />
             <span className="sr-only">Search</span>
           </Button>
@@ -101,7 +101,7 @@ const Header: React.FC = () => {
           {/* Notifications Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="relative hover:bg-accent hover:text-accent-foreground transition-colors duration-150 ease-in-out active:scale-95">
+              <Button variant="ghost" size="icon" className="relative hover:bg-primary/20 hover:text-primary transition-colors duration-150 ease-in-out active:scale-95">
                 <Bell className="h-5 w-5" />
                 {notificationsCount > 0 && (
                   <Badge className="absolute -top-1 -right-1 px-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px]">
@@ -141,7 +141,7 @@ const Header: React.FC = () => {
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-accent hover:text-accent-foreground transition-colors duration-150 ease-in-out active:scale-95">
+              <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/20 hover:text-primary transition-colors duration-150 ease-in-out active:scale-95">
                 <Avatar>
                   {/* <AvatarImage src={user?.photoURL || "/placeholder-avatar.png"} alt="User Avatar" /> */}
                   <AvatarFallback>{getAvatarFallback()}</AvatarFallback>

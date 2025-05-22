@@ -30,10 +30,10 @@ const placeholderUserData = {
 };
 
 const quickLinks = [
-    { label: "Start Nyt Spil", href: "/game-area", icon: Zap },
-    { label: "Se Aktive Sessions", href: "/active-sessions", icon: Briefcase },
-    { label: "Min Spilhistorik", href: "/history", icon: CalendarDays },
-    { label: "Indstillinger", href: "/settings", icon: Settings },
+    { label: "Start Nyt Spil", href: "/game-area", icon: Zap, color: "text-sky-500" },
+    { label: "Se Aktive Sessions", href: "/active-sessions", icon: Briefcase, color: "text-violet-500" },
+    { label: "Min Spilhistorik", href: "/history", icon: CalendarDays, color: "text-amber-500" },
+    { label: "Indstillinger", href: "/settings", icon: Settings, color: "text-foreground" },
 ];
 
 const recentActivities = [
@@ -103,7 +103,7 @@ export default function DashboardPage() {
                 <Card className="lg:col-span-1 fade-in-up shadow-lg hover:shadow-xl transition-shadow">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Saldo</CardTitle>
-                        <Wallet className="h-5 w-5 text-muted-foreground" />
+                        <Wallet className="h-5 w-5 text-primary" /> {/* Changed icon color */}
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{formatCurrency(placeholderUserData.balance)}</div>
@@ -114,23 +114,23 @@ export default function DashboardPage() {
                 <Card className="lg:col-span-1 fade-in-up shadow-lg hover:shadow-xl transition-shadow" style={{ animationDelay: "0.1s" }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Wins / Losses</CardTitle>
-                        <Star className="h-5 w-5 text-muted-foreground" />
+                        <Star className="h-5 w-5 text-yellow-500" /> {/* Changed icon color */}
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">
-                            <span className="text-green-500">{placeholderUserData.wins}</span> / <span className="text-red-500">{placeholderUserData.losses}</span>
+                            <span className="text-primary">{placeholderUserData.wins}</span> / <span className="text-destructive">{placeholderUserData.losses}</span> {/* Changed wins color */}
                         </div>
-                        <p className="text-xs text-muted-foreground">Win rate: {((placeholderUserData.wins / (placeholderUserData.wins + placeholderUserData.losses)) * 100).toFixed(1)}%</p>
+                        <p className="text-xs text-muted-foreground">Win rate: {((placeholderUserData.wins / (placeholderUserData.wins + placeholderUserData.losses || 1)) * 100).toFixed(1)}%</p>
                     </CardContent>
                 </Card>
 
                 <Card className="lg:col-span-1 fade-in-up shadow-lg hover:shadow-xl transition-shadow" style={{ animationDelay: "0.2s" }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Netto Profit</CardTitle>
-                        <CircleDollarSign className="h-5 w-5 text-muted-foreground" />
+                        <CircleDollarSign className="h-5 w-5 text-primary" /> {/* Changed icon color */}
                     </CardHeader>
                     <CardContent>
-                        <div className={`text-2xl font-bold ${placeholderUserData.netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        <div className={`text-2xl font-bold ${placeholderUserData.netProfit >= 0 ? 'text-foreground' : 'text-destructive'}`}>
                             {formatCurrency(placeholderUserData.netProfit)}
                         </div>
                         <p className="text-xs text-muted-foreground">Største gevinst: {formatCurrency(placeholderUserData.largestWin)}</p>
@@ -140,7 +140,7 @@ export default function DashboardPage() {
                 <Card className="lg:col-span-1 fade-in-up shadow-lg hover:shadow-xl transition-shadow" style={{ animationDelay: "0.3s" }}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Indsatser</CardTitle>
-                        <Coins className="h-5 w-5 text-muted-foreground" />
+                        <Coins className="h-5 w-5 text-amber-500" /> {/* Changed icon color */}
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{formatCurrency(placeholderUserData.totalStaked)}</div>
@@ -213,9 +213,9 @@ export default function DashboardPage() {
                                 {recentActivities.map((activity) => (
                                     <li key={activity.id} className="flex items-center justify-between text-sm">
                                         <div className="flex items-center">
-                                            {activity.type === "win" && <ArrowUpRight className="h-4 w-4 mr-2 text-green-500" />}
-                                            {activity.type === "loss" && <ArrowDownRight className="h-4 w-4 mr-2 text-red-500" />}
-                                            {activity.type === "message" && <MessageCircle className="h-4 w-4 mr-2 text-blue-500" />}
+                                            {activity.type === "win" && <ArrowUpRight className="h-4 w-4 mr-2 text-primary" />}
+                                            {activity.type === "loss" && <ArrowDownRight className="h-4 w-4 mr-2 text-destructive" />}
+                                            {activity.type === "message" && <MessageCircle className="h-4 w-4 mr-2 text-muted-foreground" />}
                                             <span>{activity.text}</span>
                                         </div>
                                         <span className="text-muted-foreground">{activity.time}</span>
@@ -241,7 +241,7 @@ export default function DashboardPage() {
                             <ul className="space-y-3">
                                 {forumPosts.map((post) => (
                                     <li key={post.id} className="text-sm hover:bg-muted/50 p-2 rounded-md">
-                                        <a href="#" className="font-medium hover:underline block">{post.title}</a>
+                                        <a href="#" className="font-medium text-foreground hover:text-foreground/80 hover:underline block">{post.title}</a>
                                         <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
                                             <span>af {post.author}</span>
                                             <span>{post.replies} svar</span>
@@ -261,13 +261,13 @@ export default function DashboardPage() {
                 {/* Quick Links */}
                 <Card className="lg:col-span-2 fade-in-up shadow-lg hover:shadow-xl transition-shadow" style={{ animationDelay: "0.8s" }}>
                     <CardHeader>
-                        <CardTitle className="flex items-center"><Zap className="mr-2 h-6 w-6 text-yellow-500" /> Hurtige Links</CardTitle>
+                        <CardTitle className="flex items-center"><Zap className="mr-2 h-6 w-6 text-muted-foreground" /> Hurtige Links</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 gap-4">
                         {quickLinks.map((link) => (
                             <Button key={link.label} variant="outline" asChild>
-                                <a href={link.href}>
-                                    <link.icon className="mr-2 h-4 w-4" />
+                                <a href={link.href} className="flex w-full items-center justify-center text-foreground"> {/* Added text-foreground for adaptive text color */}
+                                    <link.icon className={`mr-2 h-4 w-4 ${link.color}`} />
                                     {link.label}
                                 </a>
                             </Button>
@@ -286,10 +286,24 @@ export default function DashboardPage() {
                                 {sessionsInvites.map((item) => (
                                     <li key={item.id} className="flex items-center justify-between text-sm p-2 hover:bg-muted/50 rounded-md">
                                         <div>
-                                            <span className="font-medium">{item.name}</span>
-                                            <Badge variant="secondary" className="ml-2">{item.type}</Badge>
+                                            <span className="font-medium mr-2">{item.name}</span>
+                                            <Badge className={`text-white border ${item.type === "Session"
+                                                ? "bg-sky-500 border-sky-600"
+                                                : item.type === "Invite"
+                                                    ? "bg-blue-700 border-blue-800"
+                                                    : "bg-gray-500 border-gray-600" // Fallback for type
+                                                }`}>
+                                                {item.type}
+                                            </Badge>
                                         </div>
-                                        <Badge variant={item.status === "Åben" ? "default" : "outline"}>{item.status}</Badge>
+                                        <Badge className={`ml-2 text-white border ${item.status === "Åben"
+                                            ? "bg-sky-500 border-sky-600"
+                                            : item.status === "Afventer"
+                                                ? "bg-orange-500 border-orange-600"
+                                                : "bg-gray-500 border-gray-600" // Fallback for status
+                                            }`}>
+                                            {item.status}
+                                        </Badge>
                                     </li>
                                 ))}
                             </ul>

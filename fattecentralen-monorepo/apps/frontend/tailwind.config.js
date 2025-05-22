@@ -19,61 +19,61 @@ module.exports = {
         },
         extend: {
             colors: {
-                border: "hsl(var(--border))", // Updated to use hsl and direct variable name
-                input: "hsl(var(--input))",   // Updated
-                ring: "hsl(var(--ring))",     // Updated
-                background: "hsl(var(--background))", // Updated
-                foreground: "hsl(var(--foreground))", // Updated
+                border: "var(--border)",
+                input: "var(--input)",
+                ring: "var(--ring)",
+                background: "var(--background)",
+                foreground: "var(--foreground)",
                 primary: {
-                    DEFAULT: "hsl(var(--primary))", // Updated
-                    foreground: "hsl(var(--primary-foreground))", // Updated
+                    DEFAULT: "var(--primary)",
+                    foreground: "var(--primary-foreground)",
                 },
                 secondary: {
-                    DEFAULT: "hsl(var(--secondary))", // Updated
-                    foreground: "hsl(var(--secondary-foreground))", // Updated
+                    DEFAULT: "var(--secondary)",
+                    foreground: "var(--secondary-foreground)",
                 },
                 destructive: {
-                    DEFAULT: "hsl(var(--destructive))", // Updated
-                    foreground: "hsl(var(--destructive-foreground))", // Updated
+                    DEFAULT: "var(--destructive)",
+                    foreground: "var(--destructive-foreground)",
                 },
                 muted: {
-                    DEFAULT: "hsl(var(--muted))", // Updated
-                    foreground: "hsl(var(--muted-foreground))", // Updated
+                    DEFAULT: "var(--muted)",
+                    foreground: "var(--muted-foreground)",
                 },
                 accent: {
-                    DEFAULT: "hsl(var(--accent))", // Updated
-                    foreground: "hsl(var(--accent-foreground))", // Updated
+                    DEFAULT: "var(--accent)",
+                    foreground: "var(--accent-foreground)",
                 },
                 popover: {
-                    DEFAULT: "hsl(var(--popover))", // Updated
-                    foreground: "hsl(var(--popover-foreground))", // Updated
+                    DEFAULT: "var(--popover)",
+                    foreground: "var(--popover-foreground)",
                 },
                 card: {
-                    DEFAULT: "hsl(var(--card))", // Updated
-                    foreground: "hsl(var(--card-foreground))", // Updated
+                    DEFAULT: "var(--card)",
+                    foreground: "var(--card-foreground)",
                 },
                 // Adding sidebar specific colors from globals.css
                 sidebar: {
-                    DEFAULT: "hsl(var(--sidebar))", // Updated
-                    foreground: "hsl(var(--sidebar-foreground))", // Updated
+                    DEFAULT: "var(--sidebar)",
+                    foreground: "var(--sidebar-foreground)",
                     primary: {
-                        DEFAULT: "hsl(var(--sidebar-primary))", // Updated
-                        foreground: "hsl(var(--sidebar-primary-foreground))", // Updated
+                        DEFAULT: "var(--sidebar-primary)",
+                        foreground: "var(--sidebar-primary-foreground)",
                     },
                     accent: {
-                        DEFAULT: "hsl(var(--sidebar-accent))", // Updated
-                        foreground: "hsl(var(--sidebar-accent-foreground))", // Updated
+                        DEFAULT: "var(--sidebar-accent)",
+                        foreground: "var(--sidebar-accent-foreground)",
                     },
-                    border: "hsl(var(--sidebar-border))", // Updated
-                    ring: "hsl(var(--sidebar-ring))", // Updated
+                    border: "var(--sidebar-border)",
+                    ring: "var(--sidebar-ring)",
                 },
                 // Adding chart specific colors from globals.css
                 chart: {
-                    '1': "hsl(var(--chart-1))", // Updated
-                    '2': "hsl(var(--chart-2))", // Updated
-                    '3': "hsl(var(--chart-3))", // Updated
-                    '4': "hsl(var(--chart-4))", // Updated
-                    '5': "hsl(var(--chart-5))", // Updated
+                    '1': "var(--chart-1)",
+                    '2': "var(--chart-2)",
+                    '3': "var(--chart-3)",
+                    '4': "var(--chart-4)",
+                    '5': "var(--chart-5)",
                 },
             },
             borderRadius: {

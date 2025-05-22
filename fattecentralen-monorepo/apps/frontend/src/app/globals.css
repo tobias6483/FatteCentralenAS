@@ -55,7 +55,7 @@
   }
 
   .dark {
-    --background: oklch(0.12 0.02 220); /* Very Dark Desaturated Blue/Gray */
+    --background: oklch(0.15 0.025 220); /* Very Dark Desaturated Blue/Gray - Adjusted for a lighter, more metallic feel */
     --foreground: oklch(0.92 0.01 220); /* Light Gray/Off-white */
 
     --card: oklch(0.17 0.025 220); /* Slightly Lighter Dark Desaturated Blue/Gray */
@@ -64,8 +64,8 @@
     --popover: oklch(0.15 0.028 220); /* Darker Popover for depth */
     --popover-foreground: oklch(0.92 0.01 220);
 
-    --primary: oklch(0.65 0.16 155); /* Vibrant Turkish Green (adjusted for dark bg) */
-    --primary-foreground: oklch(0.05 0.01 155); /* Very Dark text for contrast on green */
+    --primary: oklch(0.72 0.14 165); /* Turkish Green */
+    --primary-foreground: oklch(0.05 0.01 165); /* Very Dark text for contrast on green */
 
     --secondary: oklch(0.35 0.08 160); /* Muted Dark Teal/Turkish Green */
     --secondary-foreground: oklch(0.9 0.01 160); /* Light text for on dark teal */
@@ -81,10 +81,10 @@
 
     --border: oklch(0.25 0.03 220); /* Subtle Border */
     --input: oklch(0.20 0.028 220); /* Dark Input Background */
-    --ring: oklch(0.7 0.17 155 / 0.65); /* Turkish Green focus ring with transparency */
+    --ring: oklch(0.72 0.14 165 / 0.65); /* Turkish Green focus ring with transparency */
 
     /* Charts for dark theme */
-    --chart-1: oklch(0.65 0.16 155);  /* Turkish Green */
+    --chart-1: oklch(0.72 0.14 165);  /* Turkish Green */
     --chart-2: oklch(0.58 0.22 15);   /* Red */
     --chart-3: oklch(0.55 0.14 180);  /* Teal */
     --chart-4: oklch(0.6 0.1 240);   /* Purple-Blue */
@@ -93,12 +93,12 @@
     /* Sidebar for dark theme */
     --sidebar: oklch(0.1 0.015 220); /* Even Darker Sidebar Background */
     --sidebar-foreground: oklch(0.92 0.01 220);
-    --sidebar-primary: oklch(0.65 0.16 155);
-    --sidebar-primary-foreground: oklch(0.05 0.01 155);
+    --sidebar-primary: oklch(0.72 0.14 165); /* Turkish Green */
+    --sidebar-primary-foreground: oklch(0.05 0.01 165); /* Very Dark text for contrast on green */
     --sidebar-accent: oklch(0.45 0.12 158);
     --sidebar-accent-foreground: oklch(0.95 0.01 158);
     --sidebar-border: oklch(0.20 0.02 220);
-    --sidebar-ring: oklch(0.7 0.17 155 / 0.65);
+    --sidebar-ring: oklch(0.72 0.14 165 / 0.65); /* Turkish Green focus ring */
   }
 
   /* Modern CSS resets and base styles */
@@ -116,9 +116,9 @@
 
   /* User's existing global style for all elements - This rule is KEPT AS IS from user's file. */
   /* It applies a border and outline to ALL elements. Verify if this is the intended global behavior. */
-  * {
+  /* * {
     @apply border-border outline-ring/50;
-  }
+  } */ /* This rule has been commented out */
 
   /* Enhanced body styles with CSS nesting for typography and base elements */
   body {

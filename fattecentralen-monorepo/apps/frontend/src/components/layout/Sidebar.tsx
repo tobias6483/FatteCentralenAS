@@ -85,12 +85,19 @@ const Sidebar = () => {
           <AvatarFallback>{displayUser.username.substring(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
         <p className="font-semibold text-lg" data-testid="sidebar-username">{displayUser.username}</p>
-        <div className="text-sm text-muted-foreground flex items-center" data-testid="sidebar-balance">
-          <Wallet2 className="h-4 w-4 mr-1" /> {displayUser.balance}
+        <div className="text-sm text-foreground flex items-center" data-testid="sidebar-balance"> {/* Changed text-muted-foreground to text-foreground */}
+          <Wallet2 className="h-4 w-4 mr-1 text-primary" /> {/* Added text-primary to icon */}
+          {displayUser.balance}
         </div>
-        <div className="text-xs text-muted-foreground mt-1 space-y-0.5">
-          <p data-testid="sidebar-uid">UID: {displayUser.uid}</p>
-          <p data-testid="sidebar-invited-by">Inviteret af: {displayUser.invitedBy}</p>
+        <div className="text-xs mt-1 space-y-0.5">
+          <p data-testid="sidebar-uid">
+            <span className="text-foreground">UID:</span> {/* Changed to text-foreground */}
+            <span className="text-muted-foreground"> {displayUser.uid}</span> {/* Kept UID value as muted */}
+          </p>
+          <p data-testid="sidebar-invited-by">
+            <span className="text-foreground">Inviteret af:</span> {/* Changed to text-foreground */}
+            <span className="text-muted-foreground"> {displayUser.invitedBy}</span> {/* Kept inviter name as muted */}
+          </p>
         </div>
       </div>
 
@@ -128,7 +135,8 @@ const Sidebar = () => {
                 <li key={link.id}>
                   <Button
                     variant={currentPath.startsWith(link.href) ? 'secondary' : 'ghost'}
-                    className="w-full justify-start"
+                    className={`w-full justify-start ${link.label === 'Admin Menu' ? 'text-destructive hover:!text-destructive hover:!bg-destructive/20' : ''
+                      }`}
                     asChild
                     data-testid={link.testId}
                   >
